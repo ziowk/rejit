@@ -1,6 +1,7 @@
 #encoding: utf8
 
 import functools
+import string
 
 class RegexError(Exception): pass
 
@@ -101,4 +102,6 @@ class NFA:
         n = NFA(q,f)
         n.description = '('+s.description+')*'
         return n
+
+supported_chars = string.ascii_letters + string.digits
 

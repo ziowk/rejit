@@ -1,12 +1,12 @@
 #encoding: utf8
 
 import pytest
-import string
+import rejit.regex
 from rejit.regex import NFA
 
 @pytest.fixture(scope='module')
 def symbol_list():
-    return string.ascii_letters + string.digits
+    return rejit.regex.supported_chars
 
 def accept_test_helper(regex,cases):
     for s,expected in cases:
