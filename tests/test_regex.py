@@ -3,6 +3,7 @@
 import pytest
 import rejit.regex
 from rejit.regex import NFA
+from rejit.regex import Regex
 
 @pytest.fixture(scope='module')
 def symbol_list():
@@ -112,4 +113,88 @@ class TestNFA:
                     ('cc',False),
                 ]
         accept_test_helper(nfa,cases)
+
+class TestRegexParsing:
+    def test_empty_regex(self):
+        pattern = ''
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '\\E'
+
+    def test_symbol_regex(self, symbol_list):
+        for char in symbol_list:
+            re = Regex(char)
+            assert re.get_parsed_description() == char
+
+    def test_union_regex(self):
+        pattern = 'a|b'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(a|b)'
+
+    def test_kleene_star_regex(self):
+        pattern = 'a*'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(a)*'
+
+    def test_concat_regex(self):
+        pattern = 'abcdef'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == 'abcdef'
+
+    def test_complex_regex(self):
+        pattern = 'aa(bb|(cc)*)'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == 'aa(bb|(cc)*)'
+
+    def test_one_or_zero_mult_regex(self):
+        pattern = 'a?'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(a|\\E)'
+
+    def test_charset_regex(self):
+        pattern = '[abc]'
+        with pytest.raises(NotImplementedError):
+            re = Regex(pattern)
+
+    def test_negative_charset_regex(self):
+        pattern = '[^abc]'
+        with pytest.raises(NotImplementedError):
+            re = Regex(pattern)
+
+    def test_period_wildcard_regex(self):
+        pattern = '.'
+        with pytest.raises(NotImplementedError):
+            re = Regex(pattern)
+
+    def test_kleene_plus_regex(self):
+        pattern = 'a+'
+        with pytest.raises(NotImplementedError):
+            re = Regex(pattern)
+
+    def test_grouping_regex(self):
+        pattern = '(aa|bb)cc'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(aa|bb)cc'
+
+    def test_unsupported_char_regex(self):
+        unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
+        for char in unsupported_chars:
+            with pytest.raises(rejit.regex.RegexParseError):
+                re = Regex(char)
+
+    def test_invalid_use_of_special_char_regex(self):
+        special_chars = '^*()-+]|?' # '[' now raises NotImplementedError
+        for char in special_chars:
+            with pytest.raises(rejit.regex.RegexParseError):
+                re = Regex(char)
+
+    def test_empty_set_regex(self):
+        pattern = '[]'
+        with pytest.raises(NotImplementedError):
+            re = Regex(pattern)
+
+    def test_empty_group_regex(self):
+        pattern = '()'
+        with pytest.raises(rejit.regex.RegexParseError):
+            re = Regex(pattern)
+
 

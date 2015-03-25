@@ -5,6 +5,8 @@ import string
 
 class RegexError(Exception): pass
 
+class RegexParseError(RegexError): pass
+
 class State:
     state = 0
     def __init__(self):
@@ -102,6 +104,85 @@ class NFA:
         n = NFA(q,f)
         n.description = '('+s.description+')*'
         return n
+
+class Regex:
+    def __init__(self, pattern):
+        self.pattern = pattern
+        self._matcher = self._parse(pattern)
+
+    def accept(self, s):
+        return self._matcher.accept(s)
+
+    def get_parsed_description(self):
+        return str(self._matcher)
+
+    def _getchar(self):
+        if self._input:
+            self._last_char = self._input[0]
+            self._input = self._input[1:]
+        else:
+            self._last_char = ''
+
+    def _parse(self, pattern):
+        self._input = pattern
+        self._last_char = ''
+        self._getchar()
+        return self._unionRE()
+
+    def _unionRE(self):
+        r1 = self._concatRE()
+        if self._last_char == '|':
+            self._getchar() # '|'
+            r2 = self._unionRE()
+            return NFA.union(r1,r2)
+        return r1
+
+    def _concatRE(self):
+        r1 = self._kleeneRE()
+        if self._last_char and self._last_char not in '|)':
+            return NFA.concat(r1,self._concatRE())
+        return r1
+
+    def _kleeneRE(self):
+        relem = self._elementaryRE()
+        if self._last_char == '*':
+            self._getchar() # '*'
+            return NFA.kleene(relem)
+        elif self._last_char == '+':
+            self._getchar() # '+'
+            raise NotImplementedError('Kleene plus not implemented yet')
+            # return NFA.concat(relem,NFA.kleene(relem)) # deep copy of relem needed to pass to NFA.kleene
+        elif self._last_char == '?':
+            self._getchar() # '?'
+            return NFA.union(relem,NFA.empty())
+        else:
+            return relem
+
+    def _elementaryRE(self):
+        if self._last_char == '(':
+            self._getchar()
+            rparen = self._unionRE()
+            if self._last_char != ')':
+                raise RegexParseError('Expected ")", got {}'.format(self._last_char))
+            self._getchar() # ')'
+            return rparen
+        elif self._last_char == '.':
+            raise NotImplementedError('Period character wildcard not implemented yet')
+        elif self._last_char == '[':
+            return self._parse_charset()
+        elif self._last_char == '':
+            #assert self.pattern == ''
+            return NFA.empty()
+        else:
+            if self._last_char not in supported_chars:
+                raise RegexParseError('Not supported character "{}"'.format(self._last_char))
+            rchar = NFA.symbol(self._last_char)
+            self._getchar()
+            return rchar
+
+    def _parse_charset(self):
+        raise NotImplementedError('Character set parsing not implemented yet')
+
 
 supported_chars = string.ascii_letters + string.digits
 
