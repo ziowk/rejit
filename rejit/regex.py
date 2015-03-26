@@ -2,6 +2,7 @@
 
 import functools
 import string
+import copy
 
 class RegexError(Exception): pass
 
@@ -164,8 +165,7 @@ class Regex:
             return NFA.kleene(relem)
         elif self._last_char == '+':
             self._getchar() # '+'
-            raise NotImplementedError('Kleene plus not implemented yet')
-            # return NFA.concat(relem,NFA.kleene(relem)) # deep copy of relem needed to pass to NFA.kleene
+            return NFA.concat(relem,NFA.kleene(copy.deepcopy(relem)))
         elif self._last_char == '?':
             self._getchar() # '?'
             return NFA.union(relem,NFA.empty())

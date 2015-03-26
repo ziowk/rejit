@@ -167,8 +167,8 @@ class TestRegexParsing:
 
     def test_kleene_plus_regex(self):
         pattern = 'a+'
-        with pytest.raises(NotImplementedError):
-            re = Regex(pattern)
+        re = Regex(pattern)
+        assert re.get_parsed_description() == 'a(a)*'
 
     def test_grouping_regex(self):
         pattern = '(aa|bb)cc'
