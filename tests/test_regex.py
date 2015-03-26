@@ -174,6 +174,9 @@ class TestRegexParsing:
         pattern = 'aa.*bb.?(a|b)?'
         re = Regex(pattern)
         assert re.get_parsed_description() == 'aa(.)*bb(.|\\E)((a|b)|\\E)'
+        pattern = 'aa[x-z]*bb[0-0]+cc[]?'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == 'aa(((x|y)|z))*bb0(0)*cc([]|\\E)'
 
     def test_one_or_zero_mult_regex(self):
         pattern = 'a?'
@@ -182,12 +185,36 @@ class TestRegexParsing:
 
     def test_charset_regex(self):
         pattern = '[abc]'
-        with pytest.raises(NotImplementedError):
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '((a|b)|c)'
+        pattern = '[Xa-cY0-2Z]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)'
+        pattern = '[aa-bb]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(((a|a)|b)|b)'
+        pattern = '[c-c]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == 'c'
+        pattern = '[cc]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(c|c)'
+        pattern = '[z-a]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '[]'
+        pattern = '[*+.<-?]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '((((((*|+)|.)|<)|=)|>)|?)'
+        pattern = '[a-]'
+        with pytest.raises(rejit.regex.RegexParseError):
             re = Regex(pattern)
+        pattern = '[[-]]'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(([|\\)|])'
 
     def test_negative_charset_regex(self):
         pattern = '[^abc]'
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(rejit.regex.RegexParseError):
             re = Regex(pattern)
 
     def test_period_wildcard_regex(self):
@@ -219,8 +246,8 @@ class TestRegexParsing:
 
     def test_empty_set_regex(self):
         pattern = '[]'
-        with pytest.raises(NotImplementedError):
-            re = Regex(pattern)
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '[]'
 
     def test_empty_group_regex(self):
         pattern = '()'

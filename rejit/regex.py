@@ -203,7 +203,37 @@ class Regex:
             return rchar
 
     def _parse_charset(self):
-        raise NotImplementedError('Character set parsing not implemented yet')
+        self._getchar() # '['
+        symbol_list = []
+        if self._last_char == '^':
+            raise RegexParseError('Negative character set not supported')
+        while self._last_char and self._last_char != ']':
+            symbol1 = self._last_char
+            self._getchar()
+            if self._last_char == '-':
+                self._getchar() # '-'
+                if self._last_char:
+                    symbol_list += list(Regex.char_range(symbol1,self._last_char))
+                    self._getchar()
+                else:
+                    raise RegexParseError('Expected a symbol after "-" but the end of the pattern reached')
+            else:
+                symbol_list.append(symbol1)
+        if self._last_char != ']':
+            raise RegexParseError('Expected "]" but end of the pattern reached'.format(self._last_char))
+        self._getchar() # ']'
+        if not symbol_list:
+            reg = NFA(State(),State()) # empty set is matched by no character
+            reg.description = '[]'
+        else:
+            reg = functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
+        return reg
+
+    @staticmethod
+    def char_range(c1, c2):
+        """Generates the characters from `c1` to `c2`, inclusive."""
+        for c in range(ord(c1), ord(c2)+1):
+            yield chr(c)
 
 
 supported_chars = string.ascii_letters + string.digits
