@@ -5,6 +5,8 @@ import string
 
 class RegexError(Exception): pass
 
+class NFAInvalidError(RegexError): pass
+
 class State:
     state = 0
     def __init__(self):
@@ -26,6 +28,8 @@ class NFA:
         self.description = ''
 
     def accept(self,s):
+        if self.start is None:
+            raise NFAInvalidError('Trying to use invalid NFA object')
         states = {self.start}
         while states:
             states = NFA.moveEpsilon(states)
@@ -37,6 +41,11 @@ class NFA:
 
     def __str__(self):
         return self.description
+
+    def _invalidate(self):
+        self.start = None
+        self.end = None
+        self.description = None
 
     @staticmethod
     def get_char_states(state, char):
@@ -80,6 +89,8 @@ class NFA:
         s.end.add('',n.end)
         t.end.add('',n.end)
         n.description = '('+s.description+'|'+t.description+')'
+        s._invalidate()
+        t._invalidate()
         return n
 
     @staticmethod
@@ -89,6 +100,8 @@ class NFA:
         # the END state of S now shares the edge list with the START state of T.
         # alternatively we can just add an empty edge from S.end to T.start
         n.description = s.description+t.description
+        s._invalidate()
+        t._invalidate()
         return n
 
     @staticmethod
@@ -101,6 +114,7 @@ class NFA:
         s.end.add('',f)
         n = NFA(q,f)
         n.description = '('+s.description+')*'
+        s._invalidate()
         return n
 
 supported_chars = string.ascii_letters + string.digits
