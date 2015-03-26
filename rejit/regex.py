@@ -68,7 +68,7 @@ class NFA:
 
     @staticmethod
     def moveChar(in_to_check, char):
-        return functools.reduce(lambda x, st: x | NFA.get_char_states(st,char), in_to_check, set())
+        return functools.reduce(lambda x, st: x | NFA.get_char_states(st,char) | NFA.get_char_states(st,'any'), in_to_check, set())
 
     @staticmethod
     def empty():
@@ -82,6 +82,13 @@ class NFA:
         n = NFA(State(),State())
         n.start.add(a,n.end)
         n.description = a
+        return n
+
+    @staticmethod
+    def any():
+        n = NFA(State(),State())
+        n.start.add('any',n.end)
+        n.description = '.'
         return n
 
     @staticmethod
@@ -181,7 +188,8 @@ class Regex:
             self._getchar() # ')'
             return rparen
         elif self._last_char == '.':
-            raise NotImplementedError('Period character wildcard not implemented yet')
+            self._getchar() # '.'
+            return NFA.any()
         elif self._last_char == '[':
             return self._parse_charset()
         elif self._last_char == '':

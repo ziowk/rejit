@@ -35,6 +35,14 @@ class TestNFA:
             cases = zip(symbol_list,map(lambda c: c == char,symbol_list)) 
             accept_test_helper(nfa,cases)
 
+    def test_any_NFA(self, symbol_list):
+        special_chars = '^*()-+[]|?.'
+        unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
+        all_chars = symbol_list + special_chars + unsupported_chars
+        nfa = NFA.any()
+        cases = zip(all_chars,[True]*len(all_chars))
+        accept_test_helper(nfa,cases)
+
     def test_kleene_NFA(self):
         nfa = NFA.kleene(NFA.symbol('a'))
         cases = [
@@ -114,6 +122,25 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+        # equivalent to 'a.b'
+        nfa = NFA.concat(
+                NFA.concat(NFA.symbol('a'),NFA.any()),
+                NFA.symbol('b')
+                )
+        cases = [
+                    ('axb',True),
+                    ('aab',True),
+                    ('abb',True),
+                    ('a+b',True),
+                    ('a1b',True),
+                    ('',False),
+                    ('ab',False),
+                    ('axxb',False),
+                    ('axc',False),
+                    ('cxb',False),
+                ]
+        accept_test_helper(nfa,cases)
+
 class TestRegexParsing:
     def test_empty_regex(self):
         pattern = ''
@@ -144,6 +171,9 @@ class TestRegexParsing:
         pattern = 'aa(bb|(cc)*)'
         re = Regex(pattern)
         assert re.get_parsed_description() == 'aa(bb|(cc)*)'
+        pattern = 'aa.*bb.?(a|b)?'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == 'aa(.)*bb(.|\\E)((a|b)|\\E)'
 
     def test_one_or_zero_mult_regex(self):
         pattern = 'a?'
@@ -162,8 +192,8 @@ class TestRegexParsing:
 
     def test_period_wildcard_regex(self):
         pattern = '.'
-        with pytest.raises(NotImplementedError):
-            re = Regex(pattern)
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '.'
 
     def test_kleene_plus_regex(self):
         pattern = 'a+'
