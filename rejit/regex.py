@@ -96,6 +96,12 @@ class NFA:
         return n
 
     @staticmethod
+    def none():
+        n = NFA(State(),State()) 
+        n._description = '[]'
+        return n
+
+    @staticmethod
     def union(s,t):
         n = NFA(State(),State())
         n._start.add('',s._start)
@@ -227,8 +233,7 @@ class Regex:
             raise RegexParseError('Expected "]" but end of the pattern reached'.format(self._last_char))
         self._getchar() # ']'
         if not symbol_list:
-            reg = NFA(State(),State()) # empty set is matched by no character
-            reg._description = '[]'
+            reg = NFA.none()
         else:
             reg = functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
         return reg

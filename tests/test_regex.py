@@ -43,6 +43,16 @@ class TestNFA:
         cases = zip(all_chars,[True]*len(all_chars))
         accept_test_helper(nfa,cases)
 
+    def test_none_NFA(self, symbol_list):
+        special_chars = '^*()-+[]|?.'
+        unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
+        all_chars = symbol_list + special_chars + unsupported_chars
+        nfa = NFA.none()
+        cases = zip(all_chars,[False]*len(all_chars))
+        accept_test_helper(nfa,cases)
+        cases = [('',False)]
+        accept_test_helper(nfa,cases)
+
     def test_kleene_NFA(self):
         nfa = NFA.kleene(NFA.symbol('a'))
         cases = [
