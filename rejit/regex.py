@@ -103,6 +103,8 @@ class NFA:
 
     @staticmethod
     def union(s,t):
+        if s._start is None or t._start is None:
+            raise NFAInvalidError('Trying to use invalid NFA object')
         n = NFA(State(),State())
         n._start.add('',s._start)
         n._start.add('',t._start)
@@ -115,6 +117,8 @@ class NFA:
 
     @staticmethod
     def concat(s,t):
+        if s._start is None or t._start is None:
+            raise NFAInvalidError('Trying to use invalid NFA object')
         n = NFA(s._start,t._end)
         s._end._edges = t._start._edges
         # the END state of S now shares the edge list with the START state of T.
@@ -126,6 +130,8 @@ class NFA:
 
     @staticmethod
     def kleene(s):
+        if s._start is None:
+            raise NFAInvalidError('Trying to use invalid NFA object')
         q = State()
         f = State()
         q.add('',s._start)
