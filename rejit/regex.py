@@ -11,105 +11,109 @@ class RegexParseError(RegexError): pass
 class NFAInvalidError(RegexError): pass
 
 class State:
-    state = 0
+    _state_counter = 0
     def __init__(self):
-        self.e = [] # Edge = ('char', State)
-        self.s = State.state # for printing purposes only
-        State.state += 1
+        self._edges = [] # Edge = ('char', State)
+        self._state_num = State._state_counter # for printing purposes only
+        State._state_counter += 1
 
     def add(self,edge,state):
-        self.e.append((edge,state))
+        self._edges.append((edge,state))
 
     def __repr__(self):
-        return '<State: {num}, id: {ident}, edges: {e}>'.format(num=str(self.s), ident=str(id(self)),
-                                                                e=list(map(lambda x: (x[0],x[1].s), self.e)))
+        return '<State: {num}, id: {ident}, edges: {e}>'.format(num=str(self._state_num), ident=str(id(self)),
+                                                                e=list(map(lambda x: (x[0],x[1]._state_num), self._edges)))
 
 class NFA:
     def __init__(self,start,end):
-        self.start = start
-        self.end = end
-        self.description = ''
+        self._start = start
+        self._end = end
+        self._description = ''
+
+    @property
+    def description(self):
+        return self._description
 
     def accept(self,s):
-        if self.start is None:
+        if self._start is None:
             raise NFAInvalidError('Trying to use invalid NFA object')
-        states = {self.start}
+        states = {self._start}
         while states:
-            states = NFA.moveEpsilon(states)
+            states = NFA._moveEpsilon(states)
             if not s:
                 break
-            states = NFA.moveChar(states,s[0])
+            states = NFA._moveChar(states,s[0])
             s = s[1:]
-        return self.end in states and s == ''
+        return self._end in states and s == ''
 
     def __str__(self):
-        return self.description
+        return '<NFA id: {ident}, regex: {desc}>'.format(ident=id(self), desc=self.description)
 
     def _invalidate(self):
-        self.start = None
-        self.end = None
-        self.description = None
+        self._start = None
+        self._end = None
+        self._description = None
 
     @staticmethod
-    def get_char_states(state, char):
-        return set(map(lambda edge: edge[1], filter(lambda edge: edge[0]==char, state.e)))
+    def _get_char_states(state, char):
+        return set(map(lambda edge: edge[1], filter(lambda edge: edge[0]==char, state._edges)))
 
     @staticmethod
-    def moveEpsilon(in_to_check):
+    def _moveEpsilon(in_to_check):
         to_check = in_to_check.copy()
         checked = set()
         while to_check:
             st = to_check.pop()
             checked.add(st)
-            new = NFA.get_char_states(st,'')
+            new = NFA._get_char_states(st,'')
             to_check = (to_check | new) - checked
         assert in_to_check <= checked
         return checked
 
     @staticmethod
-    def moveChar(in_to_check, char):
-        return functools.reduce(lambda x, st: x | NFA.get_char_states(st,char) | NFA.get_char_states(st,'any'), in_to_check, set())
+    def _moveChar(in_to_check, char):
+        return functools.reduce(lambda x, st: x | NFA._get_char_states(st,char) | NFA._get_char_states(st,'any'), in_to_check, set())
 
     @staticmethod
     def empty():
         n = NFA(State(),State())
-        n.start.add('',n.end)
-        n.description = '\\E'
+        n._start.add('',n._end)
+        n._description = '\\E'
         return n
 
     @staticmethod
     def symbol(a):
         n = NFA(State(),State())
-        n.start.add(a,n.end)
-        n.description = a
+        n._start.add(a,n._end)
+        n._description = a
         return n
 
     @staticmethod
     def any():
         n = NFA(State(),State())
-        n.start.add('any',n.end)
-        n.description = '.'
+        n._start.add('any',n._end)
+        n._description = '.'
         return n
 
     @staticmethod
     def union(s,t):
         n = NFA(State(),State())
-        n.start.add('',s.start)
-        n.start.add('',t.start)
-        s.end.add('',n.end)
-        t.end.add('',n.end)
-        n.description = '('+s.description+'|'+t.description+')'
+        n._start.add('',s._start)
+        n._start.add('',t._start)
+        s._end.add('',n._end)
+        t._end.add('',n._end)
+        n._description = '('+s._description+'|'+t._description+')'
         s._invalidate()
         t._invalidate()
         return n
 
     @staticmethod
     def concat(s,t):
-        n = NFA(s.start,t.end)
-        s.end.e = t.start.e
+        n = NFA(s._start,t._end)
+        s._end._edges = t._start._edges
         # the END state of S now shares the edge list with the START state of T.
-        # alternatively we can just add an empty edge from S.end to T.start
-        n.description = s.description+t.description
+        # alternatively we can just add an empty edge from S._end to T._start
+        n._description = s._description+t._description
         s._invalidate()
         t._invalidate()
         return n
@@ -118,12 +122,12 @@ class NFA:
     def kleene(s):
         q = State()
         f = State()
-        q.add('',s.start)
+        q.add('',s._start)
         q.add('',f)
-        s.end.add('',s.start)
-        s.end.add('',f)
+        s._end.add('',s._start)
+        s._end.add('',f)
         n = NFA(q,f)
-        n.description = '('+s.description+')*'
+        n._description = '('+s._description+')*'
         s._invalidate()
         return n
 
@@ -136,7 +140,7 @@ class Regex:
         return self._matcher.accept(s)
 
     def get_parsed_description(self):
-        return str(self._matcher)
+        return self._matcher.description
 
     def _getchar(self):
         if self._input:
@@ -224,7 +228,7 @@ class Regex:
         self._getchar() # ']'
         if not symbol_list:
             reg = NFA(State(),State()) # empty set is matched by no character
-            reg.description = '[]'
+            reg._description = '[]'
         else:
             reg = functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
         return reg
