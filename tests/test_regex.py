@@ -13,7 +13,7 @@ def accept_test_helper(regex,cases):
     for s,expected in cases:
         result = regex.accept(s) 
         print("regex:{regex}, string:{s}, result:{result}, expected:{expected}, {ok}".format(
-            regex=regex,
+            regex=regex.description,
             s=s,
             result=result,
             expected=expected,
