@@ -151,6 +151,80 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+    def test_validation(self):
+        nfa = NFA.symbol('a')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfa.accept('a')
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aab') == False
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfac = NFA.concat(nfa,nfab)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfa.accept('a')
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfab.accept('b')
+        assert nfac.accept('ab') == True
+        assert nfac.accept('a') == False
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfau = NFA.union(nfa,nfab)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfa.accept('a')
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfab.accept('b')
+        assert nfau.accept('a') == True
+        assert nfau.accept('b') == True
+        assert nfau.accept('ab') == False
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfau = NFA.union(nfa,nfab)
+        assert nfab.accept('b') == True
+        assert nfab.accept('c') == False
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aax') == False
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfak = NFA.kleene(nfab)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfau = NFA.union(nfa,nfab)
+        assert nfa.accept('a') == True
+        assert nfa.accept('c') == False
+        assert nfak.accept('bbb') == True
+        assert nfak.accept('bbx') == False
+
+        nfa = NFA.symbol('a')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfakk = NFA.kleene(nfa)
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfac = NFA.concat(nfa,nfab)
+        assert nfab.accept('b') == True
+        assert nfab.accept('c') == False
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aax') == False
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfak = NFA.kleene(nfab)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfac = NFA.concat(nfa,nfab)
+        assert nfa.accept('a') == True
+        assert nfa.accept('c') == False
+        assert nfak.accept('bbb') == True
+        assert nfak.accept('bbx') == False
+
 class TestRegexParsing:
     def test_empty_regex(self):
         pattern = ''
