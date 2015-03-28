@@ -1,6 +1,7 @@
 #encoding: utf8
 
 import pytest
+import copy
 import rejit.regex
 from rejit.regex import NFA
 from rejit.regex import Regex
@@ -224,6 +225,49 @@ class TestNFA:
         assert nfa.accept('c') == False
         assert nfak.accept('bbb') == True
         assert nfak.accept('bbx') == False
+
+    def test_deepcopy(self):
+        nfa = NFA.union(NFA.concat(NFA.symbol('a'),NFA.kleene(NFA.symbol('b'))),NFA.symbol('c'))
+        nfc = copy.deepcopy(nfa)
+
+        # test if internals are different objects
+        assert id(nfa) != id(nfc)
+        assert id(nfa._start) != id(nfc._start)
+        assert id(nfa._end) != id(nfc._end)
+
+        # get all states
+        def get_all_states_helper(n):
+            states = set()
+            temp = {n._start}
+            while temp:
+                st = temp.pop()
+                states.add(st)
+                temp |= set(map(lambda e: e[1], filter(lambda e: e[1] not in states, st._edges)))
+            return states
+
+        # assert no shared states
+        sta = get_all_states_helper(nfa)
+        stc = get_all_states_helper(nfc)
+        assert not set(map(id, sta)) & set(map(id, stc))
+
+        # test if both still work as intended
+        cases = [
+                    ('a',True),
+                    ('c',True),
+                    ('ab',True),
+                    ('abbbbb',True),
+                    ('',False),
+                    ('x',False),
+                    ('ac',False),
+                    ('bc',False),
+                    ('ba',False),
+                    ('b',False),
+                    ('abbbbc',False),
+                    ('accccc',False),
+                    ('acbbbb',False),
+                ]
+        accept_test_helper(nfa, cases)
+        accept_test_helper(nfc, cases)
 
 class TestRegexParsing:
     def test_empty_regex(self):
