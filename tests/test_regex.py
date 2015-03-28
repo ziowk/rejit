@@ -155,6 +155,8 @@ class TestNFA:
     def test_validation(self):
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
+        assert not nfa.valid
+        assert nfak.valid
         with pytest.raises(rejit.regex.NFAInvalidError):
             nfa.accept('a')
         assert nfak.accept('aaa') == True
@@ -163,6 +165,9 @@ class TestNFA:
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfac = NFA.concat(nfa,nfab)
+        assert not nfa.valid
+        assert not nfab.valid
+        assert nfac.valid
         with pytest.raises(rejit.regex.NFAInvalidError):
             nfa.accept('a')
         with pytest.raises(rejit.regex.NFAInvalidError):
@@ -173,6 +178,9 @@ class TestNFA:
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfau = NFA.union(nfa,nfab)
+        assert not nfa.valid
+        assert not nfab.valid
+        assert nfau.valid
         with pytest.raises(rejit.regex.NFAInvalidError):
             nfa.accept('a')
         with pytest.raises(rejit.regex.NFAInvalidError):

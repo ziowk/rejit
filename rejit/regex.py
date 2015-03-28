@@ -36,8 +36,12 @@ class NFA:
     def description(self):
         return self._description
 
+    @property
+    def valid(self):
+        return self._start is not None
+
     def accept(self,s):
-        if self._start is None:
+        if not self.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         states = {self._start}
         while states:
@@ -105,7 +109,7 @@ class NFA:
 
     @staticmethod
     def union(s,t):
-        if s._start is None or t._start is None:
+        if not s.valid or not t.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         if s is t:
             raise NFAArgumentError("Can't use the same object for both parameters")
@@ -121,7 +125,7 @@ class NFA:
 
     @staticmethod
     def concat(s,t):
-        if s._start is None or t._start is None:
+        if not s.valid or not t.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         if s is t:
             raise NFAArgumentError("Can't use the same object for both parameters")
@@ -136,7 +140,7 @@ class NFA:
 
     @staticmethod
     def kleene(s):
-        if s._start is None:
+        if not s.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         q = State()
         f = State()
