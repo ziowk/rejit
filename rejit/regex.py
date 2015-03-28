@@ -10,6 +10,8 @@ class RegexParseError(RegexError): pass
 
 class NFAInvalidError(RegexError): pass
 
+class NFAArgumentError(RegexError): pass
+
 class State:
     _state_counter = 0
     def __init__(self):
@@ -105,6 +107,8 @@ class NFA:
     def union(s,t):
         if s._start is None or t._start is None:
             raise NFAInvalidError('Trying to use invalid NFA object')
+        if s is t:
+            raise NFAArgumentError("Can't use the same object for both parameters")
         n = NFA(State(),State())
         n._start.add('',s._start)
         n._start.add('',t._start)
@@ -119,6 +123,8 @@ class NFA:
     def concat(s,t):
         if s._start is None or t._start is None:
             raise NFAInvalidError('Trying to use invalid NFA object')
+        if s is t:
+            raise NFAArgumentError("Can't use the same object for both parameters")
         n = NFA(s._start,t._end)
         s._end._edges = t._start._edges
         # the END state of S now shares the edge list with the START state of T.

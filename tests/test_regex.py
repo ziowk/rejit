@@ -226,6 +226,12 @@ class TestNFA:
         assert nfak.accept('bbb') == True
         assert nfak.accept('bbx') == False
 
+        nfa = NFA.symbol('a')
+        with pytest.raises(rejit.regex.NFAArgumentError):
+            nfaa = NFA.concat(nfa,nfa)
+        with pytest.raises(rejit.regex.NFAArgumentError):
+            nfaa = NFA.union(nfa,nfa)
+
     def test_deepcopy(self):
         nfa = NFA.union(NFA.concat(NFA.symbol('a'),NFA.kleene(NFA.symbol('b'))),NFA.symbol('c'))
         nfc = copy.deepcopy(nfa)
