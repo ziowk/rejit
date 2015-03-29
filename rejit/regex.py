@@ -25,6 +25,10 @@ class State:
     def __repr__(self):
         return '<State: {num}, id: {ident}, edges: {e}>'.format(num=str(self._state_num), ident=str(id(self)),
                                                                 e=list(map(lambda x: (x[0],x[1]._state_num), self._edges)))
+    def __deepcopy__(self, memo):
+        st = State()
+        st._edges = copy.deepcopy(self._edges, memo)
+        return st
 
 class NFA:
     def __init__(self,start,end):

@@ -3,6 +3,7 @@
 import pytest
 import copy
 import rejit.regex
+from rejit.regex import State
 from rejit.regex import NFA
 from rejit.regex import Regex
 
@@ -243,6 +244,18 @@ class TestNFA:
     def test_deepcopy(self):
         nfa = NFA.union(NFA.concat(NFA.symbol('a'),NFA.kleene(NFA.symbol('b'))),NFA.symbol('c'))
         nfc = copy.deepcopy(nfa)
+
+        # test state deep copy
+        st1 = State()
+        st2 = State()
+        st1.add('a',st2)
+        st1c = copy.deepcopy(st1)
+        assert st1 is not st1c
+        assert st1._edges is not st1c._edges
+        assert st1._state_num != st1c._state_num
+        assert st2 is not st1c._edges[0][1]
+        assert st2._edges is not st1c._edges[0][1]._edges
+        assert st2._state_num != st1c._edges[0][1]._state_num
 
         # test if internals are different objects
         assert id(nfa) != id(nfc)
