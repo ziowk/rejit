@@ -134,9 +134,7 @@ class NFA:
         if s is t:
             raise NFAArgumentError("Can't use the same object for both parameters")
         n = NFA(s._start,t._end)
-        s._end._edges = t._start._edges
-        # the END state of S now shares the edge list with the START state of T.
-        # alternatively we can just add an empty edge from S._end to T._start
+        s._end.add('',t._start)
         n._description = s._description+t._description
         s._invalidate()
         t._invalidate()
