@@ -258,9 +258,9 @@ class TestNFA:
         assert st2._state_num != st1c._edges[0][1]._state_num
 
         # test if internals are different objects
-        assert id(nfa) != id(nfc)
-        assert id(nfa._start) != id(nfc._start)
-        assert id(nfa._end) != id(nfc._end)
+        assert nfa is not nfc
+        assert nfa._start is not nfc._start
+        assert nfa._end is not nfc._end
 
         # get all states
         def get_all_states_helper(n):
