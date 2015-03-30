@@ -28,19 +28,20 @@ class TestNFA:
         accept_test_helper(nfa,cases)
 
     def test_symbol_NFA(self):
-        for char in rejit.regex.supported_chars:
+        char_list = rejit.regex.supported_chars + rejit.regex.special_chars
+        for char in char_list:
             nfa = NFA.symbol(char)
-            cases = zip(rejit.regex.supported_chars,map(lambda c: c == char,rejit.regex.supported_chars)) 
+            cases = zip(char_list,map(lambda c: c == char,char_list)) 
             accept_test_helper(nfa,cases)
 
     def test_any_NFA(self):
-        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars + rejit.regex.unsupported_chars
+        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars
         nfa = NFA.any()
         cases = zip(all_chars,[True]*len(all_chars))
         accept_test_helper(nfa,cases)
 
     def test_none_NFA(self):
-        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars + rejit.regex.unsupported_chars
+        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars
         nfa = NFA.none()
         cases = zip(all_chars,[False]*len(all_chars))
         accept_test_helper(nfa,cases)
@@ -298,6 +299,10 @@ class TestRegexParsing:
         for char in rejit.regex.supported_chars:
             re = Regex(char)
             assert re.get_parsed_description() == char
+        for char in rejit.regex.special_chars:
+            print("\\"+char)
+            re = Regex("\\" + char)
+            assert re.get_parsed_description() == "\\" + char
 
     def test_union_regex(self):
         pattern = 'a|b'
@@ -328,7 +333,7 @@ class TestRegexParsing:
     def test_one_or_zero_mult_regex(self):
         pattern = 'a?'
         re = Regex(pattern)
-        assert re.get_parsed_description() == '(a|\\E)'
+        assert re.get_parsed_description() == r'(a|\E)'
 
     def test_charset_regex(self):
         pattern = '[abc]'
@@ -351,13 +356,13 @@ class TestRegexParsing:
         assert re.get_parsed_description() == '[]'
         pattern = '[*+.<-?]'
         re = Regex(pattern)
-        assert re.get_parsed_description() == '((((((*|+)|.)|<)|=)|>)|?)'
+        assert re.get_parsed_description() == r'((((((\*|\+)|\.)|<)|=)|>)|\?)'
         pattern = '[a-]'
         with pytest.raises(rejit.regex.RegexParseError):
             re = Regex(pattern)
         pattern = '[[-]]'
         re = Regex(pattern)
-        assert re.get_parsed_description() == '(([|\\)|])'
+        assert re.get_parsed_description() == r'((\[|\\)|\])'
 
     def test_negative_charset_regex(self):
         pattern = '[^abc]'
@@ -379,11 +384,6 @@ class TestRegexParsing:
         re = Regex(pattern)
         assert re.get_parsed_description() == '(aa|bb)cc'
 
-    def test_unsupported_char_regex(self):
-        for char in rejit.regex.unsupported_chars:
-            with pytest.raises(rejit.regex.RegexParseError):
-                re = Regex(char)
-
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
             with pytest.raises(rejit.regex.RegexParseError):
@@ -398,5 +398,4 @@ class TestRegexParsing:
         pattern = '()'
         with pytest.raises(rejit.regex.RegexParseError):
             re = Regex(pattern)
-
 

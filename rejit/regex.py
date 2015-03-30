@@ -90,14 +90,14 @@ class NFA:
     def empty():
         n = NFA(State(),State())
         n._start.add('',n._end)
-        n._description = '\\E'
+        n._description = r'\E'
         return n
 
     @staticmethod
     def symbol(a):
         n = NFA(State(),State())
         n._start.add(a,n._end)
-        n._description = a
+        n._description = escape_symbol(a)
         return n
 
     @staticmethod
@@ -253,11 +253,18 @@ class Regex:
         elif self._last_char == '':
             return ('empty',)
         else:
-            if self._last_char not in supported_chars:
-                raise RegexParseError('Not supported character "{}"'.format(self._last_char))
-            ast = ('symbol', self._last_char)
-            self._getchar()
-            return ast
+            return self._symbolRE()
+
+    def _symbolRE(self):
+        if self._last_char in special_chars and self._last_char != '\\':
+            raise RegexParseError('Unescaped special character "{}" can\'t be used here'.format(self._last_char))
+        if self._last_char == "\\":
+            self._getchar() # '\'
+        if not self._last_char:
+            raise RegexParseError('Unexpected end of a pattern after escape character "\\"')
+        ast = ('symbol', self._last_char)
+        self._getchar()
+        return ast
 
     def _parse_charset(self):
         self._getchar() # '['
@@ -288,8 +295,9 @@ class Regex:
         for c in range(ord(c1), ord(c2)+1):
             yield chr(c)
 
+def escape_symbol(symbol):
+    return "\\" + symbol if symbol in special_chars else symbol
 
-supported_chars = string.ascii_letters + string.digits
-unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
-special_chars = '^*()-+[]|?.'
+supported_chars = string.ascii_letters + string.digits + '`~!@#$%&=_{}:;"\'<>,/'
+special_chars = '\\^*()-+[]|?.'
 
