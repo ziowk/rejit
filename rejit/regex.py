@@ -261,7 +261,7 @@ class Regex:
         if self._last_char == "\\":
             self._getchar() # '\'
         if not self._last_char:
-            raise RegexParseError('Unexpected end of a pattern after escape character "\\"')
+            raise RegexParseError('Unexpected end of the pattern after an escape character "\\"')
         ast = ('symbol', self._last_char)
         self._getchar()
         return ast
