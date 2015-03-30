@@ -212,7 +212,7 @@ class Regex:
         ast1 = self._concatRE()
         if self._last_char == '|':
             self._getchar() # '|'
-            ast2 = self._concatRE()
+            ast2 = self._unionRE()
             return ('union',ast1,ast2)
         return ast1
 

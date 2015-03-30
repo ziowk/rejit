@@ -308,6 +308,9 @@ class TestRegexParsing:
         pattern = 'a|b'
         re = Regex(pattern)
         assert re.get_parsed_description() == '(a|b)'
+        pattern = 'a|b|c'
+        re = Regex(pattern)
+        assert re.get_parsed_description() == '(a|(b|c))'
 
     def test_kleene_star_regex(self):
         pattern = 'a*'
