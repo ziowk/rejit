@@ -7,10 +7,6 @@ from rejit.regex import State
 from rejit.regex import NFA
 from rejit.regex import Regex
 
-@pytest.fixture(scope='module')
-def symbol_list():
-    return rejit.regex.supported_chars
-
 def accept_test_helper(regex,cases):
     for s,expected in cases:
         result = regex.accept(s) 
@@ -31,24 +27,20 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
-    def test_symbol_NFA(self, symbol_list):
-        for char in symbol_list:
+    def test_symbol_NFA(self):
+        for char in rejit.regex.supported_chars:
             nfa = NFA.symbol(char)
-            cases = zip(symbol_list,map(lambda c: c == char,symbol_list)) 
+            cases = zip(rejit.regex.supported_chars,map(lambda c: c == char,rejit.regex.supported_chars)) 
             accept_test_helper(nfa,cases)
 
-    def test_any_NFA(self, symbol_list):
-        special_chars = '^*()-+[]|?.'
-        unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
-        all_chars = symbol_list + special_chars + unsupported_chars
+    def test_any_NFA(self):
+        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars + rejit.regex.unsupported_chars
         nfa = NFA.any()
         cases = zip(all_chars,[True]*len(all_chars))
         accept_test_helper(nfa,cases)
 
-    def test_none_NFA(self, symbol_list):
-        special_chars = '^*()-+[]|?.'
-        unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
-        all_chars = symbol_list + special_chars + unsupported_chars
+    def test_none_NFA(self):
+        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars + rejit.regex.unsupported_chars
         nfa = NFA.none()
         cases = zip(all_chars,[False]*len(all_chars))
         accept_test_helper(nfa,cases)
@@ -302,8 +294,8 @@ class TestRegexParsing:
         re = Regex(pattern)
         assert re.get_parsed_description() == '\\E'
 
-    def test_symbol_regex(self, symbol_list):
-        for char in symbol_list:
+    def test_symbol_regex(self):
+        for char in rejit.regex.supported_chars:
             re = Regex(char)
             assert re.get_parsed_description() == char
 
@@ -388,14 +380,12 @@ class TestRegexParsing:
         assert re.get_parsed_description() == '(aa|bb)cc'
 
     def test_unsupported_char_regex(self):
-        unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
-        for char in unsupported_chars:
+        for char in rejit.regex.unsupported_chars:
             with pytest.raises(rejit.regex.RegexParseError):
                 re = Regex(char)
 
     def test_invalid_use_of_special_char_regex(self):
-        special_chars = '^*()-+]|?' # '[' now raises NotImplementedError
-        for char in special_chars:
+        for char in rejit.regex.special_chars.replace('.',''):
             with pytest.raises(rejit.regex.RegexParseError):
                 re = Regex(char)
 

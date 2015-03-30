@@ -290,4 +290,6 @@ class Regex:
 
 
 supported_chars = string.ascii_letters + string.digits
+unsupported_chars = '`~!@#$%&=_{}\\:;"\'<>,/'
+special_chars = '^*()-+[]|?.'
 
