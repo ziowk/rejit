@@ -28,11 +28,15 @@ Grammar is written in Backus–Naur Form.
 <elementaryRE> ::= <group> | <any> | <char> | <set>
 <group> ::= "(" <unionRE> ")"
 <any> ::= "."
-<char> ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z" | "0" | "1" | ... | "9"
+<char> ::= <alphanum> | <symbol> | "\" <special>
+<alphanum> ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z" | "0" | "1" | ... | "9"
+<symbol> ::= "`" | "~" | "!" | "@" | "#" | "$" | "%" | "&" | "=" | "_" | "{" | "}" | ":" | ";" | """ |  "'" | "<" | ">" | "," | "/" 
+<special> ::= "\" | "^" | "*" | "(" | ")" | "-" | "+" | "[" | "]" | "|" | "?" | "." 
 <set> ::= "[" <set-items> "]"
 <set-items> ::= <set-item> | <set-item> <set-items>
-<set-item> ::= <range> | <char>
-<range> ::= <char> "-" <char>
+<set-item> ::= <range> | <range-char>
+<range> ::= <range-char> "-" <range-char>
+<range-char> ::= any char which isn't "-" or "]"
 ```
 
 Alternative production rules for including negative set:
