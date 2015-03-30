@@ -8,6 +8,8 @@ class RegexError(Exception): pass
 
 class RegexParseError(RegexError): pass
 
+class RegexCompilationError(RegexError): pass
+
 class NFAInvalidError(RegexError): pass
 
 class NFAArgumentError(RegexError): pass
@@ -158,7 +160,8 @@ class NFA:
 class Regex:
     def __init__(self, pattern):
         self.pattern = pattern
-        self._matcher = self._parse(pattern)
+        self._ast = self._parse(pattern)
+        self._matcher = self._compile(self._ast)
 
     def accept(self, s):
         return self._matcher.accept(s)
@@ -179,56 +182,82 @@ class Regex:
         self._getchar()
         return self._unionRE()
 
+    def _compile(self, ast):
+        if ast[0] == 'concat':
+            return NFA.concat(self._compile(ast[1]),self._compile(ast[2]))
+        elif ast[0] == 'union':
+            return NFA.union(self._compile(ast[1]),self._compile(ast[2]))
+        elif ast[0] == 'kleene-star':
+            return NFA.kleene(self._compile(ast[1]))
+        elif ast[0] == 'kleene-plus':
+            nfa = self._compile(ast[1])
+            return NFA.concat(nfa,NFA.kleene(copy.deepcopy(nfa)))
+        elif ast[0] == 'zero-or-one':
+            return NFA.union(self._compile(ast[1]),NFA.empty())
+        elif ast[0] == 'any':
+            return NFA.any()
+        elif ast[0] == 'empty':
+            return NFA.empty()
+        elif ast[0] == 'symbol':
+            return NFA.symbol(ast[1])
+        elif ast[0] == 'set':
+            symbol_list = ast[1]
+            if not symbol_list:
+                return NFA.none()
+            else:
+                return functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
+        raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
+
     def _unionRE(self):
-        r1 = self._concatRE()
+        ast1 = self._concatRE()
         if self._last_char == '|':
             self._getchar() # '|'
-            r2 = self._unionRE()
-            return NFA.union(r1,r2)
-        return r1
+            ast2 = self._concatRE()
+            return ('union',ast1,ast2)
+        return ast1
 
     def _concatRE(self):
-        r1 = self._kleeneRE()
+        ast1 = self._kleeneRE()
         if self._last_char and self._last_char not in '|)':
-            return NFA.concat(r1,self._concatRE())
-        return r1
+            ast2 = self._concatRE()
+            return ('concat', ast1, ast2)
+        return ast1
 
     def _kleeneRE(self):
-        relem = self._elementaryRE()
+        ast = self._elementaryRE()
         if self._last_char == '*':
             self._getchar() # '*'
-            return NFA.kleene(relem)
+            return ('kleene-star', ast)
         elif self._last_char == '+':
             self._getchar() # '+'
-            return NFA.concat(relem,NFA.kleene(copy.deepcopy(relem)))
+            return ('kleene-plus', ast)
         elif self._last_char == '?':
             self._getchar() # '?'
-            return NFA.union(relem,NFA.empty())
+            return ('zero-or-one', ast)
         else:
-            return relem
+            return ast
 
     def _elementaryRE(self):
         if self._last_char == '(':
             self._getchar()
-            rparen = self._unionRE()
+            ast_paren = self._unionRE()
             if self._last_char != ')':
                 raise RegexParseError('Expected ")", got {}'.format(self._last_char))
             self._getchar() # ')'
-            return rparen
+            return ast_paren
         elif self._last_char == '.':
             self._getchar() # '.'
-            return NFA.any()
+            return ('any',)
         elif self._last_char == '[':
             return self._parse_charset()
         elif self._last_char == '':
-            #assert self.pattern == ''
-            return NFA.empty()
+            return ('empty',)
         else:
             if self._last_char not in supported_chars:
                 raise RegexParseError('Not supported character "{}"'.format(self._last_char))
-            rchar = NFA.symbol(self._last_char)
+            ast = ('symbol', self._last_char)
             self._getchar()
-            return rchar
+            return ast
 
     def _parse_charset(self):
         self._getchar() # '['
@@ -250,11 +279,8 @@ class Regex:
         if self._last_char != ']':
             raise RegexParseError('Expected "]" but end of the pattern reached'.format(self._last_char))
         self._getchar() # ']'
-        if not symbol_list:
-            reg = NFA.none()
-        else:
-            reg = functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
-        return reg
+        ast = ('set',symbol_list)
+        return ast
 
     @staticmethod
     def char_range(c1, c2):
