@@ -318,6 +318,7 @@ class TestRegexParsing:
 
     def test_union_regex(self):
         assert_regex_description('a|b','(a|b)')
+
         # test for bug #35
         assert_regex_description('a|b|c','(a|(b|c))')
 
@@ -362,6 +363,7 @@ class TestRegexParsing:
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
             assert_regex_parse_error(char)
+
         # test for bug #36
         assert_regex_parse_error('a|b|')
 
