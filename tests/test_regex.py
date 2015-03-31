@@ -345,8 +345,11 @@ class TestRegexParsing:
         assert_regex_description('[z-a]','[]')
         assert_regex_description('[*+.<-?]',r'((((((\*|\+)|\.)|<)|=)|>)|\?)')
         assert_regex_description('[[-]]',r'((\[|\\)|\])')
+        assert_regex_description('[---]',r'\-')
 
         assert_regex_parse_error('[a-]')
+        assert_regex_parse_error('[a-')
+        assert_regex_parse_error('[abc')
 
     def test_negative_charset_regex(self):
         assert_regex_parse_error('[^abc]')
