@@ -318,6 +318,7 @@ class TestRegexParsing:
 
     def test_union_regex(self):
         assert_regex_description('a|b','(a|b)')
+        # test for bug #35
         assert_regex_description('a|b|c','(a|(b|c))')
 
     def test_kleene_star_regex(self):
