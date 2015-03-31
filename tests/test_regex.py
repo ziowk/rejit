@@ -336,22 +336,15 @@ class TestRegexParsing:
 
     def test_charset_regex(self):
         assert_regex_description('[abc]','((a|b)|c)')
-
         assert_regex_description('[Xa-cY0-2Z]','((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)')
-
         assert_regex_description('[aa-bb]','(((a|a)|b)|b)')
-
         assert_regex_description('[c-c]','c')
-
         assert_regex_description('[cc]','(c|c)')
-
         assert_regex_description('[z-a]','[]')
-
         assert_regex_description('[*+.<-?]',r'((((((\*|\+)|\.)|<)|=)|>)|\?)')
+        assert_regex_description('[[-]]',r'((\[|\\)|\])')
 
         assert_regex_parse_error('[a-]')
-
-        assert_regex_description('[[-]]',r'((\[|\\)|\])')
 
     def test_negative_charset_regex(self):
         assert_regex_parse_error('[^abc]')
