@@ -296,99 +296,74 @@ def assert_regex_parse_error(pattern):
         print('ast: {}'.format(re._ast))
         print('description: {}'.format(re.get_parsed_description()))
 
+def assert_regex_description(pattern, expected_description):
+    re = Regex(pattern)
+    result_description = re.get_parsed_description()
+    print("pattern:{pattern}, description:{description}, expected:{expected}, {ok}".format(
+        pattern=pattern,
+        description=result_description,
+        expected=expected_description,
+        ok='OK' if result_description == expected_description else 'FAILED'))
+    assert result_description == expected_description
+
 class TestRegexParsing:
     def test_empty_regex(self):
-        pattern = ''
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '\\E'
+        assert_regex_description('','\\E')
 
     def test_symbol_regex(self):
         for char in rejit.regex.supported_chars:
-            re = Regex(char)
-            assert re.get_parsed_description() == char
+            assert_regex_description(char,char)
         for char in rejit.regex.special_chars:
-            print("\\"+char)
-            re = Regex("\\" + char)
-            assert re.get_parsed_description() == "\\" + char
+            assert_regex_description("\\"+char,"\\"+char)
 
     def test_union_regex(self):
-        pattern = 'a|b'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '(a|b)'
-        pattern = 'a|b|c'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '(a|(b|c))'
+        assert_regex_description('a|b','(a|b)')
+        assert_regex_description('a|b|c','(a|(b|c))')
 
     def test_kleene_star_regex(self):
-        pattern = 'a*'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '(a)*'
+        assert_regex_description('a*','(a)*')
 
     def test_concat_regex(self):
-        pattern = 'abcdef'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == 'abcdef'
+        assert_regex_description('abcdef','abcdef')
 
     def test_complex_regex(self):
-        pattern = 'aa(bb|(cc)*)'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == 'aa(bb|(cc)*)'
-        pattern = 'aa.*bb.?(a|b)?'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == 'aa(.)*bb(.|\\E)((a|b)|\\E)'
-        pattern = 'aa[x-z]*bb[0-0]+cc[]?'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == 'aa(((x|y)|z))*bb0(0)*cc([]|\\E)'
+        assert_regex_description('aa(bb|(cc)*)', 'aa(bb|(cc)*)')
+        assert_regex_description('aa.*bb.?(a|b)?','aa(.)*bb(.|\\E)((a|b)|\\E)')
+        assert_regex_description('aa[x-z]*bb[0-0]+cc[]?','aa(((x|y)|z))*bb0(0)*cc([]|\\E)')
 
     def test_one_or_zero_mult_regex(self):
-        pattern = 'a?'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == r'(a|\E)'
+        assert_regex_description('a?', r'(a|\E)')
 
     def test_charset_regex(self):
-        pattern = '[abc]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '((a|b)|c)'
-        pattern = '[Xa-cY0-2Z]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)'
-        pattern = '[aa-bb]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '(((a|a)|b)|b)'
-        pattern = '[c-c]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == 'c'
-        pattern = '[cc]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '(c|c)'
-        pattern = '[z-a]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '[]'
-        pattern = '[*+.<-?]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == r'((((((\*|\+)|\.)|<)|=)|>)|\?)'
+        assert_regex_description('[abc]','((a|b)|c)')
+
+        assert_regex_description('[Xa-cY0-2Z]','((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)')
+
+        assert_regex_description('[aa-bb]','(((a|a)|b)|b)')
+
+        assert_regex_description('[c-c]','c')
+
+        assert_regex_description('[cc]','(c|c)')
+
+        assert_regex_description('[z-a]','[]')
+
+        assert_regex_description('[*+.<-?]',r'((((((\*|\+)|\.)|<)|=)|>)|\?)')
+
         assert_regex_parse_error('[a-]')
-        pattern = '[[-]]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == r'((\[|\\)|\])'
+
+        assert_regex_description('[[-]]',r'((\[|\\)|\])')
 
     def test_negative_charset_regex(self):
         assert_regex_parse_error('[^abc]')
 
     def test_period_wildcard_regex(self):
-        pattern = '.'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '.'
+        assert_regex_description('.','.')
 
     def test_kleene_plus_regex(self):
-        pattern = 'a+'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == 'a(a)*'
+        assert_regex_description('a+','a(a)*')
 
     def test_grouping_regex(self):
-        pattern = '(aa|bb)cc'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '(aa|bb)cc'
+        assert_regex_description('(aa|bb)cc','(aa|bb)cc')
 
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
@@ -397,9 +372,7 @@ class TestRegexParsing:
         assert_regex_parse_error('a|b|')
 
     def test_empty_set_regex(self):
-        pattern = '[]'
-        re = Regex(pattern)
-        assert re.get_parsed_description() == '[]'
+        assert_regex_description('[]','[]')
 
     def test_empty_group_regex(self):
         assert_regex_parse_error('()')
