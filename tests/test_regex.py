@@ -289,6 +289,13 @@ class TestNFA:
         accept_test_helper(nfa, cases)
         accept_test_helper(nfc, cases)
 
+def assert_regex_parse_error(pattern):
+    with pytest.raises(rejit.regex.RegexParseError):
+        re = Regex(pattern)
+        print('Did not raise RegexParseError')
+        print('ast: {}'.format(re._ast))
+        print('description: {}'.format(re.get_parsed_description()))
+
 class TestRegexParsing:
     def test_empty_regex(self):
         pattern = ''
@@ -360,17 +367,13 @@ class TestRegexParsing:
         pattern = '[*+.<-?]'
         re = Regex(pattern)
         assert re.get_parsed_description() == r'((((((\*|\+)|\.)|<)|=)|>)|\?)'
-        pattern = '[a-]'
-        with pytest.raises(rejit.regex.RegexParseError):
-            re = Regex(pattern)
+        assert_regex_parse_error('[a-]')
         pattern = '[[-]]'
         re = Regex(pattern)
         assert re.get_parsed_description() == r'((\[|\\)|\])'
 
     def test_negative_charset_regex(self):
-        pattern = '[^abc]'
-        with pytest.raises(rejit.regex.RegexParseError):
-            re = Regex(pattern)
+        assert_regex_parse_error('[^abc]')
 
     def test_period_wildcard_regex(self):
         pattern = '.'
@@ -389,12 +392,9 @@ class TestRegexParsing:
 
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
-            with pytest.raises(rejit.regex.RegexParseError):
-                re = Regex(char)
+            assert_regex_parse_error(char)
         # test for bug #36
-        pattern = 'a|b|'
-        with pytest.raises(rejit.regex.RegexParseError):
-            re = Regex(pattern)
+        assert_regex_parse_error('a|b|')
 
     def test_empty_set_regex(self):
         pattern = '[]'
@@ -402,7 +402,5 @@ class TestRegexParsing:
         assert re.get_parsed_description() == '[]'
 
     def test_empty_group_regex(self):
-        pattern = '()'
-        with pytest.raises(rejit.regex.RegexParseError):
-            re = Regex(pattern)
+        assert_regex_parse_error('()')
 
