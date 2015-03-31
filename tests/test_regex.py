@@ -391,6 +391,10 @@ class TestRegexParsing:
         for char in rejit.regex.special_chars.replace('.',''):
             with pytest.raises(rejit.regex.RegexParseError):
                 re = Regex(char)
+        # test for bug #36
+        pattern = 'a|b|'
+        with pytest.raises(rejit.regex.RegexParseError):
+            re = Regex(pattern)
 
     def test_empty_set_regex(self):
         pattern = '[]'

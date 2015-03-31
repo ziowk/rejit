@@ -180,7 +180,10 @@ class Regex:
         self._input = pattern
         self._last_char = ''
         self._getchar()
-        return self._unionRE()
+        if not self._last_char:
+            return ('empty',)
+        else:
+            return self._unionRE()
 
     def _compile(self, ast):
         if ast[0] == 'concat':
@@ -251,7 +254,7 @@ class Regex:
         elif self._last_char == '[':
             return self._parse_charset()
         elif self._last_char == '':
-            return ('empty',)
+            raise RegexParseError('Unexpected end of the pattern')
         else:
             return self._symbolRE()
 
