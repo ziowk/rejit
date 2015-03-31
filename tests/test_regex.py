@@ -371,21 +371,23 @@ class TestRegexParsing:
         assert_regex_parse_error('a|b|')
 
         assert_regex_parse_error('abc\\')
+
         assert_regex_parse_error('a*?')
         assert_regex_parse_error('a**')
         assert_regex_parse_error('a*+')
         assert_regex_parse_error('(*a)')
         assert_regex_parse_error('(+a)')
         assert_regex_parse_error('(?a)')
+        assert_regex_parse_error('a|*b')
+        assert_regex_parse_error('a|+b')
+        assert_regex_parse_error('a|?b')
+
         assert_regex_parse_error('|abc')
         assert_regex_parse_error('abc|')
         assert_regex_parse_error('a||b')
         assert_regex_parse_error('(|abc)')
         assert_regex_parse_error('(a||b)')
         assert_regex_parse_error('(abc|)')
-        assert_regex_parse_error('a|*b')
-        assert_regex_parse_error('a|+b')
-        assert_regex_parse_error('a|?b')
 
     def test_empty_set_regex(self):
         assert_regex_description('[]','[]')
