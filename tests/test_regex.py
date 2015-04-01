@@ -323,43 +323,114 @@ def assert_regex_AST(pattern, expected_ast):
 class TestRegexParsing:
     def test_empty_regex(self):
         assert_regex_description('','\\E')
+        assert_regex_AST('',('empty',))
 
     def test_symbol_regex(self):
         for char in rejit.regex.supported_chars:
             assert_regex_description(char,char)
+            assert_regex_AST(char,('symbol',char))
         for char in rejit.regex.special_chars:
             assert_regex_description("\\"+char,"\\"+char)
+            assert_regex_AST("\\"+char,('symbol',char))
 
     def test_union_regex(self):
         assert_regex_description('a|b','(a|b)')
+        assert_regex_AST('a|b',('union',('symbol','a'),('symbol','b')))
 
         # test for bug #35
         assert_regex_description('a|b|c','(a|(b|c))')
+        assert_regex_AST('a|b|c',('union',('symbol','a'),('union',('symbol','b'),('symbol','c'))))
 
     def test_kleene_star_regex(self):
         assert_regex_description('a*','(a)*')
+        assert_regex_AST('a*',('kleene-star',('symbol','a')))
 
     def test_concat_regex(self):
         assert_regex_description('abcdef','abcdef')
+        assert_regex_AST('abcdef',
+            ('concat',('symbol','a'),
+                ('concat',('symbol','b'),
+                    ('concat',('symbol','c'),
+                        ('concat',('symbol','d'),
+                            ('concat',('symbol','e'),('symbol','f'))
+                            )
+                        )
+                    )
+                )
+            )
 
     def test_complex_regex(self):
         assert_regex_description('aa(bb|(cc)*)', 'aa(bb|(cc)*)')
+        assert_regex_AST('aa(bb|(cc)*)',
+                ('concat',('symbol','a'),
+                    ('concat',('symbol','a'),
+                        ('union',('concat',('symbol','b'),('symbol','b')),
+                            ('kleene-star',('concat',('symbol','c'),('symbol','c')))
+                            )
+                        )
+                    )
+                )
         assert_regex_description('aa.*bb.?(a|b)?','aa(.)*bb(.|\\E)((a|b)|\\E)')
+        assert_regex_AST('aa.*bb.?(a|b)?',
+                ('concat',('symbol','a'),
+                    ('concat',('symbol','a'),
+                        ('concat',('kleene-star',('any',)),
+                            ('concat',('symbol','b'),
+                                ('concat',('symbol','b'),
+                                    ('concat',('zero-or-one',('any',)),
+                                        ('zero-or-one',('union',('symbol','a'),('symbol','b'))
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
         assert_regex_description('aa[x-z]*bb[0-0]+cc[]?','aa(((x|y)|z))*bb0(0)*cc([]|\\E)')
+        assert_regex_AST('aa[x-z]*bb[0-0]+cc[]?',
+                ('concat',('symbol','a'),
+                    ('concat',('symbol','a'),
+                        ('concat',('kleene-star',('set',['x','y','z'])),
+                            ('concat',('symbol','b'),
+                                ('concat',('symbol','b'),
+                                    ('concat',('kleene-plus',('set',['0'])),
+                                        ('concat',('symbol','c'),
+                                            ('concat',('symbol','c'),
+                                                ('zero-or-one',('set',[]))
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
 
     def test_one_or_zero_mult_regex(self):
         assert_regex_description('a?', r'(a|\E)')
+        assert_regex_AST('a?',('zero-or-one',('symbol','a')))
 
     def test_charset_regex(self):
         assert_regex_description('[abc]','((a|b)|c)')
+        assert_regex_AST('[abc]',('set',['a','b','c']))
         assert_regex_description('[Xa-cY0-2Z]','((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)')
+        assert_regex_AST('[Xa-cY0-2Z]',('set',['X','a','b','c','Y','0','1','2','Z']))
         assert_regex_description('[aa-bb]','(((a|a)|b)|b)')
+        assert_regex_AST('[aa-bb]',('set',['a','a','b','b']))
         assert_regex_description('[c-c]','c')
+        assert_regex_AST('[c-c]',('set',['c']))
         assert_regex_description('[cc]','(c|c)')
+        assert_regex_AST('[cc]',('set',['c','c']))
         assert_regex_description('[z-a]','[]')
+        assert_regex_AST('[z-a]',('set',[]))
         assert_regex_description('[*+.<-?]',r'((((((\*|\+)|\.)|<)|=)|>)|\?)')
+        assert_regex_AST('[*+.<-?]',('set',['*','+','.','<','=','>','?']))
         assert_regex_description('[[-]]',r'((\[|\\)|\])')
+        assert_regex_AST('[[-]]',('set',['[','\\',']']))
         assert_regex_description('[---]',r'\-')
+        assert_regex_AST('[---]',('set',['-']))
 
         assert_regex_parse_error('[a-]')
         assert_regex_parse_error('[a-')
@@ -370,12 +441,22 @@ class TestRegexParsing:
 
     def test_period_wildcard_regex(self):
         assert_regex_description('.','.')
+        assert_regex_AST('.',('any',))
 
     def test_kleene_plus_regex(self):
         assert_regex_description('a+','a(a)*')
+        assert_regex_AST('a+',('kleene-plus',('symbol','a')))
 
     def test_grouping_regex(self):
         assert_regex_description('(aa|bb)cc','(aa|bb)cc')
+        assert_regex_AST('(aa|bb)cc',
+            ('concat',
+                ('union',
+                    ('concat',('symbol','a'),('symbol','a')),
+                    ('concat',('symbol','b'),('symbol','b'))),
+                ('concat',('symbol','c'),('symbol','c'))
+            )
+        )
 
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
@@ -413,6 +494,7 @@ class TestRegexParsing:
 
     def test_empty_set_regex(self):
         assert_regex_description('[]','[]')
+        assert_regex_AST('[]',('set',[]))
 
     def test_empty_group_regex(self):
         assert_regex_parse_error('()')
