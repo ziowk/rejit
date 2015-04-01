@@ -3,6 +3,7 @@
 import pytest
 import copy
 import rejit.regex
+import pprint
 from rejit.regex import State
 from rejit.regex import NFA
 from rejit.regex import Regex
@@ -306,14 +307,17 @@ def assert_regex_description(pattern, expected_description):
         ok='OK' if result_description == expected_description else 'FAILED'))
     assert result_description == expected_description
 
+ppast = pprint.PrettyPrinter(indent=4)
+
 def assert_regex_AST(pattern, expected_ast):
     re = Regex(pattern)
     result_ast = re._ast
-    print("pattern:{pattern}\nresult ast:{ast}\nexpected ast:{expected}\n{ok}".format(
-        pattern=pattern,
-        ast=result_ast,
-        expected=expected_ast,
-        ok='OK' if result_ast == expected_ast else 'FAILED'))
+    print("pattern:",pattern)
+    print("result ast:")
+    ppast.pprint(result_ast)
+    print("expected ast:")
+    ppast.pprint(expected_ast)
+    print('OK' if result_ast == expected_ast else 'FAILED')
     assert result_ast == expected_ast
 
 class TestRegexParsing:
