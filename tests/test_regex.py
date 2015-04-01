@@ -306,6 +306,16 @@ def assert_regex_description(pattern, expected_description):
         ok='OK' if result_description == expected_description else 'FAILED'))
     assert result_description == expected_description
 
+def assert_regex_AST(pattern, expected_ast):
+    re = Regex(pattern)
+    result_ast = re._ast
+    print("pattern:{pattern}\nresult ast:{ast}\nexpected ast:{expected}\n{ok}".format(
+        pattern=pattern,
+        ast=result_ast,
+        expected=expected_ast,
+        ok='OK' if result_ast == expected_ast else 'FAILED'))
+    assert result_ast == expected_ast
+
 class TestRegexParsing:
     def test_empty_regex(self):
         assert_regex_description('','\\E')
