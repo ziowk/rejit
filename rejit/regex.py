@@ -158,10 +158,11 @@ class NFA:
         return n
 
 class Regex:
-    def __init__(self, pattern):
-        self.pattern = pattern
-        self._ast = self._parse(pattern)
-        self._matcher = self._compile(self._ast)
+    def __init__(self, pattern=None):
+        if pattern is not None:
+            self.pattern = pattern
+            self._ast = self._parse(pattern)
+            self._matcher = self._compile(self._ast)
 
     def accept(self, s):
         return self._matcher.accept(s)
