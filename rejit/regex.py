@@ -166,7 +166,7 @@ class Regex:
     def accept(self, s):
         return self._matcher.accept(s)
 
-    def get_parsed_description(self):
+    def get_NFA_description(self):
         return self._matcher.description
 
     def _getchar(self):

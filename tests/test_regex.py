@@ -294,11 +294,11 @@ def assert_regex_parse_error(pattern):
         re = Regex(pattern)
         print('Did not raise RegexParseError')
         print('ast: {}'.format(re._ast))
-        print('description: {}'.format(re.get_parsed_description()))
+        print('description: {}'.format(re.get_NFA_description()))
 
 def assert_regex_description(pattern, expected_description):
     re = Regex(pattern)
-    result_description = re.get_parsed_description()
+    result_description = re.get_NFA_description()
     print("pattern:{pattern}, description:{description}, expected:{expected}, {ok}".format(
         pattern=pattern,
         description=result_description,
