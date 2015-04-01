@@ -183,7 +183,10 @@ class Regex:
         if not self._last_char:
             return ('empty',)
         else:
-            return self._unionRE()
+            ast = self._unionRE()
+            if self._last_char == ')':
+                raise RegexParseError('Unmatched parentheses')
+            return ast
 
     def _compile(self, ast):
         if ast[0] == 'concat':
