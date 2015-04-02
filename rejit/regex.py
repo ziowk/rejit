@@ -191,7 +191,13 @@ class Regex:
 
     def _compile(self, ast):
         if ast[0] == 'concat':
-            return NFA.concat(self._compile(ast[1][0]),self._compile(ast[1][1]))
+            concat_list = ast[1]
+            assert len(concat_list) > 1
+            return functools.reduce(
+                    lambda acc, x: NFA.concat(self._compile(x),acc),
+                    reversed(concat_list[:-2]),
+                    NFA.concat(self._compile(concat_list[-2]),self._compile(concat_list[-1]))
+                )
         elif ast[0] == 'union':
             return NFA.union(self._compile(ast[1]),self._compile(ast[2]))
         elif ast[0] == 'kleene-star':
