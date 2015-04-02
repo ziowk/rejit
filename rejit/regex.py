@@ -226,15 +226,20 @@ class Regex:
         return self._flatten_concat(ast)
 
     def _flatten_concat(self, ast):
-        # return a copy of leaf nodes
+        # for a list of nodes return a list of transformed nodes
+        if isinstance(ast, list):
+            return list(map(self._flatten_concat, ast))
+        # for leaf nodes return a copy 
         if ast[0] in ['any','empty','symbol','set']:
             return copy.deepcopy(ast)
-        # nodes with children
-        # return node with children transformed by `_flatten_concat`
+        # for nodes with children return node with its children transformed by `_flatten_concat`
+            # for tuple based node ast[1:] are children
+            # ('type', _flatten(child1), _flatten(child2))
+            # for list based node ast[1] is a list of children
+            # ('type', [ _flatten(child1), _flatten(child2)]
         if ast[0] != 'concat':
             return tuple([ast[0]] + list(map(self._flatten_concat, ast[1:])))
-        # node is `concat`
-        # transform children with `_flatten_concat`
+        # for `concat` node transform children with `_flatten_concat`
         left = self._flatten_concat(ast[1][0])
         right = self._flatten_concat(ast[1][1])
         # `concat` node list is created from lists extracted from children `concat` nodes, or by simply inserting other nodes
