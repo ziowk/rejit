@@ -319,48 +319,71 @@ def assert_regex_AST(pattern, expected_ast):
     print('OK' if result_ast == expected_ast else 'FAILED')
     assert result_ast == expected_ast
 
+def assert_regex_transform(ast, expected_trans_ast):
+    trans_ast = Regex()._transform(ast)
+    print("input ast:")
+    ppast.pprint(ast)
+    print("transformed ast:")
+    ppast.pprint(trans_ast)
+    print("expected ast:")
+    ppast.pprint(expected_trans_ast)
+    print('OK' if trans_ast == expected_trans_ast else 'FAILED')
+    assert trans_ast == expected_trans_ast 
+
 class TestRegexParsing:
     def test_empty_regex(self):
         pattern = ''
         expected_AST = ('empty',)
+        expected_final_AST = expected_AST
         expected_NFA_description = '\\E'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_symbol_regex(self):
         for char in rejit.regex.supported_chars:
             pattern = char
             expected_AST = ('symbol',char)
+            expected_final_AST = expected_AST
             expected_NFA_description = char
             assert_regex_AST(pattern,expected_AST)
-            assert_regex_description(expected_AST,expected_NFA_description)
+            assert_regex_transform(expected_AST,expected_final_AST)
+            assert_regex_description(expected_final_AST,expected_NFA_description)
         for char in rejit.regex.special_chars:
             pattern = "\\" + char
             expected_AST = ('symbol',char)
+            expected_final_AST = expected_AST
             expected_NFA_description = "\\" + char
             assert_regex_AST(pattern,expected_AST)
-            assert_regex_description(expected_AST,expected_NFA_description)
+            assert_regex_transform(expected_AST,expected_final_AST)
+            assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_union_regex(self):
         pattern = 'a|b'
         expected_AST = ('union',('symbol','a'),('symbol','b'))
+        expected_final_AST = expected_AST
         expected_NFA_description = '(a|b)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         # test for bug #35
         pattern = 'a|b|c'
         expected_AST = ('union',('symbol','a'),('union',('symbol','b'),('symbol','c')))
+        expected_final_AST = expected_AST
         expected_NFA_description = '(a|(b|c))'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_kleene_star_regex(self):
         pattern = 'a*'
         expected_AST = ('kleene-star',('symbol','a'))
+        expected_final_AST = expected_AST
         expected_NFA_description = '(a)*'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_concat_regex(self):
         pattern = 'abcdef'
@@ -373,9 +396,11 @@ class TestRegexParsing:
                         ])
                     ])
                 ])
+        expected_final_AST = ('concat', [('symbol','a'), ('symbol','b'), ('symbol','c'), ('symbol','d'), ('symbol','e'),('symbol','f') ])
         expected_NFA_description = 'abcdef'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_complex_regex(self):
         pattern = 'aa(bb|(cc)*)'
@@ -386,9 +411,15 @@ class TestRegexParsing:
                             )
                         ])
                     ])
+        expected_final_AST = ('concat', [
+                                    ('symbol','a'),('symbol','a'),
+                                    ('union',('concat',[('symbol','b'),('symbol','b')]),
+                                        ('kleene-star',('concat',[('symbol','c'),('symbol','c')])))
+                                    ])
         expected_NFA_description =  'aa(bb|(cc)*)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
         
         pattern = 'aa.*bb.?(a|b)?'
         expected_AST = ('concat',[('symbol','a'),
@@ -405,9 +436,19 @@ class TestRegexParsing:
                             ])
                         ])
                     ])
+        expected_final_AST = ('concat', [
+                    ('symbol','a'),
+                    ('symbol','a'),
+                    ('kleene-star',('any',)),
+                    ('symbol','b'),
+                    ('symbol','b'),
+                    ('zero-or-one',('any',)),
+                    ('zero-or-one',('union',('symbol','a'),('symbol','b'))),
+            ])
         expected_NFA_description = 'aa(.)*bb(.|\\E)((a|b)|\\E)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = 'aa[x-z]*bb[0-0]+cc[]?'
         expected_AST = ('concat',[('symbol','a'),
@@ -427,71 +468,103 @@ class TestRegexParsing:
                             ])
                         ])
                     ])
+        expected_final_AST = ('concat', [
+                    ('symbol','a'),
+                    ('symbol','a'),
+                    ('kleene-star',('set',['x','y','z'])),
+                    ('symbol','b'),
+                    ('symbol','b'),
+                    ('kleene-plus',('set',['0'])),
+                    ('symbol','c'),
+                    ('symbol','c'),
+                    ('zero-or-one',('set',[])),
+            ])
         expected_NFA_description = 'aa(((x|y)|z))*bb0(0)*cc([]|\\E)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_one_or_zero_mult_regex(self):
         pattern = 'a?'
         expected_AST = ('zero-or-one',('symbol','a'))
+        expected_final_AST = expected_AST
         expected_NFA_description = r'(a|\E)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_charset_regex(self):
         pattern = '[abc]'
         expected_AST = ('set',['a','b','c'])
+        expected_final_AST = expected_AST
         expected_NFA_description = '((a|b)|c)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[Xa-cY0-2Z]'
         expected_AST = ('set',['X','a','b','c','Y','0','1','2','Z'])
+        expected_final_AST = expected_AST
         expected_NFA_description = '((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[aa-bb]'
         expected_AST = ('set',['a','a','b','b'])
+        expected_final_AST = expected_AST
         expected_NFA_description = '(((a|a)|b)|b)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[c-c]'
         expected_AST = ('set',['c'])
+        expected_final_AST = expected_AST
         expected_NFA_description = 'c'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[cc]'
         expected_AST = ('set',['c','c'])
+        expected_final_AST = expected_AST
         expected_NFA_description = '(c|c)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[z-a]'
         expected_AST = ('set',[])
+        expected_final_AST = expected_AST
         expected_NFA_description = '[]'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[*+.<-?]'
         expected_AST = ('set',['*','+','.','<','=','>','?'])
+        expected_final_AST = expected_AST
         expected_NFA_description = r'((((((\*|\+)|\.)|<)|=)|>)|\?)'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[[-]]'
         expected_AST = ('set',['[','\\',']'])
+        expected_final_AST = expected_AST
         expected_NFA_description = r'((\[|\\)|\])'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[---]'
         expected_AST = ('set',['-'])
+        expected_final_AST = expected_AST
         expected_NFA_description = r'\-'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
         assert_regex_parse_error('[a-]')
         assert_regex_parse_error('[a-')
@@ -503,16 +576,20 @@ class TestRegexParsing:
     def test_period_wildcard_regex(self):
         pattern = '.'
         expected_AST = ('any',)
+        expected_final_AST = expected_AST
         expected_NFA_description = '.'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_kleene_plus_regex(self):
         pattern = 'a+'
         expected_AST = ('kleene-plus',('symbol','a'))
+        expected_final_AST = expected_AST
         expected_NFA_description = 'a(a)*'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_grouping_regex(self):
         pattern = '(aa|bb)cc'
@@ -522,9 +599,17 @@ class TestRegexParsing:
                     ('concat',[('symbol','b'),('symbol','b')])),
                 ('concat',[('symbol','c'),('symbol','c')])]
             )
+        expected_final_AST = ('concat',[
+                ('union',
+                    ('concat',[('symbol','a'),('symbol','a')]),
+                    ('concat',[('symbol','b'),('symbol','b')])),
+                ('symbol','c'),
+                ('symbol','c'),
+                ])
         expected_NFA_description = '(aa|bb)cc'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
@@ -563,9 +648,11 @@ class TestRegexParsing:
     def test_empty_set_regex(self):
         pattern = '[]'
         expected_AST = ('set',[])
+        expected_final_AST = expected_AST
         expected_NFA_description = '[]'
         assert_regex_AST(pattern,expected_AST)
-        assert_regex_description(expected_AST,expected_NFA_description)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_empty_group_regex(self):
         assert_regex_parse_error('()')

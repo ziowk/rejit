@@ -162,7 +162,8 @@ class Regex:
         if pattern is not None:
             self.pattern = pattern
             self._ast = self._parse(pattern)
-            self._matcher = self._compile(self._ast)
+            self._final_ast = self._transform(self._ast)
+            self._matcher = self._compile(self._final_ast)
 
     def accept(self, s):
         return self._matcher.accept(s)
@@ -220,6 +221,9 @@ class Regex:
             else:
                 return functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
         raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
+
+    def _transform(self, ast):
+        return self._flatten_concat(ast)
 
     def _flatten_concat(self, ast):
         # return a copy of leaf nodes
