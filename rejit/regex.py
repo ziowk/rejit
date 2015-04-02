@@ -191,7 +191,7 @@ class Regex:
 
     def _compile(self, ast):
         if ast[0] == 'concat':
-            return NFA.concat(self._compile(ast[1]),self._compile(ast[2]))
+            return NFA.concat(self._compile(ast[1][0]),self._compile(ast[1][1]))
         elif ast[0] == 'union':
             return NFA.union(self._compile(ast[1]),self._compile(ast[2]))
         elif ast[0] == 'kleene-star':
@@ -227,7 +227,7 @@ class Regex:
         ast1 = self._kleeneRE()
         if self._last_char and self._last_char not in '|)':
             ast2 = self._concatRE()
-            return ('concat', ast1, ast2)
+            return ('concat', [ast1, ast2])
         return ast1
 
     def _kleeneRE(self):

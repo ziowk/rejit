@@ -364,69 +364,69 @@ class TestRegexParsing:
 
     def test_concat_regex(self):
         pattern = 'abcdef'
-        expected_AST = ('concat',('symbol','a'),
-                ('concat',('symbol','b'),
-                    ('concat',('symbol','c'),
-                        ('concat',('symbol','d'),
-                            ('concat',('symbol','e'),('symbol','f'))
-                            )
-                        )
-                    )
-                )
+        expected_AST = ('concat',[('symbol','a'),
+                ('concat',[('symbol','b'),
+                    ('concat',[('symbol','c'),
+                        ('concat',[('symbol','d'),
+                            ('concat',[('symbol','e'),('symbol','f')])
+                            ])
+                        ])
+                    ])
+                ])
         expected_NFA_description = 'abcdef'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_description(expected_AST,expected_NFA_description)
 
     def test_complex_regex(self):
         pattern = 'aa(bb|(cc)*)'
-        expected_AST = ('concat',('symbol','a'),
-                    ('concat',('symbol','a'),
-                        ('union',('concat',('symbol','b'),('symbol','b')),
-                            ('kleene-star',('concat',('symbol','c'),('symbol','c')))
+        expected_AST = ('concat',[('symbol','a'),
+                    ('concat',[('symbol','a'),
+                        ('union',('concat',[('symbol','b'),('symbol','b')]),
+                            ('kleene-star',('concat',[('symbol','c'),('symbol','c')]))
                             )
-                        )
-                    )
+                        ])
+                    ])
         expected_NFA_description =  'aa(bb|(cc)*)'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_description(expected_AST,expected_NFA_description)
         
         pattern = 'aa.*bb.?(a|b)?'
-        expected_AST = ('concat',('symbol','a'),
-                    ('concat',('symbol','a'),
-                        ('concat',('kleene-star',('any',)),
-                            ('concat',('symbol','b'),
-                                ('concat',('symbol','b'),
-                                    ('concat',('zero-or-one',('any',)),
+        expected_AST = ('concat',[('symbol','a'),
+                    ('concat',[('symbol','a'),
+                        ('concat',[('kleene-star',('any',)),
+                            ('concat',[('symbol','b'),
+                                ('concat',[('symbol','b'),
+                                    ('concat',[('zero-or-one',('any',)),
                                         ('zero-or-one',('union',('symbol','a'),('symbol','b'))
                                             )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
+                                        ])
+                                    ])
+                                ])
+                            ])
+                        ])
+                    ])
         expected_NFA_description = 'aa(.)*bb(.|\\E)((a|b)|\\E)'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_description(expected_AST,expected_NFA_description)
 
         pattern = 'aa[x-z]*bb[0-0]+cc[]?'
-        expected_AST = ('concat',('symbol','a'),
-                    ('concat',('symbol','a'),
-                        ('concat',('kleene-star',('set',['x','y','z'])),
-                            ('concat',('symbol','b'),
-                                ('concat',('symbol','b'),
-                                    ('concat',('kleene-plus',('set',['0'])),
-                                        ('concat',('symbol','c'),
-                                            ('concat',('symbol','c'),
+        expected_AST = ('concat',[('symbol','a'),
+                    ('concat',[('symbol','a'),
+                        ('concat',[('kleene-star',('set',['x','y','z'])),
+                            ('concat',[('symbol','b'),
+                                ('concat',[('symbol','b'),
+                                    ('concat',[('kleene-plus',('set',['0'])),
+                                        ('concat',[('symbol','c'),
+                                            ('concat',[('symbol','c'),
                                                 ('zero-or-one',('set',[]))
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
+                                                ])
+                                            ])
+                                        ])
+                                    ])
+                                ])
+                            ])
+                        ])
+                    ])
         expected_NFA_description = 'aa(((x|y)|z))*bb0(0)*cc([]|\\E)'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_description(expected_AST,expected_NFA_description)
@@ -516,11 +516,11 @@ class TestRegexParsing:
 
     def test_grouping_regex(self):
         pattern = '(aa|bb)cc'
-        expected_AST = ('concat',
+        expected_AST = ('concat',[
                 ('union',
-                    ('concat',('symbol','a'),('symbol','a')),
-                    ('concat',('symbol','b'),('symbol','b'))),
-                ('concat',('symbol','c'),('symbol','c'))
+                    ('concat',[('symbol','a'),('symbol','a')]),
+                    ('concat',[('symbol','b'),('symbol','b')])),
+                ('concat',[('symbol','c'),('symbol','c')])]
             )
         expected_NFA_description = '(aa|bb)cc'
         assert_regex_AST(pattern,expected_AST)
