@@ -360,7 +360,7 @@ class TestRegexParsing:
 
     def test_union_regex(self):
         pattern = 'a|b'
-        expected_AST = ('union',('symbol','a'),('symbol','b'))
+        expected_AST = ('union',[('symbol','a'),('symbol','b')])
         expected_final_AST = expected_AST
         expected_NFA_description = '(a|b)'
         assert_regex_AST(pattern,expected_AST)
@@ -369,7 +369,7 @@ class TestRegexParsing:
 
         # test for bug #35
         pattern = 'a|b|c'
-        expected_AST = ('union',('symbol','a'),('union',('symbol','b'),('symbol','c')))
+        expected_AST = ('union',[('symbol','a'),('union',[('symbol','b'),('symbol','c')])])
         expected_final_AST = expected_AST
         expected_NFA_description = '(a|(b|c))'
         assert_regex_AST(pattern,expected_AST)
@@ -406,15 +406,15 @@ class TestRegexParsing:
         pattern = 'aa(bb|(cc)*)'
         expected_AST = ('concat',[('symbol','a'),
                     ('concat',[('symbol','a'),
-                        ('union',('concat',[('symbol','b'),('symbol','b')]),
+                        ('union',[('concat',[('symbol','b'),('symbol','b')]),
                             ('kleene-star',('concat',[('symbol','c'),('symbol','c')]))
-                            )
+                            ])
                         ])
                     ])
         expected_final_AST = ('concat', [
                                     ('symbol','a'),('symbol','a'),
-                                    ('union',('concat',[('symbol','b'),('symbol','b')]),
-                                        ('kleene-star',('concat',[('symbol','c'),('symbol','c')])))
+                                    ('union',[('concat',[('symbol','b'),('symbol','b')]),
+                                        ('kleene-star',('concat',[('symbol','c'),('symbol','c')]))])
                                     ])
         expected_NFA_description =  'aa(bb|(cc)*)'
         assert_regex_AST(pattern,expected_AST)
@@ -428,7 +428,7 @@ class TestRegexParsing:
                             ('concat',[('symbol','b'),
                                 ('concat',[('symbol','b'),
                                     ('concat',[('zero-or-one',('any',)),
-                                        ('zero-or-one',('union',('symbol','a'),('symbol','b'))
+                                        ('zero-or-one',('union',[('symbol','a'),('symbol','b')])
                                             )
                                         ])
                                     ])
@@ -443,7 +443,7 @@ class TestRegexParsing:
                     ('symbol','b'),
                     ('symbol','b'),
                     ('zero-or-one',('any',)),
-                    ('zero-or-one',('union',('symbol','a'),('symbol','b'))),
+                    ('zero-or-one',('union',[('symbol','a'),('symbol','b')])),
             ])
         expected_NFA_description = 'aa(.)*bb(.|\\E)((a|b)|\\E)'
         assert_regex_AST(pattern,expected_AST)
@@ -594,15 +594,15 @@ class TestRegexParsing:
     def test_grouping_regex(self):
         pattern = '(aa|bb)cc'
         expected_AST = ('concat',[
-                ('union',
+                ('union',[
                     ('concat',[('symbol','a'),('symbol','a')]),
-                    ('concat',[('symbol','b'),('symbol','b')])),
+                    ('concat',[('symbol','b'),('symbol','b')])]),
                 ('concat',[('symbol','c'),('symbol','c')])]
             )
         expected_final_AST = ('concat',[
-                ('union',
+                ('union',[
                     ('concat',[('symbol','a'),('symbol','a')]),
-                    ('concat',[('symbol','b'),('symbol','b')])),
+                    ('concat',[('symbol','b'),('symbol','b')])]),
                 ('symbol','c'),
                 ('symbol','c'),
                 ])
