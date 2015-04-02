@@ -611,6 +611,14 @@ class TestRegexParsing:
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
+        pattern = '(((a)))'
+        expected_AST = ('symbol','a')
+        expected_final_AST = expected_AST
+        expected_NFA_description = 'a'
+        assert_regex_AST(pattern,expected_AST)
+        assert_regex_transform(expected_AST,expected_final_AST)
+        assert_regex_description(expected_final_AST,expected_NFA_description)
+
     def test_invalid_use_of_special_char_regex(self):
         for char in rejit.regex.special_chars.replace('.',''):
             assert_regex_parse_error(char)
