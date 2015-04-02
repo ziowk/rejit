@@ -702,6 +702,33 @@ class TestRegexParsing:
         assert not nfa5.accept('bacde')
         assert not nfa5.accept('abcdef')
 
+    def test_union_compile(self):
+        re = Regex()
+
+        union2 = ('union', [('symbol','a'),('symbol','b')])
+        nfa2 = re._compile(union2)
+        assert nfa2.description == '(a|b)'
+        assert nfa2.accept('a')
+        assert nfa2.accept('b')
+        assert not nfa2.accept('')
+        assert not nfa2.accept('c')
+        assert not nfa2.accept('aa')
+        assert not nfa2.accept('ab')
+
+        union5 = ('union', [('symbol','a'),('symbol','b'),('symbol','c'),('symbol','d'),('symbol','e')])
+        nfa5 = re._compile(union5)
+        assert nfa5.description == '(a|(b|(c|(d|e))))'
+        assert nfa5.accept('a')
+        assert nfa5.accept('b')
+        assert nfa5.accept('c')
+        assert nfa5.accept('d')
+        assert nfa5.accept('e')
+        assert not nfa5.accept('')
+        assert not nfa5.accept('f')
+        assert not nfa5.accept('ab')
+        assert not nfa5.accept('cd')
+        assert not nfa5.accept('abcde')
+
     def test_ast_concat_transform(self):
         re = Regex()
         x = re._parse('a')
