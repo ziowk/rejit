@@ -221,6 +221,22 @@ class Regex:
                 return functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
         raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
 
+    def _flatten_concat(self, ast):
+        # return a copy of leaf nodes
+        if ast[0] in ['any','empty','symbol','set']:
+            return copy.deepcopy(ast)
+        # nodes with children
+        # return node with children transformed by `_flatten_concat`
+        if ast[0] != 'concat':
+            return tuple([ast[0]] + list(map(self._flatten_concat, ast[1:])))
+        # node is `concat`
+        # transform children with `_flatten_concat`
+        left = self._flatten_concat(ast[1][0])
+        right = self._flatten_concat(ast[1][1])
+        # `concat` node list is created from lists extracted from children `concat` nodes, or by simply inserting other nodes
+        concat_list = (left[1] if left[0] == 'concat' else [left]) + (right[1] if right[0] == 'concat' else [right])
+        return ('concat', concat_list)
+
     def _unionRE(self):
         ast1 = self._concatRE()
         if self._last_char == '|':

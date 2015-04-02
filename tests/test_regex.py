@@ -592,3 +592,44 @@ class TestRegexParsing:
         assert not nfa5.accept('bacde')
         assert not nfa5.accept('abcdef')
 
+    def test_ast_concat_transform(self):
+        re = Regex()
+        x = re._parse('a')
+        xinline = re._flatten_concat(x) 
+        assert xinline == ('symbol','a')
+
+        x = re._parse('ab')
+        xinline = re._flatten_concat(x) 
+        assert xinline == ('concat',[('symbol','a'),('symbol','b')])
+
+        x = re._parse('abc')
+        xinline = re._flatten_concat(x) 
+        assert xinline == ('concat',[('symbol','a'),('symbol','b'),('symbol','c')])
+
+        x = re._parse('a*b+c?')
+        xinline = re._flatten_concat(x) 
+        assert xinline == ('concat',[
+            ('kleene-star',('symbol','a')),
+            ('kleene-plus',('symbol','b')),
+            ('zero-or-one',('symbol','c'))
+            ])
+
+        x = re._parse('a(bbb)+d')
+        xinline = re._flatten_concat(x) 
+        assert xinline == ('concat',[('symbol','a'),('kleene-plus',('concat',[('symbol','b'),('symbol','b'),('symbol','b')])),('symbol','d')])
+
+        # really abstract syntax tree
+        x = ('concat', [
+                ('concat', [
+                    ('symbol','a'),
+                    ('concat',[ ('symbol','b'),('symbol','c')])
+                    ]),
+                ('concat', [
+                    ('concat',[('symbol','d'),('symbol','e')]),
+                    ('symbol','f')])
+                ])
+        xinline = re._flatten_concat(x)
+        ppast.pprint(x)
+        ppast.pprint(xinline)
+        assert xinline == ('concat', [ ('symbol','a'), ('symbol','b'), ('symbol','c'), ('symbol','d'), ('symbol','e'), ('symbol','f') ])
+
