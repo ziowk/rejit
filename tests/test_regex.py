@@ -645,6 +645,13 @@ class TestRegexParsing:
         assert_regex_parse_error('(a)a)')
         assert_regex_parse_error('(a)a)a')
 
+        assert_regex_parse_error('(a')
+        assert_regex_parse_error('aaa(a')
+        assert_regex_parse_error('((((')
+        assert_regex_parse_error('((((aaaa')
+        assert_regex_parse_error('a(a(a)a')
+        assert_regex_parse_error('(abc|cde')
+
     def test_empty_set_regex(self):
         pattern = '[]'
         expected_AST = ('set',[])
