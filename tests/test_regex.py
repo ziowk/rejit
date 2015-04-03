@@ -729,22 +729,22 @@ class TestRegexParsing:
         assert not nfa5.accept('cd')
         assert not nfa5.accept('abcde')
 
-    def test_ast_concat_transform(self):
+    def test_ast_flatten_transform(self):
         re = Regex()
         x = re._parse('a')
-        xinline = re._flatten_concat(x) 
+        xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('symbol','a')
 
         x = re._parse('ab')
-        xinline = re._flatten_concat(x) 
+        xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[('symbol','a'),('symbol','b')])
 
         x = re._parse('abc')
-        xinline = re._flatten_concat(x) 
+        xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[('symbol','a'),('symbol','b'),('symbol','c')])
 
         x = re._parse('a*b+c?')
-        xinline = re._flatten_concat(x) 
+        xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[
             ('kleene-star',('symbol','a')),
             ('kleene-plus',('symbol','b')),
@@ -752,7 +752,7 @@ class TestRegexParsing:
             ])
 
         x = re._parse('a(bbb)+d')
-        xinline = re._flatten_concat(x) 
+        xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[('symbol','a'),('kleene-plus',('concat',[('symbol','b'),('symbol','b'),('symbol','b')])),('symbol','d')])
 
         # really abstract syntax tree
@@ -765,20 +765,20 @@ class TestRegexParsing:
                     ('concat',[('symbol','d'),('symbol','e')]),
                     ('symbol','f')])
                 ])
-        xinline = re._flatten_concat(x)
+        xinline = re._flatten_nodes('concat',x)
         ppast.pprint(x)
         ppast.pprint(xinline)
         assert xinline == ('concat', [ ('symbol','a'), ('symbol','b'), ('symbol','c'), ('symbol','d'), ('symbol','e'), ('symbol','f') ])
 
         # test for bug #44
         x = ('xxxxx', [('symbol', 'a'), ('empty',)])
-        xinline = re._flatten_concat(x)
+        xinline = re._flatten_nodes('concat',x)
         ppast.pprint(x)
         ppast.pprint(xinline)
         assert xinline == x
         # test for bug #44
         x = ('xxxxx', [('yyy', [('xxxxx',[])]), ('symbol', 'b')])
-        xinline = re._flatten_concat(x)
+        xinline = re._flatten_nodes('concat',x)
         ppast.pprint(x)
         ppast.pprint(xinline)
         assert xinline == x

@@ -230,28 +230,28 @@ class Regex:
         raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
 
     def _transform(self, ast):
-        return self._flatten_concat(ast)
+        return self._flatten_nodes('concat',ast)
 
-    def _flatten_concat(self, ast):
+    def _flatten_nodes(self, node_type, ast):
         # for a list of nodes return a list of transformed nodes
         if isinstance(ast, list):
-            return list(map(self._flatten_concat, ast))
+            return list(map(functools.partial(self._flatten_nodes,node_type), ast))
         # for leaf nodes return a copy 
         if ast[0] in ['any','empty','symbol','set']:
             return copy.deepcopy(ast)
-        # for nodes with children return node with its children transformed by `_flatten_concat`
+        # for nodes with children return node with its children transformed by `_flatten_nodes`
             # for tuple based node ast[1:] are children
             # ('type', _flatten(child1), _flatten(child2))
             # for list based node ast[1] is a list of children
             # ('type', [ _flatten(child1), _flatten(child2)]
-        if ast[0] != 'concat':
-            return tuple([ast[0]] + list(map(self._flatten_concat, ast[1:])))
-        # for `concat` node transform children with `_flatten_concat`
-        left = self._flatten_concat(ast[1][0])
-        right = self._flatten_concat(ast[1][1])
+        if ast[0] != node_type:
+            return tuple([ast[0]] + list(map(functools.partial(self._flatten_nodes,node_type), ast[1:])))
+        # for `concat` node transform children with `flatten_nodes`
+        left = self._flatten_nodes(node_type,ast[1][0])
+        right = self._flatten_nodes(node_type,ast[1][1])
         # `concat` node list is created from lists extracted from children `concat` nodes, or by simply inserting other nodes
-        concat_list = (left[1] if left[0] == 'concat' else [left]) + (right[1] if right[0] == 'concat' else [right])
-        return ('concat', concat_list)
+        node_list = (left[1] if left[0] == node_type else [left]) + (right[1] if right[0] == node_type else [right])
+        return (node_type , node_list)
 
     def _unionRE(self):
         ast1 = self._concatRE()
