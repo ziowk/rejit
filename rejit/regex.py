@@ -223,8 +223,7 @@ class Regex:
         elif ast[0] == 'kleene-star':
             return NFA.kleene(self._compile(ast[1]))
         elif ast[0] == 'kleene-plus':
-            nfa = self._compile(ast[1])
-            return NFA.concat(nfa,NFA.kleene(copy.deepcopy(nfa)))
+            return NFA.kleene_plus(self._compile(ast[1]))
         elif ast[0] == 'zero-or-one':
             return NFA.union(self._compile(ast[1]),NFA.empty())
         elif ast[0] == 'any':

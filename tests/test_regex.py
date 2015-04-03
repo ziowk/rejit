@@ -515,7 +515,7 @@ class TestRegexParsing:
                     ('symbol','c'),
                     ('zero-or-one',('set',[])),
             ])
-        expected_NFA_description = 'aa(((x|y)|z))*bb0(0)*cc([]|\\E)'
+        expected_NFA_description = 'aa(((x|y)|z))*bb(0)+cc([]|\\E)'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
@@ -622,7 +622,7 @@ class TestRegexParsing:
         pattern = 'a+'
         expected_AST = ('kleene-plus',('symbol','a'))
         expected_final_AST = expected_AST
-        expected_NFA_description = 'a(a)*'
+        expected_NFA_description = '(a)+'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
