@@ -160,6 +160,15 @@ class NFA:
         s._invalidate()
         return n
 
+    @staticmethod
+    def kleene_plus(s):
+        # validation and invalidation of `s` is performed inside `concat`
+        s_copy = copy.deepcopy(s)
+        s_description = s._description
+        n = NFA.concat(s,NFA.kleene(s_copy))
+        n._description = '('+s_description+')+'
+        return n
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:

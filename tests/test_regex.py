@@ -63,6 +63,20 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+    def test_kleene_plus_NFA(self):
+        nfa = NFA.kleene_plus(NFA.symbol('a'))
+        cases = [
+                    ('a',True),
+                    ('aa',True),
+                    ('aaaaaaa',True),
+                    ('',False),
+                    ('b',False),
+                    ('aaaaaab',False),
+                    ('baaaaaa',False),
+                    ('aaabaaa',False),
+                ]
+        accept_test_helper(nfa,cases)
+
     def test_concat_NFA(self):
         nfa = NFA.concat(NFA.symbol('a'),NFA.symbol('b'))
         cases = [
@@ -184,6 +198,19 @@ class TestNFA:
         assert nfau.accept('b') == True
         assert nfau.accept('ab') == False
 
+        # test if `kleene_plus` invalidates its argument correctly
+        nfa = NFA.symbol('a')
+        nfap = NFA.kleene_plus(nfa)
+        assert not nfa.valid
+        assert nfap.valid
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfa.accept('a')
+        assert nfap.accept('a') == True
+        assert nfap.accept('aaa') == True
+        assert nfap.accept('') == False
+        assert nfap.accept('b') == False
+        assert nfap.accept('aab') == False
+
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
@@ -228,6 +255,15 @@ class TestNFA:
         assert nfa.accept('c') == False
         assert nfak.accept('bbb') == True
         assert nfak.accept('bbx') == False
+
+        # test if `kleene_plus` tests for validity of its argument
+        nfa = NFA.symbol('a')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfap = NFA.kleene_plus(nfa)
+        assert nfak.accept('a') == True
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aak') == False
 
         nfa = NFA.symbol('a')
         with pytest.raises(rejit.regex.NFAArgumentError):
