@@ -84,7 +84,10 @@ class NFA:
 
     @staticmethod
     def _moveChar(in_to_check, char):
-        return functools.reduce(lambda x, st: x | NFA._get_char_states(st,char) | NFA._get_char_states(st,'any'), in_to_check, set())
+        return functools.reduce(
+                lambda x, st: x | NFA._get_char_states(st,char) | NFA._get_char_states(st,'any'),
+                in_to_check,
+                set())
 
     @staticmethod
     def empty():
@@ -226,11 +229,15 @@ class Regex:
             if not symbol_list:
                 return NFA.none()
             else:
-                return functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
+                return functools.reduce(
+                        lambda acc, x: NFA.union(acc, NFA.symbol(x)),
+                        symbol_list[1:],
+                        NFA.symbol(symbol_list[0]))
         raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
 
     def _transform(self, input_ast):
-        return functools.reduce(lambda ast, transform: transform(ast),
+        return functools.reduce(
+            lambda ast, transform: transform(ast),
             [
                 functools.partial(self._flatten_nodes,'concat'),
                 functools.partial(self._flatten_nodes,'union'),
