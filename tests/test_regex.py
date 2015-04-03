@@ -755,6 +755,37 @@ class TestRegexParsing:
         xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[('symbol','a'),('kleene-plus',('concat',[('symbol','b'),('symbol','b'),('symbol','b')])),('symbol','d')])
 
+        x = re._parse('a|b|c')
+        xinline = re._flatten_nodes('union',x) 
+        assert xinline == ('union', [('symbol','a'),('symbol','b'),('symbol','c')])
+
+        x = re._parse('a|(b|c|d)|(ef|gh)')
+        xinline = re._flatten_nodes('union',x) 
+        assert xinline == ('union', [
+            ('symbol','a'),
+            ('symbol','b'),
+            ('symbol','c'),
+            ('symbol','d'),
+            ('concat',[('symbol','e'),('symbol','f')]),
+            ('concat',[('symbol','g'),('symbol','h')]),
+            ])
+        nfa1 = re._compile(x)
+        nfa2 = re._compile(xinline)
+        assert nfa1.description == '(a|((b|(c|d))|(ef|gh)))'
+        assert nfa2.description == '(a|(b|(c|(d|(ef|gh)))))'
+
+        x = re._parse('a|x(b|c|d)|(ef|gh)')
+        xinline = re._flatten_nodes('union',x) 
+        assert xinline == ('union', [
+            ('symbol','a'),
+            ('concat', [
+                ('symbol', 'x'),
+                ('union',[('symbol','b'),('symbol','c'),('symbol','d')]),
+                ]),
+            ('concat',[('symbol','e'),('symbol','f')]),
+            ('concat',[('symbol','g'),('symbol','h')]),
+            ])
+
         # really abstract syntax tree
         x = ('concat', [
                 ('concat', [
