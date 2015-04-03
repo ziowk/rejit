@@ -370,7 +370,7 @@ class TestRegexParsing:
         # test for bug #35
         pattern = 'a|b|c'
         expected_AST = ('union',[('symbol','a'),('union',[('symbol','b'),('symbol','c')])])
-        expected_final_AST = expected_AST
+        expected_final_AST = ('union',[('symbol','a'),('symbol','b'),('symbol','c')])
         expected_NFA_description = '(a|(b|c))'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)

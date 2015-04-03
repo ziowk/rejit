@@ -229,8 +229,13 @@ class Regex:
                 return functools.reduce(lambda acc, x: NFA.union(acc, NFA.symbol(x)),symbol_list[1:],NFA.symbol(symbol_list[0]))
         raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
 
-    def _transform(self, ast):
-        return self._flatten_nodes('concat',ast)
+    def _transform(self, input_ast):
+        return functools.reduce(lambda ast, transform: transform(ast),
+            [
+                functools.partial(self._flatten_nodes,'concat'),
+                functools.partial(self._flatten_nodes,'union'),
+            ],
+            input_ast)
 
     def _flatten_nodes(self, node_type, ast):
         # for a list of nodes return a list of transformed nodes
