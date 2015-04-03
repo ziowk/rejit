@@ -233,7 +233,7 @@ class Regex:
         elif ast[0] == 'kleene-plus':
             return NFA.kleene_plus(self._compile(ast[1]))
         elif ast[0] == 'zero-or-one':
-            return NFA.union(self._compile(ast[1]),NFA.empty())
+            return NFA.zero_or_one(self._compile(ast[1]))
         elif ast[0] == 'any':
             return NFA.any()
         elif ast[0] == 'empty':

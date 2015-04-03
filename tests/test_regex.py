@@ -512,7 +512,7 @@ class TestRegexParsing:
                     ('zero-or-one',('any',)),
                     ('zero-or-one',('union',[('symbol','a'),('symbol','b')])),
             ])
-        expected_NFA_description = 'aa(.)*bb(.|\\E)((a|b)|\\E)'
+        expected_NFA_description = 'aa(.)*bb(.)?((a|b))?'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
@@ -546,7 +546,7 @@ class TestRegexParsing:
                     ('symbol','c'),
                     ('zero-or-one',('set',[])),
             ])
-        expected_NFA_description = 'aa(((x|y)|z))*bb(0)+cc([]|\\E)'
+        expected_NFA_description = 'aa(((x|y)|z))*bb(0)+cc([])?'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
@@ -555,7 +555,7 @@ class TestRegexParsing:
         pattern = 'a?'
         expected_AST = ('zero-or-one',('symbol','a'))
         expected_final_AST = expected_AST
-        expected_NFA_description = r'(a|\E)'
+        expected_NFA_description = r'(a)?'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
