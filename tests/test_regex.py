@@ -115,6 +115,16 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+    def test_zero_or_one_NFA(self):
+        nfa = NFA.zero_or_one(NFA.symbol('a'))
+        cases = [
+                    ('',True),
+                    ('a',True),
+                    ('b',False),
+                    ('aaa',False),
+                ]
+        accept_test_helper(nfa,cases)
+
     def test_complex_NFA(self):
         # equivalent to 'aa(bb|(cc)*)
         nfa = NFA.concat(
@@ -211,6 +221,18 @@ class TestNFA:
         assert nfap.accept('b') == False
         assert nfap.accept('aab') == False
 
+        # test if `zero_or_one` invalidates its argument correctly
+        nfa = NFA.symbol('a')
+        nfaz = NFA.zero_or_one(nfa)
+        assert not nfa.valid
+        assert nfaz.valid
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfa.accept('a')
+        assert nfaz.accept('') == True
+        assert nfaz.accept('a') == True
+        assert nfaz.accept('b') == False
+        assert nfaz.accept('aaa') == False
+
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
@@ -261,6 +283,15 @@ class TestNFA:
         nfak = NFA.kleene(nfa)
         with pytest.raises(rejit.regex.NFAInvalidError):
             nfap = NFA.kleene_plus(nfa)
+        assert nfak.accept('a') == True
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aak') == False
+
+        # test if `zero_or_one` tests for validity of its argument
+        nfa = NFA.symbol('a')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfaz = NFA.zero_or_one(nfa)
         assert nfak.accept('a') == True
         assert nfak.accept('aaa') == True
         assert nfak.accept('aak') == False

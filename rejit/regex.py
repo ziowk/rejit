@@ -169,6 +169,14 @@ class NFA:
         n._description = '('+s_description+')+'
         return n
 
+    @staticmethod
+    def zero_or_one(s):
+        # validation and invalidation of `s` is performed inside `union`
+        s_description = s._description
+        n = NFA.union(s,NFA.empty())
+        n._description = '('+s_description+')?'
+        return n
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:
