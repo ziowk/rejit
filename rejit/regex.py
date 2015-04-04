@@ -217,6 +217,7 @@ class NFA:
 
     @staticmethod
     def char_set(char_list, description):
+        # Empty set results in `none` NFA, as in `union_many`
         n = NFA.union_many(list(map(NFA.symbol, char_list)))
         n._description = description
         return n
