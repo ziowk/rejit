@@ -190,6 +190,8 @@ class NFA:
             return NFA.empty()
         if not all(map(lambda x: x.valid, concat_list)):
             raise NFAInvalidError('Trying to use invalid NFA object')
+        if len(set(concat_list)) != len(concat_list):
+            raise NFAArgumentError("Can't use the same object more than once in the concat_list")
         return functools.reduce(
                 lambda acc, x: NFA.concat(acc,x),
                 concat_list

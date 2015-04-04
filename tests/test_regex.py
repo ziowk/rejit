@@ -414,6 +414,11 @@ class TestNFA:
         with pytest.raises(rejit.regex.NFAArgumentError):
             nfaum = NFA.union_many([nfb,NFA.symbol('a'),nfb])
 
+        # test if `concat_many` checks for passing the same NFA object multiple times
+        nfb = NFA.symbol('b')
+        with pytest.raises(rejit.regex.NFAArgumentError):
+            nfacm = NFA.concat_many([nfb,NFA.symbol('a'),nfb])
+
         nfa = NFA.symbol('a')
         with pytest.raises(rejit.regex.NFAArgumentError):
             nfaa = NFA.concat(nfa,nfa)
