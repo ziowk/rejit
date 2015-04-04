@@ -186,7 +186,8 @@ class NFA:
         # inside `concat`. This algorithm sets good description without
         # intervention. 
         # Empty list is not allowed.
-        assert concat_list
+        if not concat_list:
+            return NFA.empty()
         if not all(map(lambda x: x.valid, concat_list)):
             raise NFAInvalidError('Trying to use invalid NFA object')
         return functools.reduce(

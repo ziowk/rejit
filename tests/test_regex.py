@@ -125,6 +125,13 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+        nfa = NFA.concat_many([])
+        cases = [
+                    ('',True),
+                    ('a',False),
+                ]
+        accept_test_helper(nfa,cases)
+
     def test_union_NFA(self):
         nfa = NFA.union(NFA.symbol('a'),NFA.symbol('b'))
         cases = [
