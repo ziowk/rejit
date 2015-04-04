@@ -185,7 +185,7 @@ class NFA:
         # Invalidation of elements of `concat_list` is performed
         # inside `concat`. This algorithm sets good description without
         # intervention. 
-        # Empty list is not allowed.
+        # Empty list results in `empty` NFA
         if not concat_list:
             return NFA.empty()
         if not all(map(lambda x: x.valid, concat_list)):
