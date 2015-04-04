@@ -103,6 +103,28 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+    def test_concat_many_NFA(self):
+        nfa = NFA.concat_many([NFA.symbol('a'), NFA.symbol('b'), NFA.kleene_plus(NFA.symbol('c')), NFA.symbol('d')])
+        cases = [
+                    ('abcd',True),
+                    ('abcccccd',True),
+                    ('',False),
+                    ('x',False),
+                    ('ab',False),
+                    ('abd',False),
+                    ('abdccccc',False),
+                ]
+        accept_test_helper(nfa,cases)
+
+        nfa = NFA.concat_many([NFA.symbol('a')])
+        cases = [
+                    ('a',True),
+                    ('',False),
+                    ('b',False),
+                    ('aa',False),
+                ]
+        accept_test_helper(nfa,cases)
+
     def test_union_NFA(self):
         nfa = NFA.union(NFA.symbol('a'),NFA.symbol('b'))
         cases = [
@@ -233,6 +255,18 @@ class TestNFA:
         assert nfaz.accept('b') == False
         assert nfaz.accept('aaa') == False
 
+        # test if `concat-many` invalidates its arguments correctly
+        nfa_list = [NFA.symbol('a'), NFA.symbol('b'), NFA.symbol('c')]
+        nfacm = NFA.concat_many(nfa_list)
+        for nfa in nfa_list:
+            assert not nfa.valid
+            with pytest.raises(rejit.regex.NFAInvalidError):
+                nfa.accept('a')
+        assert nfacm.valid
+        assert nfacm.accept('abc') == True
+        assert nfacm.accept('') == False
+        assert nfacm.accept('abcd') == False
+
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
@@ -295,6 +329,19 @@ class TestNFA:
         assert nfak.accept('a') == True
         assert nfak.accept('aaa') == True
         assert nfak.accept('aak') == False
+
+        # test if `concat-many` tests for validity of its arguments
+        nfa_list = [NFA.symbol('a'), NFA.symbol('a'), NFA.symbol('a')]
+        nfak = NFA.kleene(nfa_list[-1])
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfacm = NFA.concat_many(nfa_list)
+        assert nfak.accept('a') == True
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aak') == False
+        assert nfa_list[0].accept('a') == True
+        assert nfa_list[0].accept('b') == False
+        assert nfa_list[1].accept('a') == True
+        assert nfa_list[1].accept('b') == False
 
         nfa = NFA.symbol('a')
         with pytest.raises(rejit.regex.NFAArgumentError):

@@ -176,6 +176,23 @@ class NFA:
         n = NFA.union(s,NFA.empty())
         n._description = '('+s_description+')?'
         return n
+    
+    @staticmethod
+    def concat_many(concat_list):
+        # Validation of elements of `concat_list` is performed also outside of `concat`,
+        # because `concat_many` shouldn't invalidate part of `concat_list` before reaching
+        # an invalid NFA.
+        # Invalidation of elements of `concat_list` is performed
+        # inside `concat`. This algorithm sets good description without
+        # intervention. 
+        # Empty list is not allowed.
+        assert concat_list
+        if not all(map(lambda x: x.valid, concat_list)):
+            raise NFAInvalidError('Trying to use invalid NFA object')
+        return functools.reduce(
+                lambda acc, x: NFA.concat(acc,x),
+                concat_list
+            )
 
 class Regex:
     def __init__(self, pattern=None):
