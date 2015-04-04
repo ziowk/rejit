@@ -132,6 +132,38 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+    def test_union_many_NFA(self):
+        nfa = NFA.union_many([NFA.symbol('a'),NFA.symbol('b'),NFA.kleene_plus(NFA.symbol('c'))])
+        cases = [
+                    ('a',True),
+                    ('b',True),
+                    ('c',True),
+                    ('ccc',True),
+                    ('',False),
+                    ('x',False),
+                    ('ab',False),
+                    ('aaa',False),
+                    ('bbb',False),
+                    ('abccc',False),
+                ]
+        accept_test_helper(nfa,cases)
+
+        nfa = NFA.union_many([NFA.symbol('a')])
+        cases = [
+                    ('a',True),
+                    ('',False),
+                    ('b',False),
+                    ('aa',False),
+                ]
+        accept_test_helper(nfa,cases)
+
+        nfa = NFA.union_many([])
+        cases = [
+                    ('',False),
+                    ('a',False),
+                ]
+        accept_test_helper(nfa,cases)
+
     def test_union_NFA(self):
         nfa = NFA.union(NFA.symbol('a'),NFA.symbol('b'))
         cases = [
@@ -274,6 +306,20 @@ class TestNFA:
         assert nfacm.accept('') == False
         assert nfacm.accept('abcd') == False
 
+        # test if `union_many` invalidates its arguments correctly
+        nfa_list = [NFA.symbol('a'), NFA.symbol('b'), NFA.symbol('c')]
+        nfaum = NFA.union_many(nfa_list)
+        for nfa in nfa_list:
+            assert not nfa.valid
+            with pytest.raises(rejit.regex.NFAInvalidError):
+                nfa.accept('a')
+        assert nfaum.valid
+        assert nfaum.accept('a') == True
+        assert nfaum.accept('b') == True
+        assert nfaum.accept('c') == True
+        assert nfaum.accept('') == False
+        assert nfaum.accept('abc') == False
+
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
@@ -349,6 +395,24 @@ class TestNFA:
         assert nfa_list[0].accept('b') == False
         assert nfa_list[1].accept('a') == True
         assert nfa_list[1].accept('b') == False
+
+        # test if `union_many` tests for validity of its arguments
+        nfa_list = [NFA.symbol('a'), NFA.symbol('a'), NFA.symbol('a')]
+        nfak = NFA.kleene(nfa_list[-1])
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfaum = NFA.union_many(nfa_list)
+        assert nfak.accept('a') == True
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aak') == False
+        assert nfa_list[0].accept('a') == True
+        assert nfa_list[0].accept('b') == False
+        assert nfa_list[1].accept('a') == True
+        assert nfa_list[1].accept('b') == False
+
+        # test if `union_many` checks for passing the same NFA object multiple times
+        nfb = NFA.symbol('b')
+        with pytest.raises(rejit.regex.NFAArgumentError):
+            nfaum = NFA.union_many([nfb,NFA.symbol('a'),nfb])
 
         nfa = NFA.symbol('a')
         with pytest.raises(rejit.regex.NFAArgumentError):

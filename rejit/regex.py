@@ -195,6 +195,25 @@ class NFA:
                 concat_list
             )
 
+    @staticmethod
+    def union_many(union_list):
+        # Empty list results in `none` NFA
+        if not union_list:
+            return NFA.none()
+        if not all(map(lambda x: x.valid, union_list)):
+            raise NFAInvalidError('Trying to use invalid NFA object')
+        if len(set(union_list)) != len(union_list):
+            raise NFAArgumentError("Can't use the same object more than once in the union_list")
+        n = NFA(State(),State())
+        for u in union_list:
+            n._start.add('',u._start)
+            u._end.add('',n._end)
+        n._description = '(' + functools.reduce(lambda acc, x: acc+"|"+x.description,union_list[1:],union_list[0].description) + ')'
+        for x in union_list:
+            x._invalidate()
+        return n
+
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:
