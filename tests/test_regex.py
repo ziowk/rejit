@@ -164,6 +164,26 @@ class TestNFA:
                 ]
         accept_test_helper(nfa,cases)
 
+    def test_char_set_NFA(self):
+        nfa = NFA.char_set(['a', 'b', 'c'], '[abc]')
+        cases = [
+                    ('a',True),
+                    ('b',True),
+                    ('c',True),
+                    ('',False),
+                    ('x',False),
+                    ('aaa',False),
+                    ('abc',False),
+                ]
+        accept_test_helper(nfa,cases)
+
+        nfa = NFA.char_set([], '[]')
+        cases = [
+                    ('',False),
+                    ('a',False),
+                ]
+        accept_test_helper(nfa,cases)
+
     def test_union_NFA(self):
         nfa = NFA.union(NFA.symbol('a'),NFA.symbol('b'))
         cases = [
@@ -241,6 +261,18 @@ class TestNFA:
             nfa.accept('a')
         assert nfak.accept('aaa') == True
         assert nfak.accept('aab') == False
+
+        # test if `char_set` is invalidated correctly
+        nfa = NFA.char_set(['a','b'], '[ab]')
+        nfak = NFA.kleene(nfa)
+        assert not nfa.valid
+        assert nfak.valid
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            nfa.accept('a')
+        assert nfak.accept('') == True
+        assert nfak.accept('a') == True
+        assert nfak.accept('aba') == True
+        assert nfak.accept('abx') == False
 
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')

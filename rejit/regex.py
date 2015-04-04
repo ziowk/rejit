@@ -215,6 +215,11 @@ class NFA:
             x._invalidate()
         return n
 
+    @staticmethod
+    def char_set(char_list, description):
+        n = NFA.union_many(list(map(NFA.symbol, char_list)))
+        n._description = description
+        return n
 
 class Regex:
     def __init__(self, pattern=None):
