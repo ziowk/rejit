@@ -683,13 +683,13 @@ class TestRegexParsing:
         pattern = 'aa[x-z]*bb[0-0]+cc[]?'
         expected_AST = ('concat',[('symbol','a'),
                     ('concat',[('symbol','a'),
-                        ('concat',[('kleene-star',('set',['x','y','z'])),
+                        ('concat',[('kleene-star',('set',['x','y','z'],'[x-z]')),
                             ('concat',[('symbol','b'),
                                 ('concat',[('symbol','b'),
-                                    ('concat',[('kleene-plus',('set',['0'])),
+                                    ('concat',[('kleene-plus',('set',['0'],'[0-0]')),
                                         ('concat',[('symbol','c'),
                                             ('concat',[('symbol','c'),
-                                                ('zero-or-one',('set',[]))
+                                                ('zero-or-one',('set',[],'[]'))
                                                 ])
                                             ])
                                         ])
@@ -701,15 +701,15 @@ class TestRegexParsing:
         expected_final_AST = ('concat', [
                     ('symbol','a'),
                     ('symbol','a'),
-                    ('kleene-star',('set',['x','y','z'])),
+                    ('kleene-star',('set',['x','y','z'],'[x-z]')),
                     ('symbol','b'),
                     ('symbol','b'),
-                    ('kleene-plus',('set',['0'])),
+                    ('kleene-plus',('set',['0'],'[0-0]')),
                     ('symbol','c'),
                     ('symbol','c'),
-                    ('zero-or-one',('set',[])),
+                    ('zero-or-one',('set',[],'[]')),
             ])
-        expected_NFA_description = 'aa(((x|y)|z))*bb(0)+cc([])?'
+        expected_NFA_description = 'aa([x-z])*bb([0-0])+cc([])?'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
@@ -725,73 +725,73 @@ class TestRegexParsing:
 
     def test_charset_regex(self):
         pattern = '[abc]'
-        expected_AST = ('set',['a','b','c'])
+        expected_AST = ('set',['a','b','c'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = '((a|b)|c)'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[Xa-cY0-2Z]'
-        expected_AST = ('set',['X','a','b','c','Y','0','1','2','Z'])
+        expected_AST = ('set',['X','a','b','c','Y','0','1','2','Z'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = '((((((((X|a)|b)|c)|Y)|0)|1)|2)|Z)'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[aa-bb]'
-        expected_AST = ('set',['a','a','b','b'])
+        expected_AST = ('set',['a','a','b','b'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = '(((a|a)|b)|b)'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[c-c]'
-        expected_AST = ('set',['c'])
+        expected_AST = ('set',['c'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = 'c'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[cc]'
-        expected_AST = ('set',['c','c'])
+        expected_AST = ('set',['c','c'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = '(c|c)'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[z-a]'
-        expected_AST = ('set',[])
+        expected_AST = ('set',[],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = '[]'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[*+.<-?]'
-        expected_AST = ('set',['*','+','.','<','=','>','?'])
+        expected_AST = ('set',['*','+','.','<','=','>','?'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = r'((((((\*|\+)|\.)|<)|=)|>)|\?)'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[[-]]'
-        expected_AST = ('set',['[','\\',']'])
+        expected_AST = ('set',['[','\\',']'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = r'((\[|\\)|\])'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
         pattern = '[---]'
-        expected_AST = ('set',['-'])
+        expected_AST = ('set',['-'],pattern)
         expected_final_AST = expected_AST
-        expected_NFA_description = r'\-'
+        expected_NFA_description = pattern
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
@@ -900,7 +900,7 @@ class TestRegexParsing:
 
     def test_empty_set_regex(self):
         pattern = '[]'
-        expected_AST = ('set',[])
+        expected_AST = ('set',[],'[]')
         expected_final_AST = expected_AST
         expected_NFA_description = '[]'
         assert_regex_AST(pattern,expected_AST)

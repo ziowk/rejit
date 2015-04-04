@@ -272,14 +272,7 @@ class Regex:
         elif ast[0] == 'symbol':
             return NFA.symbol(ast[1])
         elif ast[0] == 'set':
-            symbol_list = ast[1]
-            if not symbol_list:
-                return NFA.none()
-            else:
-                return functools.reduce(
-                        lambda acc, x: NFA.union(acc, NFA.symbol(x)),
-                        symbol_list[1:],
-                        NFA.symbol(symbol_list[0]))
+            return NFA.char_set(ast[1],ast[2])
         raise RegexCompilationError("Unknown AST node: {node}".format(node=ast))
 
     def _transform(self, input_ast):
@@ -373,6 +366,7 @@ class Regex:
     def _parse_charset(self):
         self._getchar() # '['
         symbol_list = []
+        charset_desc = '['
         if self._last_char == '^':
             raise RegexParseError('Negative character set not supported')
         while self._last_char and self._last_char != ']':
@@ -381,16 +375,20 @@ class Regex:
             if self._last_char == '-':
                 self._getchar() # '-'
                 if self._last_char:
+                    charset_desc += symbol1 + '-'
                     symbol_list += list(Regex.char_range(symbol1,self._last_char))
+                    charset_desc += self._last_char
                     self._getchar()
                 else:
                     raise RegexParseError('Expected a symbol after "-" but the end of the pattern reached')
             else:
+                charset_desc += symbol1
                 symbol_list.append(symbol1)
         if self._last_char != ']':
             raise RegexParseError('Expected "]" but end of the pattern reached'.format(self._last_char))
         self._getchar() # ']'
-        ast = ('set',symbol_list)
+        charset_desc += ']'
+        ast = ('set',symbol_list,charset_desc)
         return ast
 
     @staticmethod
