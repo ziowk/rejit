@@ -556,7 +556,7 @@ class TestRegexParsing:
         pattern = 'a|b|c'
         expected_AST = ('union',[('symbol','a'),('union',[('symbol','b'),('symbol','c')])])
         expected_final_AST = ('union',[('symbol','a'),('symbol','b'),('symbol','c')])
-        expected_NFA_description = '(a|(b|c))'
+        expected_NFA_description = '(a|b|c)'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)
@@ -910,7 +910,7 @@ class TestRegexParsing:
 
         union5 = ('union', [('symbol','a'),('symbol','b'),('symbol','c'),('symbol','d'),('symbol','e')])
         nfa5 = re._compile(union5)
-        assert nfa5.description == '(a|(b|(c|(d|e))))'
+        assert nfa5.description == '(a|b|c|d|e)'
         assert nfa5.accept('a')
         assert nfa5.accept('b')
         assert nfa5.accept('c')
@@ -965,7 +965,7 @@ class TestRegexParsing:
         nfa1 = re._compile(x)
         nfa2 = re._compile(xinline)
         assert nfa1.description == '(a|((b|(c|d))|(ef|gh)))'
-        assert nfa2.description == '(a|(b|(c|(d|(ef|gh)))))'
+        assert nfa2.description == '(a|b|c|d|ef|gh)'
 
         x = re._parse('a|x(b|c|d)|(ef|gh)')
         xinline = re._flatten_nodes('union',x) 

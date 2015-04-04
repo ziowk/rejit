@@ -251,14 +251,7 @@ class Regex:
         if ast[0] == 'concat':
             return NFA.concat_many(list(map(self._compile, ast[1])))
         elif ast[0] == 'union':
-            union_list = ast[1]
-            assert len(union_list) > 1
-            return functools.reduce(
-                    lambda acc, x: NFA.union(self._compile(x),acc),
-                    reversed(union_list[:-2]),
-                    NFA.union(self._compile(union_list[-2]),self._compile(union_list[-1]))
-                )
-            return NFA.union(self._compile(ast[1][0]),self._compile(ast[1][1]))
+            return NFA.union_many(list(map(self._compile, ast[1])))
         elif ast[0] == 'kleene-star':
             return NFA.kleene(self._compile(ast[1]))
         elif ast[0] == 'kleene-plus':
