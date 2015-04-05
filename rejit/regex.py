@@ -33,6 +33,32 @@ class State:
         return st
 
 class NFA:
+    """Nondeterministic finite automaton for accepting regular languages.
+
+    A NFA object can be used to determine if a string belongs to the NFA's
+    accepted language. The NFA's accepted language is equivalent to a regular
+    expression, which means that the NFA can be used for matching them.
+
+    NFA class uses a concept of object validity. Only a valid object can
+    be used to `accept` strings, or be passed to NFA's combination methods.
+    
+    Valid objects are ones created with NFA's generation methods or returned
+    from NFA's combination methods.
+
+    Invalid objects are ones passed to NFA's combination methods. If user wants
+    to use a NFA object after it was passed to a NFA's combining method, user
+    should create a copy of the NFA using `deepcopy` method from standard
+    library's `copy` module.
+
+    Attributes:
+    description (str): read-only property containing regular expression
+        equivalent of the NFA
+    valid (bool): indicates if the NFA object is valid for use
+    _start (State): NFA's starting state
+    _end (State): NFA's finishing state
+    _description (str): internal variable for `description` property
+    """
+
     def __init__(self,start,end):
         """Construct an empty NFA object with starting and finishing states
 
