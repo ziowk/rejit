@@ -109,6 +109,18 @@ class NFA:
 
     @staticmethod
     def _moveChar(in_to_check, char):
+        """Return a set of states which are reachable from the input set
+        of states by consuming `char` character without eplison-moves.
+
+        Args:
+        in_to_check (set of States): the set of states from which the search
+            is performed
+        char (str): a character to be consumed by the move
+
+        Returns:
+        A set of states which are reachable from the input set of states
+        by consuming `char` character without eplison-moves.
+        """
         return functools.reduce(
                 lambda x, st: x | NFA._get_char_states(st,char) | NFA._get_char_states(st,'any'),
                 in_to_check,
