@@ -34,6 +34,22 @@ class State:
 
 class NFA:
     def __init__(self,start,end):
+        """Construct an empty NFA object with starting and finishing states
+
+        Warning:
+        User probably should never directly create NFAs. Use NFA's generation
+        methods such as `empty`, `none`, `any`, `symbol`, `char_set` and
+        combine them using NFA's combination methods `union`, `concat`,
+        `kleene`, `kleene_plus`, `union_many`, `concat_many`, `zero_or_one`.
+
+        Args:
+        start: NFA's starting state
+        end: NFA's finishing state
+
+        Returns:
+        An empty NFA object with provided starting and finishing states
+            and empty description.
+        """
         self._start = start
         self._end = end
         self._description = ''
