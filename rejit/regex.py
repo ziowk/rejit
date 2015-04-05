@@ -83,6 +83,20 @@ class NFA:
 
     @staticmethod
     def _moveEpsilon(in_to_check):
+        """Return a set of states which are reachable from the input
+        set of states by using epsilon-moves only.
+
+        Note:
+        Returned set includes also `in_to_check` states, which are reachable
+        a priori.
+
+        Args:
+        in_to_check (set of States): the set of states from which the search
+            is performed
+
+        Returns:
+        A set of states rechable from the input set by using epsilon-moves only.
+        """
         to_check = in_to_check.copy()
         checked = set()
         while to_check:
