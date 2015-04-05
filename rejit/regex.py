@@ -47,6 +47,17 @@ class NFA:
         return self._start is not None
 
     def accept(self,s):
+        """Check if a string belongs to the NFA's accepted language.
+
+        In other words, this checks if the string exactly matches the NFA's
+        regular expression equivalent.
+
+        Args:
+        s (str): the string which is tested for a match
+
+        Returns:
+        A bool which indicates if the string is accepted by the NFA.
+        """
         if not self.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         states = {self._start}
