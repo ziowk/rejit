@@ -62,6 +62,11 @@ class NFA:
         return '<NFA id: {ident}, regex: {desc}>'.format(ident=id(self), desc=self.description)
 
     def _invalidate(self):
+        """Invalidate a NFA object making it not suitable for any use.
+        
+        Any use of an invalid NFA object will result in raising
+        an NFAInvalidError.
+        """
         self._start = None
         self._end = None
         self._description = None
