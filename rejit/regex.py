@@ -68,6 +68,17 @@ class NFA:
 
     @staticmethod
     def _get_char_states(state, char):
+        """Return a set of states connected to a `state` by an immediate edge
+        labeled exactly with `char` string.
+
+        Args:
+        state (State): the state from which the search is performed
+        char (str): the edge's label which filters the search
+
+        Returns:
+        A set of states connected to a `state` by an immediate edge labeled
+        exactly with `char` string.
+        """
         return set(map(lambda edge: edge[1], filter(lambda edge: edge[0]==char, state._edges)))
 
     @staticmethod
