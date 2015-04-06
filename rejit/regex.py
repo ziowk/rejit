@@ -186,6 +186,16 @@ class NFA:
 
     @staticmethod
     def empty():
+        """Return `empty` NFA which accepts only an empty string.
+
+        `empty` NFA is described as regular expression `\E`, which imitates
+        epsilon letter, unavailable on Windows' console.
+
+        Returned NFA object is valid.
+
+        Returns:
+        A valid NFA which accepts only an empty string.
+        """
         n = NFA(State(),State())
         n._start.add('',n._end)
         n._description = r'\E'
