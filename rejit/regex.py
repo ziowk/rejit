@@ -203,6 +203,21 @@ class NFA:
 
     @staticmethod
     def symbol(a):
+        """Return a NFA which accepts only literal character from parameter `a`.
+
+        `symbol` NFA is described as regular expression by its character `a`,
+        but the character in the description might be escaped using backslash
+        `\\` if it is one of the special characters.
+        (see rejit.regex.special_chars)
+
+        Returned NFA object is valid.
+
+        Args:
+        a (str): A literal character which will be the only accepted one.
+
+        Returns:
+        A valid NFA which accepts only literal character from parameter `a`.
+        """
         n = NFA(State(),State())
         n._start.add(a,n._end)
         n._description = escape_symbol(a)
