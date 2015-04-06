@@ -357,6 +357,39 @@ class NFA:
 
     @staticmethod
     def char_set(char_list, description):
+        """Return a NFA which accepts one character from a set.
+
+        `char_set` NFA accepts a string which comprises exactly one character
+        from a set of character literals. Character set is passed by a
+        `char_list` - list of str, which allows duplicates. Duplicates don't
+        change the behavior of the NFA, but result in creation of unnecessary
+        states and edges in the NFA, and thus it is discouraged.
+
+        `char_list` can be empty. Returned NFA is equivalent to `none` NFA.
+
+        `char_set` is also passed a `description` parameter, which is used
+        as a description of the NFA. The external description is used because
+        any description created knowing only `char_list` could be misleading.
+        Example: for a regular expression `[a-e]` user passes a list
+        `['a','b','c','d','e']`, but `char_set` doesn't know whether user had
+        `[a-e]` or `[abcde]` in mind. Therefore user has to pass the expected
+        description.
+
+        Returned NFA object is valid.
+
+        Warning:
+        This method is likely to change in future versions.
+
+        Args:
+        char_list (list of str): A list of character literals one of which
+            should be accepted. Allows duplicates. Can be empty.
+        description (str): A regular expression description for the NFA.
+            Due to its limitations, `char_set` can't reconstruct the expected
+            description from `char_list` only.
+
+        Returns:
+        A NFA which accepts one character from a set.
+        """
         # Empty set results in `none` NFA, as in `union_many`
         n = NFA.union_many(list(map(NFA.symbol, char_list)))
         n._description = description
