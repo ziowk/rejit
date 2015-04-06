@@ -45,6 +45,11 @@ class State:
     creation or copying."""
 
     def __init__(self):
+        """Create an empty state without edges.
+
+        Returns:
+        A new state without edges.
+        """
         self._edges = [] # Edge = ('char', State)
         self._state_num = State._state_counter # for printing purposes only
         State._state_counter += 1
