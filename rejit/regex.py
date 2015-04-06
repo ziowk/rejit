@@ -241,6 +241,17 @@ class NFA:
 
     @staticmethod
     def none():
+        """Return a NFA which accepts empty set.
+
+        `none` NFA doesn't accept any input, it returns `False` for every
+        possible string passed to `accept`. `none` NFA is described as regular
+        expression `[]` which means empty set of characters.
+
+        Returned NFA object is valid.
+
+        Returns:
+        A valid NFA which accepts empty set.
+        """
         n = NFA(State(),State()) 
         n._description = '[]'
         return n
