@@ -74,6 +74,15 @@ class State:
         return '<State: {num}, id: {ident}, edges: {e}>'.format(num=str(self._state_num), ident=str(id(self)),
                                                                 e=list(map(lambda x: (x[0],x[1]._state_num), self._edges)))
     def __deepcopy__(self, memo):
+        """Return a deep copy of the State.
+
+        Standard implementation of `__deepcopy__` was overriden to ensure
+        that each state has globally unique `_state_num`.
+
+        Args:
+        memo (dict): mandatory __deepcopy__ dictionary parameter, for keeping
+            track of copied objects.
+        """
         st = State()
         st._edges = copy.deepcopy(self._edges, memo)
         return st
