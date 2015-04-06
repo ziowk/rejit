@@ -41,6 +41,9 @@ class State:
     """
 
     _state_counter = 0
+    """_state_counter allows assigning State objects unique readable ids during
+    creation or copying."""
+
     def __init__(self):
         self._edges = [] # Edge = ('char', State)
         self._state_num = State._state_counter # for printing purposes only
