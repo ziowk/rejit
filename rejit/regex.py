@@ -21,8 +21,8 @@ class State:
         self._state_num = State._state_counter # for printing purposes only
         State._state_counter += 1
 
-    def add(self,edge,state):
-        self._edges.append((edge,state))
+    def add(self,label,state):
+        self._edges.append((label,state))
 
     def __repr__(self):
         return '<State: {num}, id: {ident}, edges: {e}>'.format(num=str(self._state_num), ident=str(id(self)),
