@@ -225,6 +225,15 @@ class NFA:
 
     @staticmethod
     def any():
+        """Return a NFA which accepts any single character.
+
+        `any` NFA is described as regular expression `.` (period).
+
+        Returned NFA object is valid.
+
+        Returns:
+        A valid NFA which accepts any single character.
+        """
         n = NFA(State(),State())
         n._start.add('any',n._end)
         n._description = '.'
