@@ -69,8 +69,8 @@ class NFA:
         `kleene`, `kleene_plus`, `union_many`, `concat_many`, `zero_or_one`.
 
         Args:
-        start: NFA's starting state
-        end: NFA's finishing state
+        start (State): NFA's starting state
+        end (State): NFA's finishing state
 
         Returns:
         An empty NFA object with provided starting and finishing states
