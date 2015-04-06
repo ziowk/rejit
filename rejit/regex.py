@@ -35,9 +35,20 @@ class State:
 class NFA:
     """Nondeterministic finite automaton for accepting regular languages.
 
+    A NFA is essentially a graph, made of states connected by edges. All edges
+    in the automaton form a transition function. There are two special states
+    in the NFA: `_start` state from which the automaton starts, and `_end`
+    state, which is the accepting state. For details regarding states and edges
+    see `State` class docs.
+
     A NFA object can be used to determine if a string belongs to the NFA's
     accepted language. The NFA's accepted language is equivalent to a regular
     expression, which means that the NFA can be used for matching them.
+
+    NFA objects should only be created with NFA generation methods or
+    combined using NFA combination methods. NFA generation methods create new
+    basic NFA objects. NFA combination methods transform input NFA objects
+    to create complex ones out of them.
 
     NFA class uses a concept of object validity. Only a valid object can
     be used to `accept` strings, or be passed to NFA's combination methods.
