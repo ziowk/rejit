@@ -15,6 +15,31 @@ class NFAInvalidError(RegexError): pass
 class NFAArgumentError(RegexError): pass
 
 class State:
+    """State class for internal use of NFA objects.
+
+    A `State` object represents a state in an automation, which is essentially
+    a graph. The state is connected to other states with edges. All edges in
+    the automaton form a transition function.
+    
+    An edge is a tuple which represents a single transition. The first element
+    of the tuple is a string label which is the requirement for the transition.
+    The second element is a state to which the transition points.
+
+    Transition's requirement label can be:
+    * a single character
+    * an empty string for an epsilon edge
+    * a special string for a special edge type
+
+    Currently only special edge type is 'any', which allows transition for any
+    character.
+
+    Attributes:
+    _edges (list of tuples(str, State)): a list of edges from the state to
+        other states.
+    _state_num (int): a unique id number for each state which should be human
+    readable.
+    """
+
     _state_counter = 0
     def __init__(self):
         self._edges = [] # Edge = ('char', State)
