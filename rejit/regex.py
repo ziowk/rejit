@@ -55,6 +55,19 @@ class State:
         State._state_counter += 1
 
     def add(self,label,state):
+        """Add a new edge from this state to other state.
+
+        Transition's requirement label can be:
+        * a single character
+        * an empty string for an epsilon edge
+        * a special string for a special edge type
+
+        For more information about edges see `State` class' documentation.
+
+        Args:
+        label (str): A label, requirement for transition to the other state.
+        state (State): Other state, to which the edge points.
+        """
         self._edges.append((label,state))
 
     def __repr__(self):
