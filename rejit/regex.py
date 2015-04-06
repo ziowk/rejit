@@ -104,6 +104,11 @@ class NFA:
 
         In other words, this checks if the string exactly matches the NFA's
         regular expression equivalent.
+        
+        This method can only be called on a valid NFA object.
+        
+        Raises:
+        NFAInvalidError: if called on an invalid NFA object
 
         Args:
         s (str): the string which is tested for a match
