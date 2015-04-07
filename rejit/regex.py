@@ -453,6 +453,31 @@ class NFA:
 
     @staticmethod
     def kleene(s):
+        """Construct a NFA which accepts a Kleene star of a language
+
+        `kleene` constructs a new NFA object from `s` parameter. NFA's accepted
+        language is a Kleene star of accepted language of `s`. A Kleene star of
+        a language contains every number of concatenations of any word from the
+        language. Each word can be different, and concatenation of zero words
+        is also allowed. In terms of regular expressions the NFA represents
+        a Kleene star of regular expression represented by `s`, what whould be
+        written as `s*`.
+
+        `kleene` argument should be a valid NFA object. The NFA is invalidated
+        if the method successfully completes. The NFA is not modified if an 
+        exception is raised.
+
+        Returned NFA object is valid.
+
+        Raises:
+        NFAInvalidError: if `s` is invalid.
+
+        Args:
+        s (NFA): NFA which Kleene star is constructed. Invalidated on success.
+
+        Returns:
+        A valid NFA which accepts a Kleene star of `s` language
+        """
         if not s.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         q = State()
