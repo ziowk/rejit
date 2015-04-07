@@ -617,7 +617,41 @@ class NFA:
 
     @staticmethod
     def union_many(union_list):
-        # Empty list results in `none` NFA
+        """Combine NFAs into one which accepts a union of a list of languages
+
+        `union_many` constructs a new NFA object from all the objects in the
+        list. NFA's accepted language is a sum of all languages. A sum of all
+        languages contains every word from these languages. In terms of regular
+        expressions the NFA represents a union of regular expressions from the
+        list [a,b,c ... ,z], what would be written as `a|b|c| ... |z`.
+
+        The list can be empty. Union of zero languages is an empty set language,
+        which doesn't contain any string. Equivalent of `none`.
+
+        All arguments should be different valid NFA objects. All NFAs are
+        invalidated if the method successfully completes. No NFA is modified if
+        an exception was raised.
+
+        Returned NFA object is valid.
+
+        Note:
+        Using this method is preferred over chaining calls to `union`, because
+        it results in a better NFA's description and a leaner NFA object, which
+        uses less states and edges internally.
+
+        Raises:
+        NFAInvalidError: if any NFA in `union_list` is invalid. Valid ones are
+            not modifed.
+        NFAArgumentError: if there are two or more duplicate NFA references in 
+            `union_list`. The objects are not modified.
+
+        Args:
+        union_list (list of NFA): a list of parts of the union. All are
+            invalidated on success.
+
+        Returns:
+        A valid NFA which accepts a union of languages in a list.
+        """
         if not union_list:
             return NFA.none()
         if not all(map(lambda x: x.valid, union_list)):
