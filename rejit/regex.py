@@ -559,13 +559,51 @@ class NFA:
     
     @staticmethod
     def concat_many(concat_list):
-        # Validation of elements of `concat_list` is performed also outside of `concat`,
-        # because `concat_many` shouldn't invalidate part of `concat_list` before reaching
-        # an invalid NFA.
-        # Invalidation of elements of `concat_list` is performed
-        # inside `concat`. This algorithm sets good description without
-        # intervention. 
-        # Empty list results in `empty` NFA
+        """Combine NFAs into one which accepts a concatenation of a list of
+        languages
+
+        `concat_many` constructs a new NFA object from all the objects in the
+        list. NFA's accepted language is a concatenation of all languages.
+        A concatenation of many languages contains concatenations of every
+        possible tuple of words, where there is a word from every language and
+        the words are in the same order as languages in the list. In terms of
+        regular expressions the NFA represents a concatenation of regular
+        expressions from the list [a,b,c, ... ,z], what would be written as
+        `abc...z`.
+
+        The list can be empty. Concatenation of zero languages is an empty
+        string language, which contains only an empty string. Equivalent of
+        `empty`.
+
+        All arguments should be different valid NFA objects. All NFAs are
+        invalidated if the method successfully completes. No NFA is modified if
+        an exception was raised.
+
+        Returned NFA object is valid.
+
+        Note:
+        Using this method is almost equivalent to chaining calls to `concat`. 
+        This method serves only as a better interface. It also invalidates all
+        objects in a list or none of them.
+
+        Raises:
+        NFAInvalidError: if any NFA in `concat_list` is invalid. Valid ones are
+            not modifed.
+        NFAArgumentError: if there are two or more duplicate NFA references in 
+            `concat_list`. The objects are not modified.
+
+        Args:
+        concat_list (list of NFA): a list of concatenated NFAs. All are
+            invalidated on success.
+
+        Returns:
+        A valid NFA which accepts a concatenation of languages in a list.
+        """
+        # Validation of elements of `concat_list` is performed also outside of
+        # `concat`, because `concat_many` shouldn't invalidate part of
+        # `concat_list` before reaching an invalid NFA.
+        # Invalidation of elements of `concat_list` is performed inside
+        # `concat`. This algorithm sets good description without intervention. 
         if not concat_list:
             return NFA.empty()
         if not all(map(lambda x: x.valid, concat_list)):
