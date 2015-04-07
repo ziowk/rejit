@@ -493,6 +493,30 @@ class NFA:
 
     @staticmethod
     def kleene_plus(s):
+        """Construct a NFA which accepts a Kleene plus of a language
+
+        `kleene_plus` constructs a new NFA object from `s` parameter. NFA's
+        accepted language is a Kleene plus of accepted language of `s`. A
+        Kleene plus of a language contains one or more concatenations of any
+        word from the language. Each word can be different. In terms of
+        regular expressions the NFA represents a Kleene plus of regular
+        expression represented by `s`, what whould be written as `s+`.
+
+        `kleene_plus` argument should be a valid NFA object. The NFA is
+        invalidated if the method successfully completes. The NFA is not
+        modified if an exception is raised.
+
+        Returned NFA object is valid.
+
+        Raises:
+        NFAInvalidError: if `s` is invalid.
+
+        Args:
+        s (NFA): NFA which Kleene plus is constructed. Invalidated on success.
+
+        Returns:
+        A valid NFA which accepts a Kleene plus of `s` language
+        """
         # validation and invalidation of `s` is performed inside `concat`
         s_copy = copy.deepcopy(s)
         s_description = s._description
