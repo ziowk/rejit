@@ -526,6 +526,31 @@ class NFA:
 
     @staticmethod
     def zero_or_one(s):
+        """Construct a NFA which accepts a union of a language and an empty one
+
+        `zero_or_one` constructs a new NFA object from `s` parameter. NFA's
+        accepted language is a union of accepted language of `s` and an empty
+        language. This means that the NFA will accept every word from `s`
+        language or an empty string. In terms of regular expressions the NFA
+        represents `s?`, where `s` is a regular expression representing
+        `s` NFA.
+
+        `zero_or_one` argument should be a valid NFA object. The NFA is
+        invalidated if the method successfully completes. The NFA is not
+        modified if an exception is raised.
+
+        Returned NFA object is valid.
+
+        Raises:
+        NFAInvalidError: if `s` is invalid.
+
+        Args:
+        s (NFA): NFA which union with empty language is constructed.
+            Invalidated on success.
+
+        Returns:
+        A valid NFA which accepts a union of `s` language and an empty language
+        """
         # validation and invalidation of `s` is performed inside `union`
         s_description = s._description
         n = NFA.union(s,NFA.empty())
