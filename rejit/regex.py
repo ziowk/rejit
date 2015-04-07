@@ -369,6 +369,32 @@ class NFA:
 
     @staticmethod
     def union(s,t):
+        """Combine NFAs into one which accepts a sum of both languages        
+        
+        `union` constructs a new NFA object from `s` and `t` parameters. NFA's
+        accepted language is a sum of accepted languages of `s` and `t`. In terms
+        of regular expressions the NFA represents a union of regular expressions 
+        represented by `s` and `t`, what would be written as `s|t`.
+
+        Both arguments should be different valid NFA objects. Both are invalidated
+        if the method successfully completes. No NFA is modified if an exception
+        was raised.
+
+        Returned NFA object is valid.
+
+        Raises:
+        NFAInvalidError: if either `s` or `t` is invalid. The valid one is
+            not modified.
+        NFAArgumentError: if `s` and `t` are the same object. The object is not
+            modified.
+
+        Args:
+        s (NFA): a part of the union. Invalidated on success.
+        t (NFA): a part of the union. Invalidated on success.
+
+        Returns:
+        A valid NFA which accepts a sum of `s` and `t` languages
+        """
         if not s.valid or not t.valid:
             raise NFAInvalidError('Trying to use invalid NFA object')
         if s is t:
