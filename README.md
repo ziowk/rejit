@@ -34,3 +34,24 @@ Rough plan to JIT compile regular expressions:
 Currently `rejit` can only decide whether a string exactly matches a regexp.
 There is no search support.
 
+## Usage example
+Regular expressions in `rejit` can be used to check if a string looks like a
+number. Here's a pretty bad attempt:
+```
+>>> import rejit.regex as re
+>>> regex = re.Regex(r'(\-?[0-9]*(\.[0-9]+)?')
+>>> regex.accept('not a number')
+False
+>>> regex.accept('42')
+True
+>>> regex.accept('-1.0')
+True
+>>> regex.accept('.999')
+True
+>>> regex.accept('-.')
+False
+>>> regex.accept('-')
+True
+# ugh, a lone minus is accepted, but that's actually the regex' fault, not a bug
+```
+
