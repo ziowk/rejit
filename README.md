@@ -60,3 +60,8 @@ True
 generation isn't set up yet, so no cute html docs to browse. Related issue
 [#26](https://github.com/ziowk/rejit/issues/26)
 
+## License
+`rejit` is licensed under the terms of the GPLv2 license.
+
+For more information see [LICENSE](LICENSE)
+
