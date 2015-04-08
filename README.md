@@ -55,3 +55,8 @@ True
 # ugh, a lone minus is accepted, but that's actually the regex' fault, not a bug
 ```
 
+## Documentation
+`rejit`'s classes are documented in docstrings. Automatic documentation
+generation isn't set up yet, so no cute html docs to browse. Related issue
+[#26](https://github.com/ziowk/rejit/issues/26)
+
