@@ -19,3 +19,18 @@ Rough plan to JIT compile regular expressions:
 * [ ] compile the IR to native code
 * [ ] pack native code in an easy to call wrapper
 
+## Supported features
+`rejit` supports the following regexp features:
+* union - `abc|def`
+* concatenation - `abcd`
+* Kleene star - `a*`
+* Kleene plus - `b+`
+* question mark operator - `c?`
+* grouping - `(a|b)c`
+* any character - `.`
+* character set (including character ranges) - `[a-zXYZ]`
+* escaped special characters - `\.`
+
+Currently `rejit` can only decide whether a string exactly matches a regexp.
+There is no search support.
+
