@@ -4,6 +4,11 @@ import functools
 import string
 import copy
 
+try:
+    import graphviz
+except ImportError:
+    pass
+
 class RegexError(Exception): pass
 
 class RegexParseError(RegexError): pass
@@ -184,6 +189,18 @@ class NFA:
 
     def __str__(self):
         return '<NFA id: {ident}, regex: {desc}>'.format(ident=id(self), desc=self.description)
+
+    def _view_graph(self):
+        g = graphviz.Digraph(self.description, format='png', filename='graphs/NFA_'+str(id(self)))
+        g.attr('node', shape='circle')
+        states = NFA._get_all_reachable_states(self._start)
+        for st in states:
+            g.node(str(st._state_num))
+            for e in st._edges:
+                g.edge(str(st._state_num), str(e[1]._state_num), label=e[0] if e[0] else 'ε')
+        g.body.append(r'label = "\n\n{}"'.format(self.description))
+        g.body.append('fontsize=20')
+        g.view()
 
     def _invalidate(self):
         """Invalidate a NFA object making it not suitable for any use.
