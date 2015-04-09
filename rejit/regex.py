@@ -197,6 +197,14 @@ class NFA:
 
     @staticmethod
     def _get_all_reachable_states(state):
+        """Return a set of states which are reachable from `state`
+
+        Args:
+        state (State): the state from which the search is performed
+
+        Returns:
+        A set of states connected to the state by any path.
+        """
         states = set()
         temp = {state}
         while temp:
