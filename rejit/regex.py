@@ -196,6 +196,16 @@ class NFA:
         self._description = None
 
     @staticmethod
+    def _get_all_reachable_states(state):
+        states = set()
+        temp = {state}
+        while temp:
+            st = temp.pop()
+            states.add(st)
+            temp |= set(map(lambda e: e[1], filter(lambda e: e[1] not in states, st._edges)))
+        return states
+
+    @staticmethod
     def _get_char_states(state, char):
         """Return a set of states connected to a `state` by an immediate edge
         labeled exactly with `char` string.
