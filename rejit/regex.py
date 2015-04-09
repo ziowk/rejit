@@ -191,6 +191,25 @@ class NFA:
         return '<NFA id: {ident}, regex: {desc}>'.format(ident=id(self), desc=self.description)
 
     def _view_graph(self):
+        """Generate a graph from the NFA, save to a file and view it
+
+        `_view_graph` creates a graph representation of the NFA, which can
+        be useful during development and debugging. The graph consists of
+        states and edges rechable from the `_start` state. States are labelled
+        with their individual identifiers - `_state_num` numbers. Edges are 
+        labelled with their transition requirements. The graph is labeled with
+        the NFA's description. The graph is saved to two files, textual and
+        graphical (.png), and shown on screen.
+
+        Files are saved in the `graphs` directory, with a filename created
+        from the pattern `NFA_` + `id(self)`. This means that files in the
+        `graphs` directory can be overwritten. All files in the `graphs`
+        are considered temporary.
+
+        This method depends on `graphviz` python package. Additionally, to
+        render the graph `dot` executable from Graphviz program must be on
+        system's path.
+        """
         g = graphviz.Digraph(self.description, format='png', filename='graphs/NFA_'+str(id(self)))
         g.attr('node', shape='circle')
         states = NFA._get_all_reachable_states(self._start)
