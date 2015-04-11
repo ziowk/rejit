@@ -14,7 +14,7 @@ Rough plan to JIT compile regular expressions:
 * [x] parse regexp string to an AST
 * [x] transform the AST (optimization, simplification)
 * [x] construct a [nondeterministic finite automaton](http://en.wikipedia.org/wiki/Nondeterministic_finite_automaton) from the AST
-* [ ] convert the NFA to a DFA
+* [x] convert the NFA to a DFA
 * [ ] compile the DFA to some intermediate representation
 * [ ] compile the IR to native code
 * [ ] pack native code in an easy to call wrapper
