@@ -740,6 +740,10 @@ class DFA:
                 char2statenum_set[char] |= char2statenum_set['any']
         return char2statenum_set
 
+    @staticmethod
+    def _multistate_name(states):
+        return functools.reduce(lambda acc, x: acc + ',' + x, sorted(map(str,states)))
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:
