@@ -785,6 +785,12 @@ class DFA:
         self._states_edges = newstates
         # set of accepting states
         self._end_states = frozenset(end_states)
+        # description
+        self._description = nfa.description
+
+    @property
+    def description(self):
+        return self._description
 
     def accept(self,s):
         state = self._start
