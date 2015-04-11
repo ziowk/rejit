@@ -783,6 +783,22 @@ class DFA:
         # set of accepting states
         self._end_states = frozenset(end_states)
 
+    def accept(self,s):
+        state = self._start
+        while s:
+            # check for char edge from current state
+            if s[0] in self._states_edges[state]:
+                state = self._states_edges[state][s[0]]
+                s = s[1:]
+            # check also for `any` edge, but only after char edges
+            elif 'any' in self._states_edges[state]:
+                state = self._states_edges[state]['any']
+                s = s[1:]
+            # rejecting state - no edge could match s[0]
+            else:
+                return False
+        return state in self._end_states
+
     @staticmethod
     def _nfa_reachable_noneps_edges(state):
         return filter(lambda e: e[0], functools.reduce(lambda x,y: x+y,[s._edges for s in NFA._moveEpsilon({state})]))
