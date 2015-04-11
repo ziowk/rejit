@@ -744,6 +744,19 @@ class DFA:
     def _multistate_name(states):
         return functools.reduce(lambda acc, x: acc + ',' + x, sorted(map(str,states)))
 
+    @staticmethod
+    def _merge_states(merged_states,nfa_states_edges):
+        name = DFA._multistate_name(merged_states)
+        char2statenum_set = collections.defaultdict(lambda: set())
+        for st in merged_states:
+            merged_c2s = nfa_states_edges[st]
+            for c in merged_c2s:
+                char2statenum_set[c] |= merged_c2s[c]
+            if 'any' in char2statenum_set:
+                for char in char2statenum_set:
+                    char2statenum_set[char] |= char2statenum_set['any']
+        return name, char2statenum_set
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:
