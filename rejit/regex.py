@@ -842,6 +842,22 @@ class DFA:
                     char2statenum_set[char] |= char2statenum_set['any']
         return name, char2statenum_set
 
+    def _view_graph(self):
+        g = graphviz.Digraph(self.description, format='png', filename='graphs/DFA_'+str(id(self)))
+        g.attr('node', shape='square')
+        g.node(self._start)
+        g.attr('node', shape='doublecircle')
+        for st in self._end_states:
+            g.node(st)
+        g.attr('node', shape='circle')
+        for st in self._states_edges:
+            g.node(st)
+            for char in self._states_edges[st]:
+                g.edge(st, self._states_edges[st][char], label=char)
+        g.body.append(r'label = "\n\n{}"'.format(self.description))
+        g.body.append('fontsize=20')
+        g.view()
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:
