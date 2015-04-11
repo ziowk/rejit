@@ -721,6 +721,11 @@ class NFA:
             x._invalidate()
         return n
 
+class DFA:
+    @staticmethod
+    def _nfa_reachable_noneps_edges(state):
+        return filter(lambda e: e[0], functools.reduce(lambda x,y: x+y,[s._edges for s in NFA._moveEpsilon({state})]))
+
 class Regex:
     def __init__(self, pattern=None):
         if pattern is not None:
