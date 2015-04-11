@@ -212,6 +212,10 @@ class NFA:
         system's path.
         """
         g = graphviz.Digraph(self.description, format='png', filename='graphs/NFA_'+str(id(self)))
+        g.attr('node', shape='doublecircle')
+        g.node(str(self._end._state_num))
+        g.attr('node', shape='square')
+        g.node(str(self._start._state_num))
         g.attr('node', shape='circle')
         states = NFA._get_all_reachable_states(self._start)
         for st in states:
