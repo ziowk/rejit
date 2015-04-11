@@ -6,6 +6,7 @@ import rejit.regex
 import pprint
 from rejit.regex import State
 from rejit.regex import NFA
+from rejit.regex import DFA
 from rejit.regex import Regex
 
 def accept_test_helper(regex,cases):
@@ -511,6 +512,20 @@ class TestNFA:
                 ]
         accept_test_helper(nfa, cases)
         accept_test_helper(nfc, cases)
+
+class TestDFA:
+    def test_validation(self):
+        nfa = NFA.symbol('a')
+        nfak = NFA.kleene(nfa)
+        assert not nfa.valid
+        assert nfak.valid
+        with pytest.raises(rejit.regex.NFAInvalidError):
+            DFA(nfa)
+        dfa = DFA(nfak)
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aab') == False
+        assert dfa.accept('aaa') == True
+        assert dfa.accept('aab') == False
 
 def assert_regex_parse_error(pattern):
     with pytest.raises(rejit.regex.RegexParseError):

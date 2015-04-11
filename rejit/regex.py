@@ -724,6 +724,9 @@ class NFA:
 
 class DFA:
     def __init__(self, nfa):
+        if not nfa.valid:
+            raise NFAInvalidError('Trying to use an invalid NFA object')
+
         # all nfa's states reachable from the start state
         nfa_states = frozenset(NFA._get_all_reachable_states(nfa._start))
 
