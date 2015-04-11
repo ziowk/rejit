@@ -3,6 +3,7 @@
 import functools
 import string
 import copy
+import collections
 
 try:
     import graphviz
@@ -725,6 +726,19 @@ class DFA:
     @staticmethod
     def _nfa_reachable_noneps_edges(state):
         return filter(lambda e: e[0], functools.reduce(lambda x,y: x+y,[s._edges for s in NFA._moveEpsilon({state})]))
+
+    @staticmethod
+    def _nfa_char2statenum_set(st):
+        char2statenum_set = collections.defaultdict(lambda: set())
+        # gather all non-epsilon edges reachable from `st`
+        # for each char in edges find all states reachable using that char
+        for e in DFA._nfa_reachable_noneps_edges(st):
+            char2statenum_set[e[0]] |= {e[1]._state_num} | set(map(lambda x: x._state_num, NFA._moveEpsilon({e[1]})))
+        # if `any` edge reachable, than all other chars can use it too
+        if 'any' in char2statenum_set:
+            for char in char2statenum_set:
+                char2statenum_set[char] |= char2statenum_set['any']
+        return char2statenum_set
 
 class Regex:
     def __init__(self, pattern=None):
