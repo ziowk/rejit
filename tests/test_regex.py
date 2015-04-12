@@ -1068,3 +1068,25 @@ class TestRegexParsing:
         with pytest.raises(rejit.regex.RegexMatcherError):
             re.get_matcher_description()
 
+    def test_DFA_compilation(self):
+        re = Regex('a|b*')
+        cases = [
+                    ('a', True),
+                    ('a', True),
+                    ('', True),
+                    ('b', True),
+                    ('bbb', True),
+                    ('x', False),
+                    ('aaa', False),
+                    ('abb', False),
+                ]
+        accept_test_helper(re,cases)
+
+        re.compile_to_DFA()
+        accept_test_helper(re,cases)
+        assert re._matcher_type == 'DFA'
+
+        re = Regex()
+        with pytest.raises(rejit.regex.RegexCompilationError):
+            re.compile_to_DFA()
+

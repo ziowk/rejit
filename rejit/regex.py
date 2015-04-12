@@ -883,10 +883,12 @@ class Regex:
         self._ast = None
         self._final_ast = None
         self._matcher = None
+        self._matcher_type = 'None'
         if self.pattern is not None:
             self._ast = self._parse(pattern)
             self._final_ast = self._transform(self._ast)
             self._matcher = self._compile(self._final_ast)
+            self._matcher_type = 'NFA'
 
     def accept(self, s):
         if self._matcher:
@@ -901,6 +903,13 @@ class Regex:
     @property
     def description(self):
         return self.get_matcher_description()
+
+    def compile_to_DFA(self):
+        if self._matcher_type != 'NFA':
+            raise RegexCompilationError(
+                    "Can only compile NFA-type matcher to a DFA. Current matcher type: {}".format(self._matcher_type))
+        self._matcher = DFA(self._matcher)
+        self._matcher_type = 'DFA'
 
     def _getchar(self):
         if self._input:
