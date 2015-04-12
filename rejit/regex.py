@@ -16,6 +16,8 @@ class RegexParseError(RegexError): pass
 
 class RegexCompilationError(RegexError): pass
 
+class RegexMatcherError(RegexError): pass
+
 class NFAInvalidError(RegexError): pass
 
 class NFAArgumentError(RegexError): pass
@@ -877,17 +879,24 @@ class DFA:
 
 class Regex:
     def __init__(self, pattern=None):
-        if pattern is not None:
-            self.pattern = pattern
+        self.pattern = pattern
+        self._ast = None
+        self._final_ast = None
+        self._matcher = None
+        if self.pattern is not None:
             self._ast = self._parse(pattern)
             self._final_ast = self._transform(self._ast)
             self._matcher = self._compile(self._final_ast)
 
     def accept(self, s):
-        return self._matcher.accept(s)
+        if self._matcher:
+            return self._matcher.accept(s)
+        raise RegexMatcherError("No matcher found")
 
     def get_NFA_description(self):
-        return self._matcher.description
+        if self._matcher:
+            return self._matcher.description
+        raise RegexMatcherError("No matcher found")
 
     def _getchar(self):
         if self._input:

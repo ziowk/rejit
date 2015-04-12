@@ -1059,3 +1059,12 @@ class TestRegexParsing:
         ppast.pprint(xinline)
         assert xinline == x
 
+    def test_empty_regex_checks(self):
+        # test for but #63
+        re = Regex()
+        assert re.pattern is None
+        with pytest.raises(rejit.regex.RegexMatcherError):
+            re.accept('')
+        with pytest.raises(rejit.regex.RegexMatcherError):
+            re.get_NFA_description()
+
