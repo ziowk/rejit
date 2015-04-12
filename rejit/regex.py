@@ -893,7 +893,7 @@ class Regex:
             return self._matcher.accept(s)
         raise RegexMatcherError("No matcher found")
 
-    def get_NFA_description(self):
+    def get_matcher_description(self):
         if self._matcher:
             return self._matcher.description
         raise RegexMatcherError("No matcher found")

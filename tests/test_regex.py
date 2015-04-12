@@ -532,7 +532,7 @@ def assert_regex_parse_error(pattern):
         re = Regex(pattern)
         print('Did not raise RegexParseError')
         print('ast: {}'.format(re._ast))
-        print('description: {}'.format(re.get_NFA_description()))
+        print('description: {}'.format(re.get_matcher_description()))
 
 ppast = pprint.PrettyPrinter(indent=4)
 
@@ -1066,5 +1066,5 @@ class TestRegexParsing:
         with pytest.raises(rejit.regex.RegexMatcherError):
             re.accept('')
         with pytest.raises(rejit.regex.RegexMatcherError):
-            re.get_NFA_description()
+            re.get_matcher_description()
 
