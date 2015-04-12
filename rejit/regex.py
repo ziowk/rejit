@@ -782,6 +782,19 @@ class DFA:
             lambda st: DFA._multistate_name({st._state_num}), 
             filter(lambda st: nfa._end in NFA._moveEpsilon({st}), nfa_states)))
 
+        # filter unreachable multistates from newstates
+        reachable_newstates = set()
+        to_check = {DFA._multistate_name({nfa._start._state_num})}
+        while to_check:
+            st = to_check.pop()
+            reachable_newstates.add(st)
+            to_check |= set(filter(lambda x: x not in reachable_newstates, newstates[st].values()))
+
+        newstates = dict(filter(lambda kv: kv[0] in reachable_newstates, newstates.items()))
+
+        # filter unreachable multistates from end_states
+        end_states = set(filter(lambda st: st in reachable_newstates, end_states))
+
         # save relevant data
         # start state
         self._start = DFA._multistate_name({nfa._start._state_num})
