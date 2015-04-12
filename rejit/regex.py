@@ -898,6 +898,10 @@ class Regex:
             return self._matcher.description
         raise RegexMatcherError("No matcher found")
 
+    @property
+    def description(self):
+        return self.get_matcher_description()
+
     def _getchar(self):
         if self._input:
             self._last_char = self._input[0]
