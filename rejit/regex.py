@@ -120,6 +120,25 @@ class Regex:
         node_list = (left[1] if left[0] == node_type else [left]) + (right[1] if right[0] == node_type else [right])
         return (node_type , node_list)
 
+    def _simplify_quant(self, ast):
+        quant_nodes = {'kleene-star','kleene-plus','zero-or-one'}
+        if isinstance(ast, list):
+            return list(map(self._simplify_quant, ast))
+        if ast[0] in ['any','empty','symbol','set']:
+            return copy.deepcopy(ast)
+        if ast[0] not in quant_nodes:
+            return tuple([ast[0]] + list(map(self._simplify_quant, ast[1:])))
+        child = self._simplify_quant(ast[1])
+        if child[0] in quant_nodes:
+            if child[0] == ast[0] == 'kleene-plus':
+                return ('kleene-plus', child[1])
+            elif child[0] == ast[0] == 'zero-or-one':
+                return ('zero-or-one', child[1])
+            else:
+                return ('kleene-star', child[1])
+        else:
+            return (ast[0], child)
+
     def _unionRE(self):
         ast1 = self._concatRE()
         if self._last_char == '|':

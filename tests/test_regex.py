@@ -494,6 +494,91 @@ class TestRegexASTtransform:
         xinline = re._flatten_nodes('concat',x)
         assert xinline == x
 
+    def test_ast_simplify_quant_noop(self):
+        re = Regex()
+        x = re._parse('a')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('symbol','a')
+
+    def test_ast_simplify_quant_single(self):
+        re = Regex()
+        x = re._parse('a*')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('a+')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-plus',('symbol','a'))
+
+        x = re._parse('a?')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('zero-or-one',('symbol','a'))
+
+    def test_ast_simplify_quant_nested(self):
+        re = Regex()
+        x = re._parse('(a+)+')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-plus',('symbol','a'))
+
+        x = re._parse('(a+)*')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a+)?')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a*)+')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a*)*')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a*)?')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a?)+')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a?)*')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',('symbol','a'))
+
+        x = re._parse('(a?)?')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('zero-or-one',('symbol','a'))
+
+    def test_ast_simplify_quant_nested_adv(self):
+        re = Regex()
+        x = re._parse('(([abc]*)?x+)*')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',
+                ('concat', [
+                ('kleene-star', ('set',['a','b','c'], '[abc]')),
+                ('kleene-plus', ('symbol', 'x')),
+            ])
+            )
+
+        x = re._parse('(a*|b+|c?)*')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star',
+                ('union', [
+                    ('kleene-star', ('symbol','a')),
+                    ('union', [
+                        ('kleene-plus', ('symbol', 'b')),
+                        ('zero-or-one', ('symbol', 'c')),
+                        ])
+            ])
+        )
+
+        x = re._parse('(((((a*)*)+)+)?)?')
+        xinline = re._simplify_quant(x)
+        assert xinline == ('kleene-star', ('symbol', 'a'))
+
 class TestRegexOther:
     def test_empty_regex_checks(self):
         # test for but #63
