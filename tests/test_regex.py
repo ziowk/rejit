@@ -2,11 +2,11 @@
 
 import pytest
 import copy
-import rejit.regex
 import pprint
-from rejit.regex import State
-from rejit.regex import NFA
-from rejit.regex import DFA
+import rejit.common
+from rejit.nfa import State
+from rejit.nfa import NFA
+from rejit.dfa import DFA
 from rejit.regex import Regex
 
 def accept_test_helper(regex,cases):
@@ -30,20 +30,20 @@ class TestNFA:
         accept_test_helper(nfa,cases)
 
     def test_symbol_NFA(self):
-        char_list = rejit.regex.supported_chars + rejit.regex.special_chars
+        char_list = rejit.common.supported_chars + rejit.common.special_chars
         for char in char_list:
             nfa = NFA.symbol(char)
             cases = zip(char_list,map(lambda c: c == char,char_list)) 
             accept_test_helper(nfa,cases)
 
     def test_any_NFA(self):
-        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars
+        all_chars = rejit.common.supported_chars + rejit.common.special_chars
         nfa = NFA.any()
         cases = zip(all_chars,[True]*len(all_chars))
         accept_test_helper(nfa,cases)
 
     def test_none_NFA(self):
-        all_chars = rejit.regex.supported_chars + rejit.regex.special_chars
+        all_chars = rejit.common.supported_chars + rejit.common.special_chars
         nfa = NFA.none()
         cases = zip(all_chars,[False]*len(all_chars))
         accept_test_helper(nfa,cases)
@@ -258,7 +258,7 @@ class TestNFA:
         nfak = NFA.kleene(nfa)
         assert not nfa.valid
         assert nfak.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
         assert nfak.accept('aaa') == True
         assert nfak.accept('aab') == False
@@ -268,7 +268,7 @@ class TestNFA:
         nfak = NFA.kleene(nfa)
         assert not nfa.valid
         assert nfak.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
         assert nfak.accept('') == True
         assert nfak.accept('a') == True
@@ -281,9 +281,9 @@ class TestNFA:
         assert not nfa.valid
         assert not nfab.valid
         assert nfac.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfab.accept('b')
         assert nfac.accept('ab') == True
         assert nfac.accept('a') == False
@@ -294,9 +294,9 @@ class TestNFA:
         assert not nfa.valid
         assert not nfab.valid
         assert nfau.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfab.accept('b')
         assert nfau.accept('a') == True
         assert nfau.accept('b') == True
@@ -307,7 +307,7 @@ class TestNFA:
         nfap = NFA.kleene_plus(nfa)
         assert not nfa.valid
         assert nfap.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
         assert nfap.accept('a') == True
         assert nfap.accept('aaa') == True
@@ -320,7 +320,7 @@ class TestNFA:
         nfaz = NFA.zero_or_one(nfa)
         assert not nfa.valid
         assert nfaz.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
         assert nfaz.accept('') == True
         assert nfaz.accept('a') == True
@@ -332,7 +332,7 @@ class TestNFA:
         nfacm = NFA.concat_many(nfa_list)
         for nfa in nfa_list:
             assert not nfa.valid
-            with pytest.raises(rejit.regex.NFAInvalidError):
+            with pytest.raises(rejit.nfa.NFAInvalidError):
                 nfa.accept('a')
         assert nfacm.valid
         assert nfacm.accept('abc') == True
@@ -344,7 +344,7 @@ class TestNFA:
         nfaum = NFA.union_many(nfa_list)
         for nfa in nfa_list:
             assert not nfa.valid
-            with pytest.raises(rejit.regex.NFAInvalidError):
+            with pytest.raises(rejit.nfa.NFAInvalidError):
                 nfa.accept('a')
         assert nfaum.valid
         assert nfaum.accept('a') == True
@@ -356,7 +356,7 @@ class TestNFA:
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfau = NFA.union(nfa,nfab)
         assert nfab.accept('b') == True
         assert nfab.accept('c') == False
@@ -366,7 +366,7 @@ class TestNFA:
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfab)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfau = NFA.union(nfa,nfab)
         assert nfa.accept('a') == True
         assert nfa.accept('c') == False
@@ -375,13 +375,13 @@ class TestNFA:
 
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfakk = NFA.kleene(nfa)
 
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfac = NFA.concat(nfa,nfab)
         assert nfab.accept('b') == True
         assert nfab.accept('c') == False
@@ -391,7 +391,7 @@ class TestNFA:
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfab)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfac = NFA.concat(nfa,nfab)
         assert nfa.accept('a') == True
         assert nfa.accept('c') == False
@@ -401,7 +401,7 @@ class TestNFA:
         # test if `kleene_plus` tests for validity of its argument
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfap = NFA.kleene_plus(nfa)
         assert nfak.accept('a') == True
         assert nfak.accept('aaa') == True
@@ -410,7 +410,7 @@ class TestNFA:
         # test if `zero_or_one` tests for validity of its argument
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfaz = NFA.zero_or_one(nfa)
         assert nfak.accept('a') == True
         assert nfak.accept('aaa') == True
@@ -419,7 +419,7 @@ class TestNFA:
         # test if `concat-many` tests for validity of its arguments
         nfa_list = [NFA.symbol('a'), NFA.symbol('a'), NFA.symbol('a')]
         nfak = NFA.kleene(nfa_list[-1])
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfacm = NFA.concat_many(nfa_list)
         assert nfak.accept('a') == True
         assert nfak.accept('aaa') == True
@@ -432,7 +432,7 @@ class TestNFA:
         # test if `union_many` tests for validity of its arguments
         nfa_list = [NFA.symbol('a'), NFA.symbol('a'), NFA.symbol('a')]
         nfak = NFA.kleene(nfa_list[-1])
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             nfaum = NFA.union_many(nfa_list)
         assert nfak.accept('a') == True
         assert nfak.accept('aaa') == True
@@ -444,18 +444,18 @@ class TestNFA:
 
         # test if `union_many` checks for passing the same NFA object multiple times
         nfb = NFA.symbol('b')
-        with pytest.raises(rejit.regex.NFAArgumentError):
+        with pytest.raises(rejit.nfa.NFAArgumentError):
             nfaum = NFA.union_many([nfb,NFA.symbol('a'),nfb])
 
         # test if `concat_many` checks for passing the same NFA object multiple times
         nfb = NFA.symbol('b')
-        with pytest.raises(rejit.regex.NFAArgumentError):
+        with pytest.raises(rejit.nfa.NFAArgumentError):
             nfacm = NFA.concat_many([nfb,NFA.symbol('a'),nfb])
 
         nfa = NFA.symbol('a')
-        with pytest.raises(rejit.regex.NFAArgumentError):
+        with pytest.raises(rejit.nfa.NFAArgumentError):
             nfaa = NFA.concat(nfa,nfa)
-        with pytest.raises(rejit.regex.NFAArgumentError):
+        with pytest.raises(rejit.nfa.NFAArgumentError):
             nfaa = NFA.union(nfa,nfa)
 
     def test_deepcopy(self):
@@ -519,7 +519,7 @@ class TestDFA:
         nfak = NFA.kleene(nfa)
         assert not nfa.valid
         assert nfak.valid
-        with pytest.raises(rejit.regex.NFAInvalidError):
+        with pytest.raises(rejit.nfa.NFAInvalidError):
             DFA(nfa)
         dfa = DFA(nfak)
         assert nfak.accept('aaa') == True
@@ -578,7 +578,7 @@ class TestRegexParsing:
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_symbol_regex(self):
-        for char in rejit.regex.supported_chars:
+        for char in rejit.common.supported_chars:
             pattern = char
             expected_AST = ('symbol',char)
             expected_final_AST = expected_AST
@@ -586,7 +586,7 @@ class TestRegexParsing:
             assert_regex_AST(pattern,expected_AST)
             assert_regex_transform(expected_AST,expected_final_AST)
             assert_regex_description(expected_final_AST,expected_NFA_description)
-        for char in rejit.regex.special_chars:
+        for char in rejit.common.special_chars:
             pattern = "\\" + char
             expected_AST = ('symbol',char)
             expected_final_AST = expected_AST
@@ -873,7 +873,7 @@ class TestRegexParsing:
         assert_regex_description(expected_final_AST,expected_NFA_description)
 
     def test_invalid_use_of_special_char_regex(self):
-        for char in rejit.regex.special_chars.replace('.',''):
+        for char in rejit.common.special_chars.replace('.',''):
             assert_regex_parse_error(char)
 
         # test for bug #36
