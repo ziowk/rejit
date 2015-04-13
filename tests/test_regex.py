@@ -406,6 +406,7 @@ class TestRegexParsing:
     def test_empty_group_regex(self):
         assert_regex_parse_error('()')
 
+class TestRegexASTtransform:
     def test_ast_flatten_transform(self):
         re = Regex()
         x = re._parse('a')
@@ -491,6 +492,7 @@ class TestRegexParsing:
         ppast.pprint(xinline)
         assert xinline == x
 
+class TestRegexOther:
     def test_empty_regex_checks(self):
         # test for but #63
         re = Regex()
