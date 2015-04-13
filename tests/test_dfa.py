@@ -9,7 +9,7 @@ from tests.helper import accept_test_helper
 
 import tests.automaton_test_cases as auto_cases
 
-class TestDFA:
+class TestDFAaccept:
     def test_empty_DFA(self):
         accept_test_helper(DFA(auto_cases.empty_nfa), auto_cases.empty_cases)
 
@@ -57,6 +57,7 @@ class TestDFA:
         accept_test_helper(DFA(auto_cases.complex_nfa_1),auto_cases.complex_cases_1)
         accept_test_helper(DFA(auto_cases.complex_nfa_2),auto_cases.complex_cases_2)
 
+class TestDFAvalidation:
     def test_validation(self):
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
