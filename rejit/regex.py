@@ -1,7 +1,6 @@
 #encoding: utf8
 
 import functools
-import string
 import copy
 
 from rejit.common import RegexError
