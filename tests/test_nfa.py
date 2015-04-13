@@ -10,8 +10,7 @@ from tests.helper import accept_test_helper
 
 import tests.automaton_test_cases as auto_cases
 
-
-class TestNFA:
+class TestNFAaccept:
     def test_empty_NFA(self):
         accept_test_helper(auto_cases.empty_nfa, auto_cases.empty_cases)
 
@@ -59,28 +58,15 @@ class TestNFA:
         accept_test_helper(auto_cases.complex_nfa_1,auto_cases.complex_cases_1)
         accept_test_helper(auto_cases.complex_nfa_2,auto_cases.complex_cases_2)
 
-    def test_validation(self):
-        nfa = NFA.symbol('a')
-        nfak = NFA.kleene(nfa)
-        assert not nfa.valid
-        assert nfak.valid
-        with pytest.raises(rejit.nfa.NFAInvalidError):
-            nfa.accept('a')
-        assert nfak.accept('aaa') == True
-        assert nfak.accept('aab') == False
-
-        # test if `char_set` is invalidated correctly
+class TestNFAvalidation:
+    def test_accept_validation(self):
         nfa = NFA.char_set(['a','b'], '[ab]')
-        nfak = NFA.kleene(nfa)
+        nfa._invalidate()
         assert not nfa.valid
-        assert nfak.valid
         with pytest.raises(rejit.nfa.NFAInvalidError):
             nfa.accept('a')
-        assert nfak.accept('') == True
-        assert nfak.accept('a') == True
-        assert nfak.accept('aba') == True
-        assert nfak.accept('abx') == False
 
+    def test_concat_invalidation(self):
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfac = NFA.concat(nfa,nfab)
@@ -94,6 +80,7 @@ class TestNFA:
         assert nfac.accept('ab') == True
         assert nfac.accept('a') == False
 
+    def test_union_invalidation(self):
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfau = NFA.union(nfa,nfab)
@@ -108,7 +95,17 @@ class TestNFA:
         assert nfau.accept('b') == True
         assert nfau.accept('ab') == False
 
-        # test if `kleene_plus` invalidates its argument correctly
+    def test_kleene_invalidation(self):
+        nfa = NFA.symbol('a')
+        nfak = NFA.kleene(nfa)
+        assert not nfa.valid
+        assert nfak.valid
+        with pytest.raises(rejit.nfa.NFAInvalidError):
+            nfa.accept('a')
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aab') == False
+
+    def test_kleene_plus_invalidation(self):
         nfa = NFA.symbol('a')
         nfap = NFA.kleene_plus(nfa)
         assert not nfa.valid
@@ -121,7 +118,7 @@ class TestNFA:
         assert nfap.accept('b') == False
         assert nfap.accept('aab') == False
 
-        # test if `zero_or_one` invalidates its argument correctly
+    def test_zero_or_one_invalidation(self):
         nfa = NFA.symbol('a')
         nfaz = NFA.zero_or_one(nfa)
         assert not nfa.valid
@@ -133,7 +130,7 @@ class TestNFA:
         assert nfaz.accept('b') == False
         assert nfaz.accept('aaa') == False
 
-        # test if `concat-many` invalidates its arguments correctly
+    def test_concat_many_invalidation(self):
         nfa_list = [NFA.symbol('a'), NFA.symbol('b'), NFA.symbol('c')]
         nfacm = NFA.concat_many(nfa_list)
         for nfa in nfa_list:
@@ -145,7 +142,7 @@ class TestNFA:
         assert nfacm.accept('') == False
         assert nfacm.accept('abcd') == False
 
-        # test if `union_many` invalidates its arguments correctly
+    def test_union_many_invalidation(self):
         nfa_list = [NFA.symbol('a'), NFA.symbol('b'), NFA.symbol('c')]
         nfaum = NFA.union_many(nfa_list)
         for nfa in nfa_list:
@@ -159,31 +156,34 @@ class TestNFA:
         assert nfaum.accept('') == False
         assert nfaum.accept('abc') == False
 
-        nfa = NFA.symbol('a')
-        nfab = NFA.symbol('b')
-        nfak = NFA.kleene(nfa)
-        with pytest.raises(rejit.nfa.NFAInvalidError):
-            nfau = NFA.union(nfa,nfab)
-        assert nfab.accept('b') == True
-        assert nfab.accept('c') == False
-        assert nfak.accept('aaa') == True
-        assert nfak.accept('aax') == False
-
-        nfa = NFA.symbol('a')
-        nfab = NFA.symbol('b')
-        nfak = NFA.kleene(nfab)
-        with pytest.raises(rejit.nfa.NFAInvalidError):
-            nfau = NFA.union(nfa,nfab)
-        assert nfa.accept('a') == True
-        assert nfa.accept('c') == False
-        assert nfak.accept('bbb') == True
-        assert nfak.accept('bbx') == False
-
+    def test_kleene_validation(self):
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
         with pytest.raises(rejit.nfa.NFAInvalidError):
             nfakk = NFA.kleene(nfa)
 
+    def test_union_validation(self):
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfak = NFA.kleene(nfa)
+        with pytest.raises(rejit.nfa.NFAInvalidError):
+            nfau = NFA.union(nfa,nfab)
+        assert nfab.accept('b') == True
+        assert nfab.accept('c') == False
+        assert nfak.accept('aaa') == True
+        assert nfak.accept('aax') == False
+
+        nfa = NFA.symbol('a')
+        nfab = NFA.symbol('b')
+        nfak = NFA.kleene(nfab)
+        with pytest.raises(rejit.nfa.NFAInvalidError):
+            nfau = NFA.union(nfa,nfab)
+        assert nfa.accept('a') == True
+        assert nfa.accept('c') == False
+        assert nfak.accept('bbb') == True
+        assert nfak.accept('bbx') == False
+
+    def test_concat_validation(self):
         nfa = NFA.symbol('a')
         nfab = NFA.symbol('b')
         nfak = NFA.kleene(nfa)
@@ -204,7 +204,7 @@ class TestNFA:
         assert nfak.accept('bbb') == True
         assert nfak.accept('bbx') == False
 
-        # test if `kleene_plus` tests for validity of its argument
+    def test_kleene_plus_validation(self):
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
         with pytest.raises(rejit.nfa.NFAInvalidError):
@@ -213,7 +213,7 @@ class TestNFA:
         assert nfak.accept('aaa') == True
         assert nfak.accept('aak') == False
 
-        # test if `zero_or_one` tests for validity of its argument
+    def test_zero_or_one_validation(self):
         nfa = NFA.symbol('a')
         nfak = NFA.kleene(nfa)
         with pytest.raises(rejit.nfa.NFAInvalidError):
@@ -222,7 +222,7 @@ class TestNFA:
         assert nfak.accept('aaa') == True
         assert nfak.accept('aak') == False
 
-        # test if `concat-many` tests for validity of its arguments
+    def test_concat_many_validation(self):
         nfa_list = [NFA.symbol('a'), NFA.symbol('a'), NFA.symbol('a')]
         nfak = NFA.kleene(nfa_list[-1])
         with pytest.raises(rejit.nfa.NFAInvalidError):
@@ -235,7 +235,7 @@ class TestNFA:
         assert nfa_list[1].accept('a') == True
         assert nfa_list[1].accept('b') == False
 
-        # test if `union_many` tests for validity of its arguments
+    def test_union_many_validation(self):
         nfa_list = [NFA.symbol('a'), NFA.symbol('a'), NFA.symbol('a')]
         nfak = NFA.kleene(nfa_list[-1])
         with pytest.raises(rejit.nfa.NFAInvalidError):
@@ -248,22 +248,27 @@ class TestNFA:
         assert nfa_list[1].accept('a') == True
         assert nfa_list[1].accept('b') == False
 
-        # test if `union_many` checks for passing the same NFA object multiple times
+    def test_concat_duplicates(self):
+        nfa = NFA.symbol('a')
+        with pytest.raises(rejit.nfa.NFAArgumentError):
+            nfaa = NFA.concat(nfa,nfa)
+
+    def test_union_duplicates(self):
+        nfa = NFA.symbol('a')
+        with pytest.raises(rejit.nfa.NFAArgumentError):
+            nfaa = NFA.union(nfa,nfa)
+
+    def test_union_many_duplicates(self):
         nfb = NFA.symbol('b')
         with pytest.raises(rejit.nfa.NFAArgumentError):
             nfaum = NFA.union_many([nfb,NFA.symbol('a'),nfb])
 
-        # test if `concat_many` checks for passing the same NFA object multiple times
+    def test_concat_many_duplicates(self):
         nfb = NFA.symbol('b')
         with pytest.raises(rejit.nfa.NFAArgumentError):
             nfacm = NFA.concat_many([nfb,NFA.symbol('a'),nfb])
 
-        nfa = NFA.symbol('a')
-        with pytest.raises(rejit.nfa.NFAArgumentError):
-            nfaa = NFA.concat(nfa,nfa)
-        with pytest.raises(rejit.nfa.NFAArgumentError):
-            nfaa = NFA.union(nfa,nfa)
-
+class TestNFAother:
     def test_deepcopy(self):
         nfa = NFA.union(NFA.concat(NFA.symbol('a'),NFA.kleene(NFA.symbol('b'))),NFA.symbol('c'))
         nfc = copy.deepcopy(nfa)
