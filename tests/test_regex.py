@@ -407,16 +407,20 @@ class TestRegexParsing:
         assert_regex_parse_error('()')
 
 class TestRegexASTtransform:
-    def test_ast_flatten_transform(self):
+    def test_ast_flatten_noop(self):
         re = Regex()
         x = re._parse('a')
         xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('symbol','a')
 
+    def test_ast_flatten_single(self):
+        re = Regex()
         x = re._parse('ab')
         xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[('symbol','a'),('symbol','b')])
 
+    def test_ast_flatten_nested(self):
+        re = Regex()
         x = re._parse('abc')
         xinline = re._flatten_nodes('concat',x) 
         assert xinline == ('concat',[('symbol','a'),('symbol','b'),('symbol','c')])
@@ -464,6 +468,8 @@ class TestRegexASTtransform:
             ('concat',[('symbol','g'),('symbol','h')]),
             ])
 
+    def test_ast_flatten_full_tree(self):
+        re = Regex()
         # really abstract syntax tree
         x = ('concat', [
                 ('concat', [
@@ -479,6 +485,8 @@ class TestRegexASTtransform:
         ppast.pprint(xinline)
         assert xinline == ('concat', [ ('symbol','a'), ('symbol','b'), ('symbol','c'), ('symbol','d'), ('symbol','e'), ('symbol','f') ])
 
+    def test_ast_flatten_bug_44(self):
+        re = Regex()
         # test for bug #44
         x = ('xxxxx', [('symbol', 'a'), ('empty',)])
         xinline = re._flatten_nodes('concat',x)
