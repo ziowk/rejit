@@ -38,6 +38,9 @@ class TestNFAaccept:
         accept_test_helper(auto_cases.concat_many_nfa_1,auto_cases.concat_many_cases_1)
         accept_test_helper(auto_cases.concat_many_nfa_2,auto_cases.concat_many_cases_2)
         accept_test_helper(auto_cases.concat_many_nfa_3,auto_cases.concat_many_cases_3)
+        assert auto_cases.concat_many_nfa_1.description == 'ab(c)+d'
+        assert auto_cases.concat_many_nfa_2.description == 'a'
+        assert auto_cases.concat_many_nfa_3.description == '\\E'
 
     def test_union_NFA(self):
         accept_test_helper(auto_cases.union_nfa,auto_cases.union_cases)
@@ -46,6 +49,9 @@ class TestNFAaccept:
         accept_test_helper(auto_cases.union_many_nfa_1,auto_cases.union_many_cases_1)
         accept_test_helper(auto_cases.union_many_nfa_2,auto_cases.union_many_cases_2)
         accept_test_helper(auto_cases.union_many_nfa_3,auto_cases.union_many_cases_3)
+        assert auto_cases.union_many_nfa_1.description == '(a|b|(c)+)'
+        assert auto_cases.union_many_nfa_2.description == '(a)'
+        assert auto_cases.union_many_nfa_3.description == '[]'
 
     def test_char_set_NFA(self):
         accept_test_helper(auto_cases.char_set_nfa_1,auto_cases.char_set_cases_1)

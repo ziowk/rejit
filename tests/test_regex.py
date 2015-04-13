@@ -406,55 +406,6 @@ class TestRegexParsing:
     def test_empty_group_regex(self):
         assert_regex_parse_error('()')
 
-    def test_concat_compile(self):
-        re = Regex()
-
-        concat2 = ('concat', [('symbol','a'),('symbol','b')])
-        nfa2 = re._compile(concat2)
-        assert nfa2.description == 'ab'
-        assert nfa2.accept('ab')
-        assert not nfa2.accept('')
-        assert not nfa2.accept('a')
-        assert not nfa2.accept('ba')
-        assert not nfa2.accept('abc')
-
-        concat5 = ('concat', [('symbol','a'),('symbol','b'),('symbol','c'),('symbol','d'),('symbol','e')])
-        nfa5 = re._compile(concat5)
-        assert nfa5.description == 'abcde'
-        assert nfa5.accept('abcde')
-        assert not nfa5.accept('')
-        assert not nfa5.accept('a')
-        assert not nfa5.accept('ab')
-        assert not nfa5.accept('bacde')
-        assert not nfa5.accept('abcdef')
-
-    def test_union_compile(self):
-        re = Regex()
-
-        union2 = ('union', [('symbol','a'),('symbol','b')])
-        nfa2 = re._compile(union2)
-        assert nfa2.description == '(a|b)'
-        assert nfa2.accept('a')
-        assert nfa2.accept('b')
-        assert not nfa2.accept('')
-        assert not nfa2.accept('c')
-        assert not nfa2.accept('aa')
-        assert not nfa2.accept('ab')
-
-        union5 = ('union', [('symbol','a'),('symbol','b'),('symbol','c'),('symbol','d'),('symbol','e')])
-        nfa5 = re._compile(union5)
-        assert nfa5.description == '(a|b|c|d|e)'
-        assert nfa5.accept('a')
-        assert nfa5.accept('b')
-        assert nfa5.accept('c')
-        assert nfa5.accept('d')
-        assert nfa5.accept('e')
-        assert not nfa5.accept('')
-        assert not nfa5.accept('f')
-        assert not nfa5.accept('ab')
-        assert not nfa5.accept('cd')
-        assert not nfa5.accept('abcde')
-
     def test_ast_flatten_transform(self):
         re = Regex()
         x = re._parse('a')
