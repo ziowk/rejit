@@ -105,8 +105,8 @@ class TestRegexParsing:
 
         pattern = ('(a*)*')
         expected_AST = ('kleene-star',('kleene-star',('symbol','a')))
-        expected_final_AST = expected_AST
-        expected_NFA_description = '((a)*)*'
+        expected_final_AST = ('kleene-star',('symbol','a'))
+        expected_NFA_description = '(a)*'
         assert_regex_AST(pattern,expected_AST)
         assert_regex_transform(expected_AST,expected_final_AST)
         assert_regex_description(expected_final_AST,expected_NFA_description)

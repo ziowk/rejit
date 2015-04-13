@@ -96,6 +96,7 @@ class Regex:
             [
                 functools.partial(self._flatten_nodes,'concat'),
                 functools.partial(self._flatten_nodes,'union'),
+                self._simplify_quant,
             ],
             input_ast)
 
