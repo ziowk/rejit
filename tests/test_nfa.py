@@ -290,19 +290,9 @@ class TestNFAother:
         assert nfa._start is not nfc._start
         assert nfa._end is not nfc._end
 
-        # get all states
-        def get_all_states_helper(n):
-            states = set()
-            temp = {n._start}
-            while temp:
-                st = temp.pop()
-                states.add(st)
-                temp |= set(map(lambda e: e[1], filter(lambda e: e[1] not in states, st._edges)))
-            return states
-
         # assert no shared states
-        sta = get_all_states_helper(nfa)
-        stc = get_all_states_helper(nfc)
+        sta = NFA._get_all_reachable_states(nfa._start)
+        stc = NFA._get_all_reachable_states(nfc._start)
         assert not set(map(id, sta)) & set(map(id, stc))
 
         # test if both still work as intended
