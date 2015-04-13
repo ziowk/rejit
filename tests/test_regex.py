@@ -8,14 +8,14 @@ from rejit.regex import Regex
 
 from tests.helper import accept_test_helper
 
+ppast = pprint.PrettyPrinter(indent=4)
+
 def assert_regex_parse_error(pattern):
     with pytest.raises(rejit.regex.RegexParseError):
         re = Regex(pattern)
         print('Did not raise RegexParseError')
         print('ast: {}'.format(re._ast))
         print('description: {}'.format(re.get_matcher_description()))
-
-ppast = pprint.PrettyPrinter(indent=4)
 
 def assert_regex_description(ast, expected_description):
     result_description = Regex()._compile(ast).description
