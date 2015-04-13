@@ -481,8 +481,6 @@ class TestRegexASTtransform:
                     ('symbol','f')])
                 ])
         xinline = re._flatten_nodes('concat',x)
-        ppast.pprint(x)
-        ppast.pprint(xinline)
         assert xinline == ('concat', [ ('symbol','a'), ('symbol','b'), ('symbol','c'), ('symbol','d'), ('symbol','e'), ('symbol','f') ])
 
     def test_ast_flatten_bug_44(self):
@@ -490,14 +488,10 @@ class TestRegexASTtransform:
         # test for bug #44
         x = ('xxxxx', [('symbol', 'a'), ('empty',)])
         xinline = re._flatten_nodes('concat',x)
-        ppast.pprint(x)
-        ppast.pprint(xinline)
         assert xinline == x
         # test for bug #44
         x = ('xxxxx', [('yyy', [('xxxxx',[])]), ('symbol', 'b')])
         xinline = re._flatten_nodes('concat',x)
-        ppast.pprint(x)
-        ppast.pprint(xinline)
         assert xinline == x
 
 class TestRegexOther:
