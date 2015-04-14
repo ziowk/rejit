@@ -12,7 +12,7 @@ setup(
     license='GPLv2',
     packages=['rejit',],
     extras_require = {
-        'Graphviz': ["graphviz>=0.4.3"],
+        'dev': ["graphviz", "pytest"]
         },
     keywords = ['regexp', 'regex', 'JIT', 'just-in-time', 'compiler'],
     classifiers = [
