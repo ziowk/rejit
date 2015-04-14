@@ -55,6 +55,28 @@ True
 # ugh, a lone minus is accepted, but that's actually the regex' fault, not a bug
 ```
 
+## Installation
+`rejit` package is distributed by source. Clone the repository:
+```
+git clone git@github.com:ziowk/rejit.git
+cd rejit
+```
+
+Install the package with `setuptools`:
+```
+python setup.py install
+```
+
+Or install the development version with `pip`:
+```
+pip install -e .[dev]
+```
+
+And run tests with `py.test` (installed with the development version):
+```
+py.test
+```
+
 ## Documentation
 `rejit`'s classes are documented in docstrings. Automatic documentation
 generation isn't set up yet, so no cute html docs to browse. Related issue
