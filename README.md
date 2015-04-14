@@ -77,6 +77,11 @@ And run tests with `py.test` (installed with the development version):
 py.test
 ```
 
+## Requirements
+Supports Python 3 only.
+
+No external dependencies.
+
 ## Documentation
 `rejit`'s classes are documented in docstrings. Automatic documentation
 generation isn't set up yet, so no cute html docs to browse. Related issue
