@@ -1,6 +1,6 @@
 #encoding: utf8
 
-from setuptools import setup
+from setuptools import setup, Extension
 
 setup(  
     name='rejit',
@@ -11,6 +11,7 @@ setup(
     url='https://github.com/ziowk/rejit',
     license='GPLv2',
     packages=['rejit',],
+    ext_modules = [Extension('rejit.loadcode', sources=['rejit/loadcode.c'])],
     extras_require = {
         'dev': ["graphviz", "pytest"]
         },
