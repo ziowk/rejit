@@ -13,6 +13,8 @@ typedef struct {
 
 FunObj* createFunction(const void* source, size_t source_size);
 
+int freeFunction(FunObj*);
+
 /* ----- jit definitions -----*/
 
 FunObj *
@@ -41,5 +43,15 @@ createFunction(const void* source, size_t source_size) {
     funobj->func = ptr;
     funobj->length = source_size;
 	return funobj;
+}
+
+int
+freeFunction(FunObj* funobj) {
+    JITFunc jitfunc = funobj->func;
+    size_t source_size = funobj->length; // ignore, needed only on gnu/linux
+	if (VirtualFree(jitfunc, 0, MEM_RELEASE) == 0) {
+		return -1;
+	}
+	return 0;
 }
 
