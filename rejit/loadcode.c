@@ -1,8 +1,14 @@
 #include <Python.h>
+
+#ifdef _WIN32
 #include "windows_loadcode.h"
+#elif __gnu_linux__
+#include "gnu_linux_loadcode.h"
+#else
+#error "OS not supported!"
+#endif
 
 /*----- python code -----*/
-
 static void *
 PyCode_AsPtr(PyObject *obj) {
     return (void *) PyCapsule_GetPointer(obj, "code");
