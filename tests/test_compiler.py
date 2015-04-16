@@ -3,6 +3,7 @@
 from rejit.dfa import DFA
 from tests.helper import accept_test_helper
 from rejit.compiler import VMRegex
+import rejit.loadcode as loadcode
 
 import tests.automaton_test_cases as auto_cases
 
@@ -55,4 +56,12 @@ class TestVMRegex:
     def test_complex_VMRegex(self):
         accept_test_helper(VMRegex(DFA(auto_cases.complex_nfa_1)),auto_cases.complex_cases_1)
         accept_test_helper(VMRegex(DFA(auto_cases.complex_nfa_2)),auto_cases.complex_cases_2)
+
+class TestCodeGen:
+    def test_call(self):
+        # mov eax, dword ptr 7
+        # ret
+        binary = b'\xb8\x07\x00\x00\x00\xc3'
+        code = loadcode.load(binary)
+        assert(loadcode.call(code, "elo", 3) == 7)
 
