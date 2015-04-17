@@ -9,11 +9,13 @@ from rejit.common import special_chars
 from rejit.nfa import NFA
 from rejit.dfa import DFA
 
-class RegexParseError(RejitError): pass
+class RegexError(RejitError): pass
 
-class RegexCompilationError(RejitError): pass
+class RegexParseError(RegexError): pass
 
-class RegexMatcherError(RejitError): pass
+class RegexCompilationError(RegexError): pass
+
+class RegexMatcherError(RegexError): pass
 
 class Regex:
     def __init__(self, pattern=None):
