@@ -58,7 +58,7 @@ class TestVMRegex:
         accept_test_helper(VMRegex(DFA(auto_cases.complex_nfa_2)),auto_cases.complex_cases_2)
 
 class TestCodeGen:
-    def test_call(self):
+    def test_dynamic_code_loading(self):
         # mov eax, dword ptr 7
         # ret
         binary = b'\xb8\x07\x00\x00\x00\xc3'
