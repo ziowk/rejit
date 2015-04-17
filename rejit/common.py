@@ -2,7 +2,7 @@
 
 import string
 
-class RegexError(Exception): pass
+class RejitError(Exception): pass
 
 supported_chars = string.ascii_letters + string.digits + '`~!@#$%&=_{}:;"\'<>,/'
 

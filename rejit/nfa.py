@@ -3,7 +3,7 @@
 import functools
 import copy
 
-from rejit.common import RegexError
+from rejit.common import RejitError
 from rejit.common import escape_symbol
 
 try:
@@ -11,9 +11,9 @@ try:
 except ImportError:
     pass
 
-class NFAInvalidError(RegexError): pass
+class NFAInvalidError(RejitError): pass
 
-class NFAArgumentError(RegexError): pass
+class NFAArgumentError(RejitError): pass
 
 class State:
     """State class for internal use of NFA objects.

@@ -90,7 +90,7 @@ PyInit_loadcode(void) {
     PyObject *m;
     PyObject *rejitModule;
     PyObject *rejitExceptionBase;
-    PyObject *rejitBaseName = PyUnicode_FromString("RegexError");
+    PyObject *rejitBaseName = PyUnicode_FromString("RejitError");
 
     // get base class module
     if ((rejitModule = PyImport_ImportModule("rejit.common")) == NULL) {

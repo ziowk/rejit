@@ -2,7 +2,7 @@
 
 import rejit.common
 
-class VMError(rejit.common.RegexError): pass
+class VMError(rejit.common.RejitError): pass
 
 class Compiler:
     def __init__(self):
