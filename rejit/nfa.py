@@ -11,9 +11,11 @@ try:
 except ImportError:
     pass
 
-class NFAInvalidError(RejitError): pass
+class NFAError(RejitError): pass
 
-class NFAArgumentError(RejitError): pass
+class NFAInvalidError(NFAError): pass
+
+class NFAArgumentError(NFAError): pass
 
 class State:
     """State class for internal use of NFA objects.
