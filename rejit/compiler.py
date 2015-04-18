@@ -293,3 +293,11 @@ class SIBByte:
     def byte(self):
         return self._byte
 
+    def __str__(self):
+        return '<SIBByte: {byte:08b}, scale={scale:02b}, index={index:03b}, base={base:03b}>'.format(
+                byte = self.byte,
+                scale = self.scale,
+                index = self.index,
+                base = self.base,
+                )
+
