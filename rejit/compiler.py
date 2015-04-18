@@ -172,6 +172,12 @@ class Reg(IntEnum):
     ESI = 0b110
     EDI = 0b111
 
+class Mod(IntEnum):
+    MEM = 0b00
+    MEM_DISP8 = 0b01
+    MEM_DISP32 = 0b10
+    REG = 0b11
+
 class ModRMByte:
     def __init__(self, *, mod=0, reg=0, rm=0, opex=0):
         # reg and opex are mutually exclusive!
