@@ -1,5 +1,7 @@
 #encoding: utf8
 
+from enum import IntEnum
+
 import rejit.common
 
 class VMError(rejit.common.RejitError): pass
@@ -159,6 +161,16 @@ class VMRegex:
                 raise VMError('Too long runtime. Infinite loop?')
         info = {'var': var, 'result': ret_val, 'icounter': icounter}
         return ret_val, info
+
+class Reg(IntEnum):
+    EAX = 0b000
+    ECX = 0b001
+    EDX = 0b010
+    EBX = 0b011
+    ESP = 0b100
+    EBP = 0b101
+    ESI = 0b110
+    EDI = 0b111
 
 class ModRMByte:
     def __init__(self, *, mod=0, reg=0, rm=0, opex=0):
