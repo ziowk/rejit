@@ -178,6 +178,12 @@ class Mod(IntEnum):
     MEM_DISP32 = 0b10
     REG = 0b11
 
+class Scale(IntEnum):
+    MUL_1 = 0b00
+    MUL_2 = 0b01
+    MUL_4 = 0b10
+    MUL_8 = 0b11
+
 class ModRMByte:
     def __init__(self, *, mod=0, reg=0, rm=0, opex=0):
         # reg and opex are mutually exclusive!
