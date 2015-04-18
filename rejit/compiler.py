@@ -221,10 +221,10 @@ class ModRMByte:
         return self._byte
 
     def __str__(self):
-        return '<ModRMByte: {byte}, mod={mod}, reg/opex={reg}, rm={rm}>'.format(
-                byte = bin(self.byte),
-                mod = bin(self.mod),
-                reg = bin(self.reg),
-                rm = bin(self.rm),
+        return '<ModRMByte: {byte:08b}, mod={mod:02b}, reg/opex={reg:03b}, rm={rm:03b}>'.format(
+                byte = self.byte,
+                mod = self.mod,
+                reg = self.reg,
+                rm = self.rm,
                 )
 
