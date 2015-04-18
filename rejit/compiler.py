@@ -246,3 +246,50 @@ class ModRMByte:
                 rm = self.rm,
                 )
 
+class SIBByte:
+    def __init__(self, base, index, scale):
+        assert 0 <= base <= 0b111
+        assert 0 <= index <= 0b11
+        assert 0 <= scale <= 0b11
+        self._byte = scale << 6 | index << 3 | base
+
+    @property
+    def scale(self):
+        return (self._byte & 0b11000000) >> 6
+
+    @scale.setter
+    def scale(self, value):
+        assert 0 <= value <= 0b11
+        # clear scale bits
+        self._byte &= 0b00111111
+        # set scale in byte
+        self._byte |= value << 6
+
+    @property
+    def index(self):
+        return (self._byte & 0b00111000) >> 3
+
+    @index.setter
+    def index(self, value):
+        assert 0 <= value <= 0b111
+        # clear index bits
+        self._byte &= 0b11000111
+        # set index in byte
+        self._byte |= value << 3
+
+    @property
+    def base(self):
+        return (self._byte & 0b00000111)
+
+    @base.setter
+    def base(self, value):
+        assert 0 <= value <= 0b111
+        # clear base bits
+        self._byte &= 0b11111000
+        # set base in byte
+        self._byte |= value
+
+    @property
+    def byte(self):
+        return self._byte
+
