@@ -160,3 +160,63 @@ class VMRegex:
         info = {'var': var, 'result': ret_val, 'icounter': icounter}
         return ret_val, info
 
+class ModRMByte:
+    def __init__(self, *, mod=0, reg=0, rm=0, opex=0):
+        # reg and opex are mutually exclusive!
+        # they occupy the same bits in modrm byte
+        assert reg == 0 or opex == 0
+        # check size
+        assert 0 <= mod <= 0b11
+        assert 0 <= reg <= 0b111
+        assert 0 <= rm <= 0b111
+        assert 0 <= opex <= 0b111
+        self._byte = mod << 6 | reg << 3 | opex << 3 | rm
+
+    @property
+    def mod(self):
+        return (self._byte & 0b11000000) >> 6
+
+    @mod.setter
+    def mod(self, value):
+        assert 0 <= value <= 0b11
+        # clear mod bits
+        self._byte &= 0b00111111
+        # set mod in byte
+        self._byte |= value << 6
+
+    @property
+    def reg(self):
+        return (self._byte & 0b00111000) >> 3
+
+    @reg.setter
+    def reg(self, value):
+        assert 0 <= value <= 0b111
+        # clear reg bits
+        self._byte &= 0b11000111
+        # set reg in byte
+        self._byte |= value << 3
+
+    @property
+    def rm(self):
+        return (self._byte & 0b00000111)
+
+    @rm.setter
+    def rm(self, value):
+        assert 0 <= value <= 0b111
+        # clear rm bits
+        self._byte &= 0b11111000
+        # set rm in byte
+        self._byte |= value
+
+    @property
+    def opex(self):
+        return self.reg
+
+    @opex.setter
+    def opex(self, value):
+        self.reg(value)
+
+    @property
+    def byte(self):
+        return self._byte
+
