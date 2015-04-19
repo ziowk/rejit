@@ -189,6 +189,7 @@ class Mod(IntEnum):
     MEM_DISP8 = 0b01
     MEM_DISP32 = 0b10
     REG = 0b11
+    _SIB_BASE_NONE = 0b00
 
 class Scale(IntEnum):
     MUL_1 = 0b00
