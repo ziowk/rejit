@@ -320,3 +320,78 @@ class SIBByte:
                 base = self.base,
                 )
 
+def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,index=None,scale=None,disp=None):
+    # can't use ESP/R12 as scale: [base + scale * ESP/R12 + disp] not allowed
+    assert index != Reg.ESP
+
+    modrm = ModRMByte()
+
+    # register or opcode extension
+    if reg is not None:
+        modrm.reg = reg 
+    if opex is not None:
+        modrm.reg = opex
+
+    # r/m address is a register, not memory
+    if reg_mem is not None:
+        modrm.mod = Mod.REG
+        modrm.rm = reg_mem
+        return instruction + [modrm]
+
+    # [disp32] on 32bit, [RIP/EIP + disp32] on 64bit
+    if base is None and index is None: #[disp]
+        modrm.mod = Mod.MEM
+        modrm.rm = Reg._DISP32_ONLY
+        return instruction + [modrm, disp]
+
+    if index != None: # [xxx + s * yyy + zzz]
+        modrm.rm = Reg._USE_SIB
+        sib = SIBByte()
+        sib.scale = scale
+        sib.index = index
+
+        # rare. Have to use Mod.MEM and disp32
+        if base is None: # [scale * index + disp]
+            modrm.mod = Mod._SIB_BASE_NONE
+            sib.base = Reg._SIB_BASE_NONE
+            return instruction + [modrm, sib, disp]
+        else: # [base + scale * index + disp]
+            sib.base = base
+            # can't do [EBP/R13 + scale*index] have to use [EBP/R13 + scale*index + 0]
+            if disp == 0 and base != Reg.EBP: 
+                modrm.mod = Mod.MEM
+                return instruction + [modrm, sib, disp]
+            elif -128 <= disp <= 127:
+                modrm.mod = Mod.MEM_DISP8
+                return instruction + [modrm, sib, disp]
+            else:
+                modrm.mod = Mod.MEM_DISP32
+                return instruction + [modrm, sib, disp]
+    else: # [base + disp]
+        # can't do [ESP/R12 + disp] without SIB, because ESP/R12 means SIB in modRM
+        if base == Reg.ESP: # [ESP/R12 + disp]
+            modrm.rm = Reg._USE_SIB
+            sib = SIBByte()
+            # sib.scale = # any will work
+            sib.index = Reg._SIB_INDEX_NONE
+            if disp == 0:
+                modrm.mod = Mod.MEM
+                return instruction + [modrm, sib]
+            elif -128 <= disp <= 127:
+                modrm.mod = Mod.MEM_DISP8
+                return instruction + [modrm, sib, disp]
+            else:
+                modrm.mod = Mod.MEM_DISP32
+                return instruction + [modrm, sib, disp]
+        else: # [non-ESP + disp]
+            modrm.rm = base
+            if disp == 0 and base != Reg.EBP:
+                modrm.mod = Mod.MEM
+                return instruction + [modrm]
+            elif -128 <= disp <= 127:
+                modrm.mod = Mod.MEM_DISP8
+                return instruction + [modrm, disp]
+            else:
+                modrm.mod = Mod.MEM_DISP32
+                return instruction + [modrm, disp]
+    
