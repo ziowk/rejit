@@ -320,6 +320,36 @@ class SIBByte:
                 base = self.base,
                 )
 
+def encode_instruction(opcode_list, *,
+        prefix_list = None,
+        reg = None,
+        opex = None,
+        reg_mem = None,
+        base = None,
+        index = None,
+        scale = None,
+        disp = None,
+        imm = None):
+
+    instruction = []
+
+    # add prefices
+    if prefix_list:
+        instruction += prefix_list
+
+    # add opcodes
+    instruction += opcode_list
+
+    # add operands or opcode extension
+    if reg or reg_mem or base or index or scale or disp:
+        instruction = add_reg_mem_opex(instruction, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
+
+    # add immediate value
+    if imm is not None:
+        instruction.append(imm)
+
+    return tuple(instruction)
+
 def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,index=None,scale=None,disp=None):
     # can't use ESP/R12 as scale: [base + scale * ESP/R12 + disp] not allowed
     assert index != Reg.ESP
