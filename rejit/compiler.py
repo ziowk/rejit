@@ -171,6 +171,18 @@ class Reg(IntEnum):
     EBP = 0b101
     ESI = 0b110
     EDI = 0b111
+    _SIB_BASE_NONE = 0b101
+    _DISP32_ONLY = 0b101
+    _USE_SIB = 0b100
+    _SIB_INDEX_NONE = 0b100
+    R8 = 0b000
+    R9 = 0b001
+    R10 = 0b010
+    R11 = 0b011
+    R12 = 0b100
+    R13 = 0b101
+    R14 = 0b110
+    R15 = 0b111
 
 class Mod(IntEnum):
     MEM = 0b00
