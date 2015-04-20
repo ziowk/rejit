@@ -266,7 +266,7 @@ class ModRMByte:
                 )
 
 class SIBByte:
-    def __init__(self, base, index, scale):
+    def __init__(self, base=0, index=0, scale=0):
         assert 0 <= base <= 0b111
         assert 0 <= index <= 0b11
         assert 0 <= scale <= 0b11
