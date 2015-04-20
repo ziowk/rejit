@@ -1,6 +1,7 @@
 #encoding: utf8
 
 from enum import IntEnum
+import struct
 
 import rejit.common
 
@@ -425,3 +426,6 @@ def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,ind
                 modrm.mod = Mod.MEM_DISP32
                 return instruction + [modrm, disp]
     
+def add_int32(binary, int32):
+    binary += struct.pack('@i',int32)
+
