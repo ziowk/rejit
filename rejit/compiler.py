@@ -7,6 +7,8 @@ import rejit.common
 
 class VMError(rejit.common.RejitError): pass
 
+class CompilationError(rejit.common.RejitError): pass
+
 class Compiler:
     def __init__(self):
         self._ir = []
