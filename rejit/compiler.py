@@ -405,6 +405,7 @@ def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,ind
         if base == Reg.ESP: # [ESP/R12 + disp]
             modrm.rm = Reg._USE_SIB
             sib = SIBByte()
+            sib.base = Reg.ESP
             # sib.scale = # any will work
             sib.index = Reg._SIB_INDEX_NONE
             if disp == 0:
