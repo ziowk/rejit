@@ -506,6 +506,9 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
                 binary.append(modrm.byte)
                 add_int32(binary, disp)
                 return 
+
+def add_int8(binary, int8):
+    binary += struct.pack('@b', int8)
     
 def add_int32(binary, int32):
     binary += struct.pack('@i',int32)
