@@ -351,7 +351,7 @@ def encode_instruction(opcode_list, *,
         binary.append(opcode)
 
     # add operands or opcode extension
-    if reg or reg_mem or base or index or scale or disp:
+    if reg is not None or reg_mem is not None or base is not None or index is not None or disp is not None or opex is not None:
         add_reg_mem_opex(instruction, binary, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
 
     # add immediate value
