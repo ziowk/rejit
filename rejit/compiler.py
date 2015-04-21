@@ -254,7 +254,7 @@ class ModRMByte:
 
     @opex.setter
     def opex(self, value):
-        self.reg(value)
+        self.reg = value
 
     @property
     def byte(self):
