@@ -38,7 +38,7 @@ class Compiler:
 
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
-        self._load_next(state, state in end_states)
+        self._load_next(state, state in end_states, bool(edges)) # bool() to be more explicit
         for char,st in filter(lambda x: x[0] != 'any', edges.items()):
             self._emit_cmp_value('char', char)
             self._emit_jump_eq(st)
@@ -46,7 +46,7 @@ class Compiler:
             self._emit_jump(edges['any'])
         self._emit_ret(False)
 
-    def _load_next(self,label,accepting):
+    def _load_next(self,label,accepting,load_next_needed):
         self._emit_inc_var('i')
         self._emit_cmp_name('i', 'length')
         self._emit_jump_ne('load_' + label)
@@ -55,7 +55,8 @@ class Compiler:
         else:
             self._emit_ret(False)
         self._emit_label('load_' + label)
-        self._emit_move_indexed('char', 'string', 'i')
+        if load_next_needed:
+            self._emit_move_indexed('char', 'string', 'i')
 
     def _emit_label(self, label):
         self._ir.append(('label', label))
