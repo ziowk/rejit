@@ -407,6 +407,10 @@ def add_reg_mem_opex(instruction, binary, *,
         add_int32(binary, disp)
         return
 
+    # supplement a displacment for memory addressing
+    if disp is None:
+        disp = 0
+
     if index is not None:
         modrm.rm = Reg._USE_SIB
         sib = SIBByte()
