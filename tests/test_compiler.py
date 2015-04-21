@@ -4,6 +4,7 @@ from rejit.dfa import DFA
 from tests.helper import accept_test_helper
 from rejit.compiler import VMRegex
 import rejit.loadcode as loadcode
+import rejit.compiler as compiler
 
 import tests.automaton_test_cases as auto_cases
 
@@ -64,4 +65,9 @@ class TestCodeGen:
         binary = b'\xb8\x07\x00\x00\x00\xc3'
         code = loadcode.load(binary)
         assert(loadcode.call(code, "elo", 3) == 7)
+
+    def test_add_reg_mem_modrm_test(self):
+        # test for a bug fixed in 639968d
+        _, binary = compiler.encode_instruction([0x8B], reg=compiler.Reg.EAX, reg_mem=compiler.Reg.EAX)
+        assert binary == b'\x8B\xC0' 
 
