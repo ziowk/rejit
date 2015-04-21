@@ -434,7 +434,7 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
                 instruction.append(disp)
                 binary.append(modrm.byte)
                 binary.append(sib.byte)
-                binary.append(disp)
+                add_int8(binary,disp)
                 return 
             else:
                 modrm.mod = Mod.MEM_DISP32
@@ -470,7 +470,7 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
                 instruction.append(disp)
                 binary.append(modrm.byte)
                 binary.append(sib.byte)
-                binary.append(disp)
+                add_int8(binary,disp)
                 return 
             else:
                 modrm.mod = Mod.MEM_DISP32
@@ -496,7 +496,7 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
                 instruction.append(modrm)
                 instruction.append(disp)
                 binary.append(modrm.byte)
-                binary.append(disp)
+                add_int8(binary,disp)
                 return 
             else:
                 modrm.mod = Mod.MEM_DISP32
