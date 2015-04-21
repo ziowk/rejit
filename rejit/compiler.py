@@ -384,7 +384,7 @@ def add_reg_mem_opex(instruction, binary, *,
     if reg is not None:
         modrm.reg = reg 
     if opex is not None:
-        modrm.reg = opex
+        modrm.opex = opex
 
     # r/m address is a register, not memory
     if reg_mem is not None:
