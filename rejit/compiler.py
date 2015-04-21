@@ -332,28 +332,40 @@ def encode_instruction(opcode_list, *,
         index = None,
         scale = None,
         disp = None,
-        imm = None):
+        imm = None,
+        imm_size = None):
 
     instruction = []
+    binary = bytearray()
 
     # add prefices
     if prefix_list:
         instruction += prefix_list
+        for prefix in prefix_list:
+            binary.append(prefix)
 
     # add opcodes
     instruction += opcode_list
+    for opcode in opcode_list:
+        binary.append(opcode)
 
     # add operands or opcode extension
     if reg or reg_mem or base or index or scale or disp:
-        instruction = add_reg_mem_opex(instruction, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
+        add_reg_mem_opex(instruction, binary, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
 
     # add immediate value
     if imm is not None:
         instruction.append(imm)
+        if imm_size == 1:
+            binary.append(imm)
+        elif imm_size == 4:
+            add_int32(binary, imm)
+        else:
+            raise CompilationError("can't use {} immediate value of size {}".format(imm,imm_size))
 
-    return tuple(instruction)
+    return (tuple(instruction), binary)
 
-def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,index=None,scale=None,disp=None):
+def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=None,index=None,scale=None,disp=None):
     # can't use ESP/R12 as scale: [base + scale * ESP/R12 + disp] not allowed
     assert index != Reg.ESP
 
@@ -369,13 +381,21 @@ def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,ind
     if reg_mem is not None:
         modrm.mod = Mod.REG
         modrm.rm = reg_mem
-        return instruction + [modrm]
+
+        instruction.append(modrm)
+        binary.append(modrm.byte)
+        return
 
     # [disp32] on 32bit, [RIP/EIP + disp32] on 64bit
     if base is None and index is None: #[disp]
         modrm.mod = Mod.MEM
         modrm.rm = Reg._DISP32_ONLY
-        return instruction + [modrm, disp]
+
+        instruction.append(modrm)
+        instruction.append(disp)
+        binary.append(modrm.byte)
+        add_int32(binary, disp)
+        return
 
     if index != None: # [xxx + s * yyy + zzz]
         modrm.rm = Reg._USE_SIB
@@ -387,19 +407,45 @@ def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,ind
         if base is None: # [scale * index + disp]
             modrm.mod = Mod._SIB_BASE_NONE
             sib.base = Reg._SIB_BASE_NONE
-            return instruction + [modrm, sib, disp]
+
+            instruction.append(modrm)
+            instruction.append(sib)
+            instruction.append(disp)
+            binary.append(modrm.byte)
+            binary.append(sib.byte)
+            add_int32(binary, disp)
+            return 
         else: # [base + scale * index + disp]
             sib.base = base
             # can't do [EBP/R13 + scale*index] have to use [EBP/R13 + scale*index + 0]
             if disp == 0 and base != Reg.EBP: 
                 modrm.mod = Mod.MEM
-                return instruction + [modrm, sib, disp]
+
+                instruction.append(modrm)
+                instruction.append(sib)
+                binary.append(modrm.byte)
+                binary.append(sib.byte)
+                return
             elif -128 <= disp <= 127:
                 modrm.mod = Mod.MEM_DISP8
-                return instruction + [modrm, sib, disp]
+
+                instruction.append(modrm)
+                instruction.append(sib)
+                instruction.append(disp)
+                binary.append(modrm.byte)
+                binary.append(sib.byte)
+                binary.append(disp)
+                return 
             else:
                 modrm.mod = Mod.MEM_DISP32
-                return instruction + [modrm, sib, disp]
+
+                instruction.append(modrm)
+                instruction.append(sib)
+                instruction.append(disp)
+                binary.append(modrm.byte)
+                binary.append(sib.byte)
+                add_int32(binary, disp)
+                return
     else: # [base + disp]
         # can't do [ESP/R12 + disp] without SIB, because ESP/R12 means SIB in modRM
         if base == Reg.ESP: # [ESP/R12 + disp]
@@ -410,24 +456,56 @@ def add_reg_mem_opex(instruction,*,reg=None,opex=None,reg_mem=None,base=None,ind
             sib.index = Reg._SIB_INDEX_NONE
             if disp == 0:
                 modrm.mod = Mod.MEM
-                return instruction + [modrm, sib]
+
+                instruction.append(modrm)
+                instruction.append(sib)
+                binary.append(modrm.byte)
+                binary.append(sib.byte)
+                return
             elif -128 <= disp <= 127:
                 modrm.mod = Mod.MEM_DISP8
-                return instruction + [modrm, sib, disp]
+
+                instruction.append(modrm)
+                instruction.append(sib)
+                instruction.append(disp)
+                binary.append(modrm.byte)
+                binary.append(sib.byte)
+                binary.append(disp)
+                return 
             else:
                 modrm.mod = Mod.MEM_DISP32
-                return instruction + [modrm, sib, disp]
+
+                instruction.append(modrm)
+                instruction.append(sib)
+                instruction.append(disp)
+                binary.append(modrm.byte)
+                binary.append(sib.byte)
+                add_int32(binary, disp)
+                return
         else: # [non-ESP + disp]
             modrm.rm = base
             if disp == 0 and base != Reg.EBP:
                 modrm.mod = Mod.MEM
-                return instruction + [modrm]
+
+                instruction.append(modrm)
+                binary.append(modrm.byte)
+                return
             elif -128 <= disp <= 127:
                 modrm.mod = Mod.MEM_DISP8
-                return instruction + [modrm, disp]
+
+                instruction.append(modrm)
+                instruction.append(disp)
+                binary.append(modrm.byte)
+                binary.append(disp)
+                return 
             else:
                 modrm.mod = Mod.MEM_DISP32
-                return instruction + [modrm, disp]
+
+                instruction.append(modrm)
+                instruction.append(disp)
+                binary.append(modrm.byte)
+                add_int32(binary, disp)
+                return 
     
 def add_int32(binary, int32):
     binary += struct.pack('@i',int32)
