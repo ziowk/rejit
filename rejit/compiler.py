@@ -365,8 +365,17 @@ def encode_instruction(opcode_list, *,
 
     return (tuple(instruction), binary)
 
-def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=None,index=None,scale=None,disp=None):
-    # can't use ESP/R12 as scale: [base + scale * ESP/R12 + disp] not allowed
+def add_reg_mem_opex(instruction, binary, *,
+        reg = None, 
+        opex = None, 
+        reg_mem = None, 
+        base = None, 
+        index = None, 
+        scale = None, 
+        disp = None):
+
+    # can't use ESP/R12 as an index
+    # [base + scale * ESP/R12 + disp] is not allowed
     assert index != Reg.ESP
 
     modrm = ModRMByte()
@@ -387,7 +396,7 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
         return
 
     # [disp32] on 32bit, [RIP/EIP + disp32] on 64bit
-    if base is None and index is None: #[disp]
+    if base is None and index is None:
         modrm.mod = Mod.MEM
         modrm.rm = Reg._DISP32_ONLY
 
@@ -397,14 +406,16 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
         add_int32(binary, disp)
         return
 
-    if index != None: # [xxx + s * yyy + zzz]
+    if index is not None:
         modrm.rm = Reg._USE_SIB
         sib = SIBByte()
         sib.scale = scale
         sib.index = index
 
-        # rare. Have to use Mod.MEM and disp32
-        if base is None: # [scale * index + disp]
+        # [scale * index + disp]
+        # Addressing without a base, rare.
+        # Have to use Mod.MEM and disp32
+        if base is None: 
             modrm.mod = Mod._SIB_BASE_NONE
             sib.base = Reg._SIB_BASE_NONE
 
@@ -415,9 +426,13 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
             binary.append(sib.byte)
             add_int32(binary, disp)
             return 
-        else: # [base + scale * index + disp]
+        # [base + scale * index + disp]
+        else: 
             sib.base = base
-            # can't do [EBP/R13 + scale*index] have to use [EBP/R13 + scale*index + 0]
+            # Can't do [EBP/R13 + scale*index] (Mod.MEM)
+            # Have to use [EBP/R13 + scale*index + 0] (Mod.MEM_DISP8)
+            # Therefore test `base` != Reg.EBP 
+            # Reg.EBP will be handled in the next case
             if disp == 0 and base != Reg.EBP: 
                 modrm.mod = Mod.MEM
 
@@ -446,13 +461,16 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
                 binary.append(sib.byte)
                 add_int32(binary, disp)
                 return
-    else: # [base + disp]
-        # can't do [ESP/R12 + disp] without SIB, because ESP/R12 means SIB in modRM
+    # [base + disp]
+    else: 
+        # can't do [ESP/R12 + disp] without a SIB byte
+        # because ESP/R12 R/M means SIB in modRM
         if base == Reg.ESP: # [ESP/R12 + disp]
             modrm.rm = Reg._USE_SIB
             sib = SIBByte()
             sib.base = Reg.ESP
-            # sib.scale = # any will work
+            # Any scale will work, because index is none
+            sib.scale = Scale.MUL_1 
             sib.index = Reg._SIB_INDEX_NONE
             if disp == 0:
                 modrm.mod = Mod.MEM
@@ -482,7 +500,8 @@ def add_reg_mem_opex(instruction,binary,*,reg=None,opex=None,reg_mem=None,base=N
                 binary.append(sib.byte)
                 add_int32(binary, disp)
                 return
-        else: # [non-ESP + disp]
+        # [non-ESP + disp]
+        else: 
             modrm.rm = base
             if disp == 0 and base != Reg.EBP:
                 modrm.mod = Mod.MEM
