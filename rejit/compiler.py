@@ -54,6 +54,9 @@ class Compiler:
         # currently variables can be stored in registers only
         var_regs, used_regs = Compiler._allocate_vars(vars_to_allocate, reg_list)
 
+        # find registers which have to be restored
+        to_restore = list(used_regs & set(calle_saved))
+
     @staticmethod
     def _find_vars(ir):
         names_read = set()
