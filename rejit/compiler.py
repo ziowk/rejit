@@ -38,7 +38,7 @@ class Compiler:
             self._state_code(st, edges, end_states)
         return self._ir
 
-    def compile_to_x86_32(self, ir, args):
+    def compile_to_x86_32(self, ir, args, save_hex_file=None):
         # registers available for variables
         # can't access ESI EDI lowest byte in 32bit mode
         reg_list = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.EBX] 
@@ -97,6 +97,11 @@ class Compiler:
 
         # merge generated x86 instructions to create final binary
         x86_code = Compiler._merge_binary_instructions(ir_transformed)
+
+        if save_hex_file:
+            with open(save_hex_file, 'wt') as output:
+                for b in x86_code:
+                    output.write('{:02x} '.format(b))
 
         return x86_code, (ir_transformed, set(labels), jmp_targets, names_read, names_written, var_regs, used_regs)
 
