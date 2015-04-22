@@ -57,6 +57,12 @@ class Compiler:
         # find registers which have to be restored
         to_restore = list(used_regs & set(calle_saved))
 
+        # `args` is a JITted function's signature in format (name, size)
+        # Names are converted to registers which store them
+        # or None if they aren't used.
+        reg_args = [(var_regs[arg],size) if arg in var_regs else (None,size) 
+                        for arg, size in args]
+
     @staticmethod
     def _find_vars(ir):
         names_read = set()
