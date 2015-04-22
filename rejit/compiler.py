@@ -2,6 +2,7 @@
 
 from enum import IntEnum
 import struct
+import functools
 
 import rejit.common
 
@@ -66,6 +67,16 @@ class Compiler:
         # offset from [ebp] to arguments (return address, old ebp)
         # warning: different in 64bit code
         args_offset = 8
+
+        # apply compilation passes in this order
+        ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
+                [ 
+                    functools.partial(Compiler._add_function_prologue,
+                        args=reg_args, 
+                        args_offset=args_offset, 
+                        regs_to_restore=to_restore),
+                ],
+                ir)
 
     @staticmethod
     def _find_vars(ir):
