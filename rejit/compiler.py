@@ -90,6 +90,7 @@ class Compiler:
                     functools.partial(Compiler._impl_jmps_ins_placeholder,
                         labels=labels, out_jmp_targets=jmp_targets),
                     functools.partial(Compiler._impl_jmps, labels=labels),
+                    Compiler._purge_labels,
                 ],
                 ir)
 
@@ -307,6 +308,10 @@ class Compiler:
             else:
                 ir_1.append(inst)
         return ir_1
+
+    @staticmethod
+    def _purge_labels(ir):
+        return list(filter(lambda x: x[0]!='label', ir))
 
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
