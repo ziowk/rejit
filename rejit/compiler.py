@@ -4,6 +4,7 @@ from enum import IntEnum
 import struct
 import functools
 
+import rejit.loadcode as loadcode
 import rejit.common
 
 class VMError(rejit.common.RejitError): pass
@@ -805,4 +806,23 @@ def uint8bin(int8):
 def int32bin(int32):
     return struct.pack('@i',int32)
 
+class JITMatcher:
+    def __init__(self, dfa):
+        cc = Compiler()
+        self._ir = cc.compile_to_ir(dfa)
+        self._ir_transformed = None
+
+        # function call arguments and thier sizes
+        args = (('string',4),('length',4))
+        self._x86_binary, (self._ir_transfromed, labels, jmp_targets, var_read, var_written, var2regs, used_regs) = cc.compile_to_x86_32(self._ir,args)
+
+        self._description = dfa.description
+        self._jit_func = loadcode.load(self._x86_binary)
+
+    @property
+    def description(self):
+        return self._description
+
+    def accept(self, s):
+        return loadcode.call(self._jit_func,s,len(s))
 
