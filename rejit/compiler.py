@@ -70,6 +70,7 @@ class Compiler:
 
         # used to relay information between passes (other than transformed IR)
         labels = dict()
+        jmp_targets = set()
 
         # apply compilation passes in this order
         ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
@@ -86,6 +87,8 @@ class Compiler:
                     Compiler._impl_set,
                     functools.partial(Compiler._impl_ret, to_restore=to_restore),
                     functools.partial(Compiler._find_labels, out_labels=labels),
+                    functools.partial(Compiler._impl_jmps_ins_placeholder,
+                        labels=labels, out_jmp_targets=jmp_targets),
                 ],
                 ir)
 
@@ -263,6 +266,27 @@ class Compiler:
                     raise CompilationError('label "{}" already defined'.format(inst[1]))
                 out_labels[inst[1]] = num
         return ir
+
+    @staticmethod
+    def _impl_jmps_ins_placeholder(ir, labels, out_jmp_targets):
+        labels_set = set(labels)
+        ir_1 = []
+        jmp_map = {'jump':'jmp', 'jump eq':'je', 'jump ne':'jne'}
+        for num,inst in enumerate(ir):
+            if inst[0] in {'jump', 'jump eq', 'jump ne'}:
+                if inst[1] not in labels_set:
+                    raise CompilationError('label "{}" not found'.format(inst[1]))
+                out_jmp_targets.add(inst[1])
+                if inst[0] == 'jump':
+                    _, binary = encode_instruction([0xE9],imm=0,imm_size=4)
+                elif inst[0] == 'jump eq':
+                    _, binary = encode_instruction([0x0F, 0x84],imm=0,imm_size=4)
+                elif inst[0] == 'jump ne':
+                    _, binary = encode_instruction([0x0F, 0x85],imm=0,imm_size=4)
+                ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
+            else:
+                ir_1.append(inst)
+        return ir_1
 
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
