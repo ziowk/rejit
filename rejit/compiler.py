@@ -68,6 +68,9 @@ class Compiler:
         # warning: different in 64bit code
         args_offset = 8
 
+        # used to relay information between passes (other than transformed IR)
+        labels = dict()
+
         # apply compilation passes in this order
         ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
                 [ 
@@ -82,6 +85,7 @@ class Compiler:
                     Compiler._impl_inc,
                     Compiler._impl_set,
                     functools.partial(Compiler._impl_ret, to_restore=to_restore),
+                    functools.partial(Compiler._find_labels, out_labels=labels),
                 ],
                 ir)
 
@@ -250,6 +254,15 @@ class Compiler:
         _, binary = encode_instruction([0xC3])
         ir_1.append((('ret',),binary))
         return ir_1
+
+    @staticmethod
+    def _find_labels(ir, out_labels):
+        for num,inst in enumerate(ir):
+            if inst[0] == 'label':
+                if inst[1] in out_labels:
+                    raise CompilationError('label "{}" already defined'.format(inst[1]))
+                out_labels[inst[1]] = num
+        return ir
 
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
