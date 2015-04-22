@@ -81,6 +81,7 @@ class Compiler:
                     Compiler._impl_mov,
                     Compiler._impl_inc,
                     Compiler._impl_set,
+                    functools.partial(Compiler._impl_ret, to_restore=to_restore),
                 ],
                 ir)
 
@@ -228,6 +229,26 @@ class Compiler:
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _impl_ret(ir, to_restore):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'ret':
+                _, binary = encode_instruction([0xB8+Reg.EAX],imm=1 if inst[1] else 0,imm_size=4)
+                ir_1.append((('mov', Reg.EAX, inst[1]),binary))
+                ir_1.append(('jump','return'))
+            else:
+                ir_1.append(inst)
+        ir_1.append(('label', 'return'))
+        for reg in reversed(to_restore):
+            _, binary = encode_instruction([0x58+reg])
+            ir_1.append((('pop', reg),binary))
+        _, binary = encode_instruction([0x58+Reg.EBP])
+        ir_1.append((('pop', Reg.EBP),binary))
+        _, binary = encode_instruction([0xC3])
+        ir_1.append((('ret',),binary))
         return ir_1
 
     def _state_code(self, state, edges, end_states):
