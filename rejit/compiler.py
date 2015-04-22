@@ -89,6 +89,7 @@ class Compiler:
                     functools.partial(Compiler._find_labels, out_labels=labels),
                     functools.partial(Compiler._impl_jmps_ins_placeholder,
                         labels=labels, out_jmp_targets=jmp_targets),
+                    functools.partial(Compiler._impl_jmps, labels=labels),
                 ],
                 ir)
 
@@ -284,6 +285,25 @@ class Compiler:
                 elif inst[0] == 'jump ne':
                     _, binary = encode_instruction([0x0F, 0x85],imm=0,imm_size=4)
                 ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
+            else:
+                ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _impl_jmps(ir, labels):
+        ir_1 = []
+        for num,inst in enumerate(ir):
+            if inst[0][0] in {'jmp', 'je', 'jne'}:
+                # calculate jump offset
+                target_num = labels[inst[0][1]]
+                if target_num > num:
+                    no_label = filter(lambda x: x[0]!='label', ir[num+1:target_num])
+                    jump_length = functools.reduce(lambda acc,x: acc + len(x[1]), no_label, 0)
+                else: 
+                    no_label = filter(lambda x: x[0]!='label', ir[target_num:num+1])
+                    jump_length = functools.reduce(lambda acc,x: acc - len(x[1]), no_label, 0)
+                new_bin = inst[1][:-4] + int32bin(jump_length)
+                ir_1.append((inst[0], new_bin))
             else:
                 ir_1.append(inst)
         return ir_1
