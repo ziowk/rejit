@@ -78,6 +78,7 @@ class Compiler:
                     functools.partial(Compiler._replace_vars, var_regs=var_regs),
                     Compiler._replace_values,
                     Compiler._impl_cmp,
+                    Compiler._impl_mov,
                 ],
                 ir)
 
@@ -187,6 +188,20 @@ class Compiler:
                 """cmp r/m16/32/64 r16/32/64"""
                 _, binary = encode_instruction([0x39], reg=inst[1], reg_mem=inst[2])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
+            else:
+                ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _impl_mov(ir):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'move indexed':
+                _, binary = encode_instruction([0x8A], reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1)
+                ir_1.append((('mov',inst[1],'=[',inst[2],'+',inst[3],']'), binary))
+            elif inst[0] == 'move':
+                _, binary = encode_instruction([0x8B], reg=inst[1],reg_mem=inst[2])
+                ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
         return ir_1
