@@ -76,6 +76,7 @@ class Compiler:
                         args_offset=args_offset, 
                         regs_to_restore=to_restore),
                     functools.partial(Compiler._replace_vars, var_regs=var_regs),
+                    Compiler._replace_values,
                 ],
                 ir)
 
@@ -155,6 +156,20 @@ class Compiler:
                 ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]]))
             elif inst[0] == 'move indexed':
                 ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]]))
+            else:
+                ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _replace_values(ir):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'cmp value':
+                ir_1.append((inst[0], inst[1], ord(inst[2])))
+            elif inst[0] == 'set':
+                ir_1.append((inst[0], inst[1], inst[2]))
+            elif inst[0] == 'ret':
+                ir_1.append((inst[0], 1 if inst[1] else 0))
             else:
                 ir_1.append(inst)
         return ir_1
