@@ -801,7 +801,6 @@ def add_reg_mem_opex(instruction, binary, *,
                 binary += modrm.binary + int32bin(disp)
                 return 
 
-# see also int.to_bytes(len,order)
 def int8bin(int8):
     return struct.pack('@b', int8)
 
