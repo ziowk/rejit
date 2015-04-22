@@ -80,6 +80,7 @@ class Compiler:
                     Compiler._impl_cmp,
                     Compiler._impl_mov,
                     Compiler._impl_inc,
+                    Compiler._impl_set,
                 ],
                 ir)
 
@@ -214,6 +215,17 @@ class Compiler:
             if inst[0] == 'inc':
                 _, binary = encode_instruction([0x40 + inst[1]])
                 ir_1.append((inst, binary))
+            else:
+                ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _impl_set(ir):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'set':
+                _, binary = encode_instruction([0xB8 + inst[1]], imm=inst[2], imm_size=4)
+                ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
         return ir_1
