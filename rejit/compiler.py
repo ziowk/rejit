@@ -99,6 +99,12 @@ class Compiler:
         return var_regs, used_regs
 
     @staticmethod
+    def _add_function_prologue(ir, args, args_offset, regs_to_restore):
+        ir_load_args = Compiler._load_args(args, args_offset)
+        ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore)
+        return ir_calle_reg_save + ir_load_args + ir
+
+    @staticmethod
     def _load_args(args, offset):
         ir_1 = []
         total = offset
