@@ -47,6 +47,13 @@ class Compiler:
         # find variables referenced by IR instructions
         names_read, names_written = Compiler._find_vars(ir)
 
+        # probably could skip instructions which only use write-only vars...
+        # and do: vars_to_allocate = names_read
+        vars_to_allocate = names_read | names_written
+
+        # currently variables can be stored in registers only
+        var_regs, used_regs = Compiler._allocate_vars(vars_to_allocate, reg_list)
+
     @staticmethod
     def _find_vars(ir):
         names_read = set()
@@ -69,6 +76,14 @@ class Compiler:
                 names_read.add(inst[2])
                 names_read.add(inst[3])
         return names_read, names_written
+
+    @staticmethod
+    def _allocate_vars(vars_to_allocate, reg_list):
+        if len(reg_list) < len(vars_to_allocate):
+            raise CompilationError('not enough registers')
+        var_regs = dict(zip(vars_to_allocate, reg_list))
+        used_regs = set(var_regs.values())
+        return var_regs, used_regs
 
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
