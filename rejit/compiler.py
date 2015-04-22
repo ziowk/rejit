@@ -77,6 +77,7 @@ class Compiler:
                         regs_to_restore=to_restore),
                     functools.partial(Compiler._replace_vars, var_regs=var_regs),
                     Compiler._replace_values,
+                    Compiler._impl_cmp,
                 ],
                 ir)
 
@@ -170,6 +171,22 @@ class Compiler:
                 ir_1.append((inst[0], inst[1], inst[2]))
             elif inst[0] == 'ret':
                 ir_1.append((inst[0], 1 if inst[1] else 0))
+            else:
+                ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _impl_cmp(ir):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'cmp value':
+                """cmp r/m8 imm8"""
+                _, binary = encode_instruction([0x80], opex=0x07, reg_mem=inst[1], imm=inst[2], imm_size=1)
+                ir_1.append((('cmp',inst[1],inst[2]), binary))
+            elif inst[0] == 'cmp name':
+                """cmp r/m16/32/64 r16/32/64"""
+                _, binary = encode_instruction([0x39], reg=inst[1], reg_mem=inst[2])
+                ir_1.append((('cmp',inst[1],inst[2]), binary))
             else:
                 ir_1.append(inst)
         return ir_1
