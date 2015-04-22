@@ -94,6 +94,9 @@ class Compiler:
                 ],
                 ir)
 
+        # merge generated x86 instructions to create final binary
+        x86_code = Compiler._merge_binary_instructions(ir_transformed)
+
     @staticmethod
     def _find_vars(ir):
         names_read = set()
@@ -312,6 +315,10 @@ class Compiler:
     @staticmethod
     def _purge_labels(ir):
         return list(filter(lambda x: x[0]!='label', ir))
+
+    @staticmethod
+    def _merge_binary_instructions(ir):
+        return functools.reduce(lambda acc, x: acc+x, map(lambda x: x[1], ir))
 
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
