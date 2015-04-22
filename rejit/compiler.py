@@ -79,6 +79,7 @@ class Compiler:
                     Compiler._replace_values,
                     Compiler._impl_cmp,
                     Compiler._impl_mov,
+                    Compiler._impl_inc,
                 ],
                 ir)
 
@@ -201,6 +202,17 @@ class Compiler:
                 ir_1.append((('mov',inst[1],'=[',inst[2],'+',inst[3],']'), binary))
             elif inst[0] == 'move':
                 _, binary = encode_instruction([0x8B], reg=inst[1],reg_mem=inst[2])
+                ir_1.append((inst, binary))
+            else:
+                ir_1.append(inst)
+        return ir_1
+
+    @staticmethod
+    def _impl_inc(ir):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'inc':
+                _, binary = encode_instruction([0x40 + inst[1]])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
