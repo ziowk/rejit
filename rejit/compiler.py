@@ -98,6 +98,18 @@ class Compiler:
         used_regs = set(var_regs.values())
         return var_regs, used_regs
 
+    @staticmethod
+    def _calle_reg_save(to_restore):
+        ir_1 = []
+        _, binary = encode_instruction([0x50+Reg.EBP])
+        ir_1.append((('push', Reg.EBP),binary))
+        _, binary = encode_instruction([0x8B], reg=Reg.EBP,reg_mem=Reg.ESP)
+        ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
+        for reg in to_restore:
+            _, binary = encode_instruction([0x50+reg])
+            ir_1.append((('push', reg),binary))
+        return ir_1
+
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
         self._load_next(state, state in end_states, bool(edges)) # bool() to be more explicit
