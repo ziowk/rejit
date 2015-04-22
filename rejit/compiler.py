@@ -97,6 +97,8 @@ class Compiler:
         # merge generated x86 instructions to create final binary
         x86_code = Compiler._merge_binary_instructions(ir_transformed)
 
+        return x86_code, (ir_transformed, set(labels), jmp_targets, names_read, names_written, var_regs, used_regs)
+
     @staticmethod
     def _find_vars(ir):
         names_read = set()
