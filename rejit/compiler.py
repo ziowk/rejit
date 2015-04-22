@@ -36,6 +36,14 @@ class Compiler:
             self._state_code(st, edges, end_states)
         return self._ir
 
+    def compile_to_x86_32(self, ir, args):
+        # registers available for variables
+        # can't access ESI EDI lowest byte in 32bit mode
+        reg_list = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.EBX] 
+
+        # registers saved by calle
+        calle_saved = [Reg.EBX, Reg.ESI, Reg.EDI, Reg.EBP]
+
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
         self._load_next(state, state in end_states, bool(edges)) # bool() to be more explicit
