@@ -44,6 +44,32 @@ class Compiler:
         # registers saved by calle
         calle_saved = [Reg.EBX, Reg.ESI, Reg.EDI, Reg.EBP]
 
+        # find variables referenced by IR instructions
+        names_read, names_written = Compiler._find_vars(ir)
+
+    @staticmethod
+    def _find_vars(ir):
+        names_read = set()
+        names_written = set()
+        for inst in ir:
+            if inst[0] == 'cmp name':
+                names_read.add(inst[1])
+                names_read.add(inst[2])
+            elif inst[0] == 'cmp value':
+                names_read.add(inst[1])
+            elif inst[0] == 'set':
+                names_written.add(inst[1])
+            elif inst[0] == 'inc':
+                names_read.add(inst[1])
+            elif inst[0] == 'move':
+                names_written.add(inst[1])
+                names_read.add(inst[2])
+            elif inst[0] == 'move indexed':
+                names_written.add(inst[1])
+                names_read.add(inst[2])
+                names_read.add(inst[3])
+        return names_read, names_written
+
     def _state_code(self, state, edges, end_states):
         self._emit_label(state)
         self._load_next(state, state in end_states, bool(edges)) # bool() to be more explicit
