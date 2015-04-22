@@ -99,6 +99,17 @@ class Compiler:
         return var_regs, used_regs
 
     @staticmethod
+    def _load_args(args, offset):
+        ir_1 = []
+        total = offset
+        for arg, size in (args):
+            if arg is not None:
+                _, binary = encode_instruction([0x8B], reg=arg,base=Reg.EBP,disp=total)
+                ir_1.append((('mov',arg,'=[',Reg.ESP,'+',total,']'), binary))
+            total += size
+        return ir_1
+
+    @staticmethod
     def _calle_reg_save(to_restore):
         ir_1 = []
         _, binary = encode_instruction([0x50+Reg.EBP])
