@@ -75,6 +75,7 @@ class Compiler:
                         args=reg_args, 
                         args_offset=args_offset, 
                         regs_to_restore=to_restore),
+                    functools.partial(Compiler._replace_vars, var_regs=var_regs),
                 ],
                 ir)
 
@@ -136,6 +137,26 @@ class Compiler:
         for reg in to_restore:
             _, binary = encode_instruction([0x50+reg])
             ir_1.append((('push', reg),binary))
+        return ir_1
+
+    @staticmethod
+    def _replace_vars(ir, var_regs):
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'cmp name':
+                ir_1.append((inst[0], var_regs[inst[1]],  var_regs[inst[2]]))
+            elif inst[0] == 'cmp value':
+                ir_1.append((inst[0], var_regs[inst[1]], inst[2]))
+            elif inst[0] == 'set':
+                ir_1.append((inst[0], var_regs[inst[1]], inst[2]))
+            elif inst[0] == 'inc':
+                ir_1.append((inst[0], var_regs[inst[1]]))
+            elif inst[0] == 'move':
+                ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]]))
+            elif inst[0] == 'move indexed':
+                ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]]))
+            else:
+                ir_1.append(inst)
         return ir_1
 
     def _state_code(self, state, edges, end_states):
