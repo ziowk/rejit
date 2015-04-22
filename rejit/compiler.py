@@ -63,6 +63,10 @@ class Compiler:
         reg_args = [(var_regs[arg],size) if arg in var_regs else (None,size) 
                         for arg, size in args]
 
+        # offset from [ebp] to arguments (return address, old ebp)
+        # warning: different in 64bit code
+        args_offset = 8
+
     @staticmethod
     def _find_vars(ir):
         names_read = set()
