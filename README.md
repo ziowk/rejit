@@ -80,6 +80,9 @@ py.test
 ## Requirements
 Supports Python 3 only.
 
+JIT compilation available only on 32bit Python running on Windows.
+See [#79](https://github.com/ziowk/rejit/issues/79) [#80](https://github.com/ziowk/rejit/issues/80)
+
 No external dependencies.
 
 ## Documentation
