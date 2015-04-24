@@ -493,6 +493,71 @@ class Scale(IntEnum):
     MUL_4 = 0b10
     MUL_8 = 0b11
 
+class REXByte:
+    def __init__(self, *, w=0, r=0, x=0, b=0):
+        assert 0 <= w <= 0b1
+        assert 0 <= r <= 0b1
+        assert 0 <= x <= 0b1
+        assert 0 <= b <= 0b1
+        self._byte = 0b01000000 | w << 3 | r << 2 | x << 1 | b
+
+    @property
+    def w(self):
+        return (self._byte & 0b00001000) >> 3
+
+    @w.setter
+    def w(self, value):
+        assert 0 <= value <= 0b1
+        self._byte &= 0b11110111
+        self._byte |= value << 3
+
+    @property
+    def r(self):
+        return (self._byte & 0b00000100) >> 2
+
+    @r.setter
+    def r(self, value):
+        assert 0 <= value <= 0b1
+        self._byte &= 0b11111011
+        self._byte |= value << 2
+
+    @property
+    def x(self):
+        return (self._byte & 0b00000010) >> 1
+
+    @x.setter
+    def x(self, value):
+        assert 0 <= value <= 0b1
+        self._byte &= 0b11111101
+        self._byte |= value << 1
+
+    @property
+    def b(self):
+        return (self._byte & 0b00000001)
+
+    @b.setter
+    def b(self, value):
+        assert 0 <= value <= 0b1
+        self._byte &= 0b11111110
+        self._byte |= value
+
+    @property
+    def byte(self):
+        return self._byte
+
+    @property
+    def binary(self):
+        return uint8bin(self._byte)
+
+    def __str__(self):
+        return '<REXByte: {byte:08b}, w={w:01b}, r={r:01b}, x={x:01b}, b={b:01b}>'.format(
+                byte = self.byte,
+                w = self.w,
+                r = self.r,
+                x = self.x,
+                b = self.b,
+                )
+
 class ModRMByte:
     def __init__(self, *, mod=0, reg=0, rm=0, opex=0):
         # reg and opex are mutually exclusive!
