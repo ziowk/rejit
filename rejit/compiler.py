@@ -728,6 +728,8 @@ def encode_instruction(opcode_list, *,
             binary += int16bin(imm)
         elif imm_size == 4:
             binary += int32bin(imm)
+        elif imm_size == 8:
+            binary += int64bin(imm)
         else:
             raise CompilationError("can't use {} immediate value of size {}".format(imm,imm_size))
 
