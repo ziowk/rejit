@@ -872,6 +872,9 @@ def int8bin(int8):
 def uint8bin(int8):
     return struct.pack('@B', int8)
 
+def int16bin(int16):
+    return struct.pack('@h',int16)
+
 def int32bin(int32):
     return struct.pack('@i',int32)
 
