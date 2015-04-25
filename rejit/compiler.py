@@ -724,6 +724,8 @@ def encode_instruction(opcode_list, *,
         instruction.append(imm)
         if imm_size == 1:
             binary += int8bin(imm)
+        elif imm_size == 2:
+            binary += int16bin(imm)
         elif imm_size == 4:
             binary += int32bin(imm)
         else:
