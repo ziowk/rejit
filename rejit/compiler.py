@@ -880,6 +880,9 @@ def int16bin(int16):
 def int32bin(int32):
     return struct.pack('@i',int32)
 
+def int64bin(int64):
+    return struct.pack('@q',int64)
+
 class JITMatcher:
     def __init__(self, dfa):
         cc = Compiler()
