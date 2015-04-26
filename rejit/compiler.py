@@ -480,6 +480,10 @@ class Reg(IntEnum):
     R14 = 0b110
     R15 = 0b111
 
+class OPcode(IntEnum):
+    OVERRIDE_ADDRESSING = 0x67
+    OVERRIDE_SIZE = 0x66
+
 class Mod(IntEnum):
     MEM = 0b00
     MEM_DISP8 = 0b01
