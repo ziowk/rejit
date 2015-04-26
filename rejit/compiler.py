@@ -156,12 +156,12 @@ class Compiler:
     @staticmethod
     def _calle_reg_save(to_restore):
         ir_1 = []
-        _, binary = encode_instruction([0x50+Reg.EBP], '32')
+        _, binary = encode_instruction([0x50], '32', opcode_reg=Reg.EBP)
         ir_1.append((('push', Reg.EBP),binary))
         _, binary = encode_instruction([0x8B], '32', reg=Reg.EBP,reg_mem=Reg.ESP)
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
         for reg in to_restore:
-            _, binary = encode_instruction([0x50+reg], '32')
+            _, binary = encode_instruction([0x50], '32', opcode_reg=reg)
             ir_1.append((('push', reg),binary))
         return ir_1
 
@@ -234,7 +234,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
-                _, binary = encode_instruction([0x40 + inst[1]], '32')
+                _, binary = encode_instruction([0x40], '32', opcode_reg=inst[1])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -245,7 +245,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'set':
-                _, binary = encode_instruction([0xB8 + inst[1]], '32', imm=inst[2], imm_size=4)
+                _, binary = encode_instruction([0xB8], '32', opcode_reg=inst[1], imm=inst[2], imm_size=4)
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -256,16 +256,16 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'ret':
-                _, binary = encode_instruction([0xB8+Reg.EAX], '32', imm=1 if inst[1] else 0,imm_size=4)
+                _, binary = encode_instruction([0xB8], '32', opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,imm_size=4)
                 ir_1.append((('mov', Reg.EAX, inst[1]),binary))
                 ir_1.append(('jump','return'))
             else:
                 ir_1.append(inst)
         ir_1.append(('label', 'return'))
         for reg in reversed(to_restore):
-            _, binary = encode_instruction([0x58+reg], '32')
+            _, binary = encode_instruction([0x58], '32', opcode_reg=reg)
             ir_1.append((('pop', reg),binary))
-        _, binary = encode_instruction([0x58+Reg.EBP], '32')
+        _, binary = encode_instruction([0x58], '32', opcode_reg=Reg.EBP)
         ir_1.append((('pop', Reg.EBP),binary))
         _, binary = encode_instruction([0xC3], '32')
         ir_1.append((('ret',),binary))
@@ -699,10 +699,15 @@ def encode_instruction(opcode_list, arch, *,
         scale = None,
         disp = None,
         imm = None,
-        imm_size = None):
+        imm_size = None,
+        opcode_reg = None):
 
     instruction = []
     binary = bytearray()
+
+    # opcode_reg -> register in the opcode
+    if opcode_reg is not None:
+        opcode_list[0] += opcode_reg
 
     # add prefices
     if prefix_list:
