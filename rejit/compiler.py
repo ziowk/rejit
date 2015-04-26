@@ -148,7 +148,7 @@ class Compiler:
         total = offset
         for arg, size in (args):
             if arg is not None:
-                _, binary = encode_instruction([0x8B], reg=arg,base=Reg.EBP,disp=total)
+                _, binary = encode_instruction([0x8B], '32', reg=arg,base=Reg.EBP,disp=total)
                 ir_1.append((('mov',arg,'=[',Reg.ESP,'+',total,']'), binary))
             total += size
         return ir_1
@@ -156,12 +156,12 @@ class Compiler:
     @staticmethod
     def _calle_reg_save(to_restore):
         ir_1 = []
-        _, binary = encode_instruction([0x50+Reg.EBP])
+        _, binary = encode_instruction([0x50+Reg.EBP], '32')
         ir_1.append((('push', Reg.EBP),binary))
-        _, binary = encode_instruction([0x8B], reg=Reg.EBP,reg_mem=Reg.ESP)
+        _, binary = encode_instruction([0x8B], '32', reg=Reg.EBP,reg_mem=Reg.ESP)
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
         for reg in to_restore:
-            _, binary = encode_instruction([0x50+reg])
+            _, binary = encode_instruction([0x50+reg], '32')
             ir_1.append((('push', reg),binary))
         return ir_1
 
@@ -205,11 +205,11 @@ class Compiler:
         for inst in ir:
             if inst[0] == 'cmp value':
                 """cmp r/m8 imm8"""
-                _, binary = encode_instruction([0x80], opex=0x07, reg_mem=inst[1], imm=inst[2], imm_size=1)
+                _, binary = encode_instruction([0x80], '32', opex=0x07, reg_mem=inst[1], imm=inst[2], imm_size=1)
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             elif inst[0] == 'cmp name':
                 """cmp r/m16/32/64 r16/32/64"""
-                _, binary = encode_instruction([0x39], reg=inst[1], reg_mem=inst[2])
+                _, binary = encode_instruction([0x39], '32', reg=inst[1], reg_mem=inst[2])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -220,10 +220,10 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'move indexed':
-                _, binary = encode_instruction([0x8A], reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1)
+                _, binary = encode_instruction([0x8A], '32', reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1)
                 ir_1.append((('mov',inst[1],'=[',inst[2],'+',inst[3],']'), binary))
             elif inst[0] == 'move':
-                _, binary = encode_instruction([0x8B], reg=inst[1],reg_mem=inst[2])
+                _, binary = encode_instruction([0x8B], '32', reg=inst[1],reg_mem=inst[2])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -234,7 +234,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
-                _, binary = encode_instruction([0x40 + inst[1]])
+                _, binary = encode_instruction([0x40 + inst[1]], '32')
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -245,7 +245,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'set':
-                _, binary = encode_instruction([0xB8 + inst[1]], imm=inst[2], imm_size=4)
+                _, binary = encode_instruction([0xB8 + inst[1]], '32', imm=inst[2], imm_size=4)
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -256,18 +256,18 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'ret':
-                _, binary = encode_instruction([0xB8+Reg.EAX],imm=1 if inst[1] else 0,imm_size=4)
+                _, binary = encode_instruction([0xB8+Reg.EAX], '32', imm=1 if inst[1] else 0,imm_size=4)
                 ir_1.append((('mov', Reg.EAX, inst[1]),binary))
                 ir_1.append(('jump','return'))
             else:
                 ir_1.append(inst)
         ir_1.append(('label', 'return'))
         for reg in reversed(to_restore):
-            _, binary = encode_instruction([0x58+reg])
+            _, binary = encode_instruction([0x58+reg], '32')
             ir_1.append((('pop', reg),binary))
-        _, binary = encode_instruction([0x58+Reg.EBP])
+        _, binary = encode_instruction([0x58+Reg.EBP], '32')
         ir_1.append((('pop', Reg.EBP),binary))
-        _, binary = encode_instruction([0xC3])
+        _, binary = encode_instruction([0xC3], '32')
         ir_1.append((('ret',),binary))
         return ir_1
 
@@ -291,11 +291,11 @@ class Compiler:
                     raise CompilationError('label "{}" not found'.format(inst[1]))
                 out_jmp_targets.add(inst[1])
                 if inst[0] == 'jump':
-                    _, binary = encode_instruction([0xE9],imm=0,imm_size=4)
+                    _, binary = encode_instruction([0xE9], '32', imm=0,imm_size=4)
                 elif inst[0] == 'jump eq':
-                    _, binary = encode_instruction([0x0F, 0x84],imm=0,imm_size=4)
+                    _, binary = encode_instruction([0x0F, 0x84], '32', imm=0,imm_size=4)
                 elif inst[0] == 'jump ne':
-                    _, binary = encode_instruction([0x0F, 0x85],imm=0,imm_size=4)
+                    _, binary = encode_instruction([0x0F, 0x85], '32', imm=0,imm_size=4)
                 ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
             else:
                 ir_1.append(inst)
@@ -689,7 +689,7 @@ class SIBByte:
                 base = self.base,
                 )
 
-def encode_instruction(opcode_list, *,
+def encode_instruction(opcode_list, arch, *,
         prefix_list = None,
         reg = None,
         opex = None,

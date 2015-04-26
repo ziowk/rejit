@@ -69,7 +69,7 @@ class TestCodeGen:
 
     def test_add_reg_mem_modrm_test(self):
         # test for a bug fixed in 639968d
-        _, binary = compiler.encode_instruction([0x8B], reg=compiler.Reg.EAX, reg_mem=compiler.Reg.EAX)
+        _, binary = compiler.encode_instruction([0x8B], '32', reg=compiler.Reg.EAX, reg_mem=compiler.Reg.EAX)
         assert binary == b'\x8B\xC0' 
 
 class Testx86accept:
