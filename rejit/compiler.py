@@ -205,7 +205,7 @@ class Compiler:
         for inst in ir:
             if inst[0] == 'cmp value':
                 """cmp r/m8 imm8"""
-                _, binary = encode_instruction([0x80], '32', opex=0x07, reg_mem=inst[1], imm=inst[2], imm_size=1)
+                _, binary = encode_instruction([0x80], '32', opex=0x07, reg_mem=inst[1], imm=inst[2], size=1)
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             elif inst[0] == 'cmp name':
                 """cmp r/m16/32/64 r16/32/64"""
@@ -245,7 +245,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'set':
-                _, binary = encode_instruction([0xB8], '32', opcode_reg=inst[1], imm=inst[2], imm_size=4)
+                _, binary = encode_instruction([0xB8], '32', opcode_reg=inst[1], imm=inst[2], size=4)
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -256,7 +256,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'ret':
-                _, binary = encode_instruction([0xB8], '32', opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,imm_size=4)
+                _, binary = encode_instruction([0xB8], '32', opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,size=4)
                 ir_1.append((('mov', Reg.EAX, inst[1]),binary))
                 ir_1.append(('jump','return'))
             else:
@@ -291,11 +291,11 @@ class Compiler:
                     raise CompilationError('label "{}" not found'.format(inst[1]))
                 out_jmp_targets.add(inst[1])
                 if inst[0] == 'jump':
-                    _, binary = encode_instruction([0xE9], '32', imm=0,imm_size=4)
+                    _, binary = encode_instruction([0xE9], '32', imm=0,size=4)
                 elif inst[0] == 'jump eq':
-                    _, binary = encode_instruction([0x0F, 0x84], '32', imm=0,imm_size=4)
+                    _, binary = encode_instruction([0x0F, 0x84], '32', imm=0,size=4)
                 elif inst[0] == 'jump ne':
-                    _, binary = encode_instruction([0x0F, 0x85], '32', imm=0,imm_size=4)
+                    _, binary = encode_instruction([0x0F, 0x85], '32', imm=0,size=4)
                 ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
             else:
                 ir_1.append(inst)
@@ -703,7 +703,7 @@ def encode_instruction(opcode_list, arch, *,
         scale = None,
         disp = None,
         imm = None,
-        imm_size = None,
+        size = None,
         opcode_reg = None):
 
     instruction = []
@@ -731,16 +731,16 @@ def encode_instruction(opcode_list, arch, *,
     # add immediate value
     if imm is not None:
         instruction.append(imm)
-        if imm_size == 1:
+        if size == 1:
             binary += int8bin(imm)
-        elif imm_size == 2:
+        elif size == 2:
             binary += int16bin(imm)
-        elif imm_size == 4:
+        elif size == 4:
             binary += int32bin(imm)
-        elif imm_size == 8:
+        elif size == 8:
             binary += int64bin(imm)
         else:
-            raise CompilationError("can't use {} immediate value of size {}".format(imm,imm_size))
+            raise CompilationError("can't use {} immediate value of size {}".format(imm,size))
 
     return (tuple(instruction), binary)
 
