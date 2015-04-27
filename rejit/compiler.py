@@ -743,6 +743,36 @@ class SIBByte:
                 base = self.base,
                 )
 
+def type2size(type, arch):
+    if arch == '32':
+        if type == 'pointer':
+            return 4
+        elif type == 'long':
+            return 4
+        elif type == 'int':
+            return 4
+        elif type == 'short':
+            return 2
+        elif type == 'byte':
+            return 1
+        else:
+            raise CompilationError('Unknown variable type {} in architecture {}'.format(type,arch))
+    elif arch == '64':
+        if type == 'pointer':
+            return 8
+        elif type == 'long':
+            return 8
+        elif type == 'int':
+            return 4
+        elif type == 'short':
+            return 2
+        elif type == 'byte':
+            return 1
+        else:
+            raise CompilationError('Unknown variable type {} in architecture {}'.format(type,arch))
+    else:
+        raise CompilationError('Uknown architecture {}'.format(arch))
+
 def encode_instruction(opcode_list, arch, *,
         prefix_list = None,
         reg = None,
