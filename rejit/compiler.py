@@ -39,18 +39,14 @@ class Compiler:
         return self._ir
 
     def compile_to_x86_32(self, ir, args, save_hex_file=None):
-        # find variables referenced by IR instructions
-        names_read, names_written = Compiler._find_vars(ir)
-
-        # probably could skip instructions which only use write-only vars...
-        # and do: vars_to_allocate = names_read
-        vars_to_allocate = names_read | names_written
-
         # offset from [ebp] to arguments (return address, old ebp)
         # warning: different in 64bit code
         args_offset = 8
 
         # used to relay information between passes (other than transformed IR)
+        names_read = set()
+        names_written = set()
+        vars_to_allocate = set()
         var_regs = dict()
         used_regs = set()
         to_restore = list()
@@ -60,6 +56,10 @@ class Compiler:
         # apply compilation passes in this order
         ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
                 [ 
+                    functools.partial(Compiler._find_vars_pass,
+                        out_names_read=names_read,
+                        out_names_written=names_written,
+                        out_vars_to_allocate=vars_to_allocate),
                     functools.partial(Compiler._allocate_vars_pass,
                         vars_to_allocate=vars_to_allocate,
                         out_var_regs=var_regs,
@@ -96,27 +96,29 @@ class Compiler:
         return x86_code, (ir_transformed, set(labels), jmp_targets, names_read, names_written, var_regs, used_regs)
 
     @staticmethod
-    def _find_vars(ir):
-        names_read = set()
-        names_written = set()
+    def _find_vars_pass(ir, out_names_read, out_names_written, out_vars_to_allocate):
+        # find variables referenced by IR instructions
         for inst in ir:
             if inst[0] == 'cmp name':
-                names_read.add(inst[1])
-                names_read.add(inst[2])
+                out_names_read.add(inst[1])
+                out_names_read.add(inst[2])
             elif inst[0] == 'cmp value':
-                names_read.add(inst[1])
+                out_names_read.add(inst[1])
             elif inst[0] == 'set':
-                names_written.add(inst[1])
+                out_names_written.add(inst[1])
             elif inst[0] == 'inc':
-                names_read.add(inst[1])
+                out_names_read.add(inst[1])
             elif inst[0] == 'move':
-                names_written.add(inst[1])
-                names_read.add(inst[2])
+                out_names_written.add(inst[1])
+                out_names_read.add(inst[2])
             elif inst[0] == 'move indexed':
-                names_written.add(inst[1])
-                names_read.add(inst[2])
-                names_read.add(inst[3])
-        return names_read, names_written
+                out_names_written.add(inst[1])
+                out_names_read.add(inst[2])
+                out_names_read.add(inst[3])
+        # probably could skip instructions which only use write-only vars...
+        # and do: vars_to_allocate.update(names_read)
+        out_vars_to_allocate.update(out_names_read | out_names_written)
+        return ir
 
     @staticmethod
     def _allocate_vars_pass(ir, vars_to_allocate, out_var_regs, out_used_regs, out_to_restore):
