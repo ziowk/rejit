@@ -704,6 +704,7 @@ def encode_instruction(opcode_list, arch, *,
         disp = None,
         imm = None,
         size = None,
+        address_size = None,
         opcode_reg = None):
 
     instruction = []
@@ -714,8 +715,12 @@ def encode_instruction(opcode_list, arch, *,
 
     if arch == '32':
         # 0x66 -> override operand size to 16bit 
+        # 0x67 -> override addressing to 16bit
         if size == 2:
             prefix_list.append(OPcode.OVERRIDE_SIZE)
+        if address_size == 2:
+            raise CompilationError('16bit addressing not supported')
+            #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
     else:
         raise CompilationError('Architecture {} not supported'.format(arch))
 

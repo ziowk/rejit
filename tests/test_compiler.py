@@ -1,5 +1,7 @@
 #encoding: utf8
 
+import pytest
+
 from rejit.dfa import DFA
 import rejit.loadcode as loadcode
 import rejit.compiler as compiler
@@ -75,6 +77,10 @@ class TestCodeGen:
     def test_encode_16bit_move(self):
         _, binary = compiler.encode_instruction([0x8B], '32', reg=compiler.Reg.EAX, base=compiler.Reg.ECX, size=2)
         assert binary == b'\x66\x8B\x01'
+
+    def test_encode_16bit_addressing(self):
+        with pytest.raises(compiler.CompilationError):
+            _, binary = compiler.encode_instruction([0x8B], '32', reg=compiler.Reg.EAX, base=compiler.Reg.EBX, address_size=2)
 
 class Testx86accept:
     def test_empty_JITMatcher(self):
