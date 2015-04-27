@@ -59,12 +59,6 @@ class Compiler:
         # find registers which have to be restored
         to_restore = list(used_regs & set(calle_saved))
 
-        # `args` is a JITted function's signature in format (name, size)
-        # Names are converted to registers which store them
-        # or None if they aren't used.
-        reg_args = [(var_regs[arg],size) if arg in var_regs else (None,size) 
-                        for arg, size in args]
-
         # offset from [ebp] to arguments (return address, old ebp)
         # warning: different in 64bit code
         args_offset = 8
@@ -77,7 +71,8 @@ class Compiler:
         ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
                 [ 
                     functools.partial(Compiler._add_function_prologue,
-                        args=reg_args, 
+                        args=args, 
+                        var_regs=var_regs,
                         args_offset=args_offset, 
                         regs_to_restore=to_restore),
                     functools.partial(Compiler._replace_vars, var_regs=var_regs),
@@ -137,19 +132,19 @@ class Compiler:
         return var_regs, used_regs
 
     @staticmethod
-    def _add_function_prologue(ir, args, args_offset, regs_to_restore):
-        ir_load_args = Compiler._load_args(args, args_offset)
+    def _add_function_prologue(ir, args, var_regs, args_offset, regs_to_restore):
+        ir_load_args = Compiler._load_args(args, var_regs, args_offset)
         ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore)
         return ir_calle_reg_save + ir_load_args + ir
 
     @staticmethod
-    def _load_args(args, offset):
+    def _load_args(args, var_regs, offset):
         ir_1 = []
         total = offset
         for arg, size in (args):
-            if arg is not None:
-                _, binary = encode_instruction([0x8B], '32', reg=arg,base=Reg.EBP,disp=total)
-                ir_1.append((('mov',arg,'=[',Reg.ESP,'+',total,']'), binary))
+            if arg in var_regs:
+                _, binary = encode_instruction([0x8B], '32', reg=var_regs[arg], base=Reg.EBP,disp=total)
+                ir_1.append((('mov',var_regs[arg],'=[',Reg.ESP,'+',total,']'), binary))
             total += size
         return ir_1
 
