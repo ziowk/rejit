@@ -40,45 +40,27 @@ class Compiler:
 
     def compile_to_x86_32(self, ir, args, save_hex_file=None):
         # used to relay information between passes (other than transformed IR)
-        names_read = set()
-        names_written = set()
-        vars_to_allocate = set()
-        var_regs = dict()
-        used_regs = set()
-        to_restore = list()
-        labels = dict()
-        jmp_targets = set()
+        compilation_data = {'args': args}
 
         # apply compilation passes in this order
-        ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
+        ir_transformed, compilation_data = functools.reduce(lambda ir_data, ir_pass: ir_pass(ir_data), 
                 [ 
-                    functools.partial(Compiler._find_vars_pass,
-                        out_names_read=names_read,
-                        out_names_written=names_written,
-                        out_vars_to_allocate=vars_to_allocate),
-                    functools.partial(Compiler._allocate_vars_pass,
-                        vars_to_allocate=vars_to_allocate,
-                        out_var_regs=var_regs,
-                        out_used_regs=used_regs,
-                        out_to_restore=to_restore),
-                    functools.partial(Compiler._add_function_prologue,
-                        args=args, 
-                        var_regs=var_regs,
-                        regs_to_restore=to_restore),
-                    functools.partial(Compiler._replace_vars, var_regs=var_regs),
+                    Compiler._find_vars_pass,
+                    Compiler._allocate_vars_pass,
+                    Compiler._add_function_prologue,
+                    Compiler._replace_vars,
                     Compiler._replace_values,
                     Compiler._impl_cmp,
                     Compiler._impl_mov,
                     Compiler._impl_inc,
                     Compiler._impl_set,
-                    functools.partial(Compiler._impl_ret, to_restore=to_restore),
-                    functools.partial(Compiler._find_labels, out_labels=labels),
-                    functools.partial(Compiler._impl_jmps_ins_placeholder,
-                        labels=labels, out_jmp_targets=jmp_targets),
-                    functools.partial(Compiler._impl_jmps, labels=labels),
+                    Compiler._impl_ret,
+                    Compiler._find_labels,
+                    Compiler._impl_jmps_ins_placeholder,
+                    Compiler._impl_jmps,
                     Compiler._purge_labels,
                 ],
-                ir)
+                (ir, compilation_data))
 
         # merge generated x86 instructions to create final binary
         x86_code = Compiler._merge_binary_instructions(ir_transformed)
@@ -88,35 +70,45 @@ class Compiler:
                 for b in x86_code:
                     output.write('{:02x} '.format(b))
 
-        return x86_code, (ir_transformed, set(labels), jmp_targets, names_read, names_written, var_regs, used_regs)
+        return x86_code, compilation_data
 
     @staticmethod
-    def _find_vars_pass(ir, out_names_read, out_names_written, out_vars_to_allocate):
+    def _find_vars_pass(ir_data):
+        ir, data = ir_data
+        names_read = set()
+        names_written = set()
         # find variables referenced by IR instructions
         for inst in ir:
             if inst[0] == 'cmp name':
-                out_names_read.add(inst[1])
-                out_names_read.add(inst[2])
+                names_read.add(inst[1])
+                names_read.add(inst[2])
             elif inst[0] == 'cmp value':
-                out_names_read.add(inst[1])
+                names_read.add(inst[1])
             elif inst[0] == 'set':
-                out_names_written.add(inst[1])
+                names_written.add(inst[1])
             elif inst[0] == 'inc':
-                out_names_read.add(inst[1])
+                names_read.add(inst[1])
             elif inst[0] == 'move':
-                out_names_written.add(inst[1])
-                out_names_read.add(inst[2])
+                names_written.add(inst[1])
+                names_read.add(inst[2])
             elif inst[0] == 'move indexed':
-                out_names_written.add(inst[1])
-                out_names_read.add(inst[2])
-                out_names_read.add(inst[3])
+                names_written.add(inst[1])
+                names_read.add(inst[2])
+                names_read.add(inst[3])
         # probably could skip instructions which only use write-only vars...
-        # and do: vars_to_allocate.update(names_read)
-        out_vars_to_allocate.update(out_names_read | out_names_written)
-        return ir
+        # and do: vars_to_allocate = set(names_read)
+        vars_to_allocate = names_read | names_written
+
+        data['names_read'] = names_read
+        data['names_written'] = names_written
+        data['vars_to_allocate'] = vars_to_allocate
+        return ir_data
 
     @staticmethod
-    def _allocate_vars_pass(ir, vars_to_allocate, out_var_regs, out_used_regs, out_to_restore):
+    def _allocate_vars_pass(ir_data):
+        ir, data = ir_data
+        vars_to_allocate  = data['vars_to_allocate']
+
         # registers available for variables
         # can't access ESI EDI lowest byte in 32bit mode
         reg_list = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.EBX] 
@@ -124,22 +116,31 @@ class Compiler:
         # currently variables can be stored in registers only
         if len(reg_list) < len(vars_to_allocate):
             raise CompilationError('Not enough registers')
-        out_var_regs.update(dict(zip(vars_to_allocate, reg_list)))
-        out_used_regs.update(set(out_var_regs.values()))
+        var_regs = dict(zip(vars_to_allocate, reg_list))
+        used_regs = set(var_regs.values())
 
         # calle-saved registers
         calle_saved = [Reg.EBX, Reg.ESI, Reg.EDI, Reg.EBP]
 
         # find registers which have to be restored
-        out_to_restore += list(out_used_regs & set(calle_saved))
+        regs_to_restore = list(used_regs & set(calle_saved))
 
-        return ir
+        data['var_regs'] = var_regs
+        data['used_regs'] = used_regs
+        data['regs_to_restore'] = regs_to_restore
+        return ir_data
 
     @staticmethod
-    def _add_function_prologue(ir, args, var_regs, regs_to_restore):
+    def _add_function_prologue(ir_data):
+        ir, data = ir_data
+        args = data['args']
+        var_regs = data['var_regs']
+        regs_to_restore = data['regs_to_restore']
+
         ir_load_args = Compiler._load_args(args, var_regs)
         ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore)
-        return ir_calle_reg_save + ir_load_args + ir
+
+        return (ir_calle_reg_save + ir_load_args + ir, data)
 
     @staticmethod
     def _load_args(args, var_regs):
@@ -157,19 +158,22 @@ class Compiler:
         return ir_1
 
     @staticmethod
-    def _calle_reg_save(to_restore):
+    def _calle_reg_save(regs_to_restore):
         ir_1 = []
         _, binary = encode_instruction([0x50], '32', opcode_reg=Reg.EBP)
         ir_1.append((('push', Reg.EBP),binary))
         _, binary = encode_instruction([0x8B], '32', reg=Reg.EBP,reg_mem=Reg.ESP)
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
-        for reg in to_restore:
+        for reg in regs_to_restore:
             _, binary = encode_instruction([0x50], '32', opcode_reg=reg)
             ir_1.append((('push', reg),binary))
         return ir_1
 
     @staticmethod
-    def _replace_vars(ir, var_regs):
+    def _replace_vars(ir_data):
+        ir, data = ir_data
+        var_regs = data['var_regs']
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'cmp name':
@@ -186,10 +190,13 @@ class Compiler:
                 ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]]))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _replace_values(ir):
+    def _replace_values(ir_data):
+        ir, data = ir_data
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'cmp value':
@@ -200,10 +207,13 @@ class Compiler:
                 ir_1.append((inst[0], 1 if inst[1] else 0))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _impl_cmp(ir):
+    def _impl_cmp(ir_data):
+        ir, data = ir_data
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'cmp value':
@@ -216,10 +226,13 @@ class Compiler:
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _impl_mov(ir):
+    def _impl_mov(ir_data):
+        ir, data = ir_data
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'move indexed':
@@ -230,10 +243,13 @@ class Compiler:
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _impl_inc(ir):
+    def _impl_inc(ir_data):
+        ir, data = ir_data
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
@@ -241,10 +257,13 @@ class Compiler:
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _impl_set(ir):
+    def _impl_set(ir_data):
+        ir, data = ir_data
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'set':
@@ -252,10 +271,14 @@ class Compiler:
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _impl_ret(ir, to_restore):
+    def _impl_ret(ir_data):
+        ir, data = ir_data
+        regs_to_restore = data['regs_to_restore']
+
         ir_1 = []
         for inst in ir:
             if inst[0] == 'ret':
@@ -265,34 +288,44 @@ class Compiler:
             else:
                 ir_1.append(inst)
         ir_1.append(('label', 'return'))
-        for reg in reversed(to_restore):
+        for reg in reversed(regs_to_restore):
             _, binary = encode_instruction([0x58], '32', opcode_reg=reg)
             ir_1.append((('pop', reg),binary))
         _, binary = encode_instruction([0x58], '32', opcode_reg=Reg.EBP)
         ir_1.append((('pop', Reg.EBP),binary))
         _, binary = encode_instruction([0xC3], '32')
         ir_1.append((('ret',),binary))
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _find_labels(ir, out_labels):
+    def _find_labels(ir_data):
+        ir, data = ir_data
+
+        labels = dict()
         for num,inst in enumerate(ir):
             if inst[0] == 'label':
-                if inst[1] in out_labels:
+                if inst[1] in labels:
                     raise CompilationError('label "{}" already defined'.format(inst[1]))
-                out_labels[inst[1]] = num
-        return ir
+                labels[inst[1]] = num
+
+        data['labels'] = labels
+        return ir_data
 
     @staticmethod
-    def _impl_jmps_ins_placeholder(ir, labels, out_jmp_targets):
+    def _impl_jmps_ins_placeholder(ir_data):
+        ir, data = ir_data
+        labels = data['labels']
+
         labels_set = set(labels)
         ir_1 = []
+        jmp_targets = set()
         jmp_map = {'jump':'jmp', 'jump eq':'je', 'jump ne':'jne'}
         for num,inst in enumerate(ir):
             if inst[0] in {'jump', 'jump eq', 'jump ne'}:
                 if inst[1] not in labels_set:
                     raise CompilationError('label "{}" not found'.format(inst[1]))
-                out_jmp_targets.add(inst[1])
+                jmp_targets.add(inst[1])
                 if inst[0] == 'jump':
                     _, binary = encode_instruction([0xE9], '32', imm=0,size=4)
                 elif inst[0] == 'jump eq':
@@ -302,10 +335,15 @@ class Compiler:
                 ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        data['jmp_targets'] = jmp_targets
+        return (ir_1, data)
 
     @staticmethod
-    def _impl_jmps(ir, labels):
+    def _impl_jmps(ir_data):
+        ir, data = ir_data
+        labels = data['labels']
+
         ir_1 = []
         for num,inst in enumerate(ir):
             if inst[0][0] in {'jmp', 'je', 'jne'}:
@@ -321,11 +359,13 @@ class Compiler:
                 ir_1.append((inst[0], new_bin))
             else:
                 ir_1.append(inst)
-        return ir_1
+
+        return (ir_1, data)
 
     @staticmethod
-    def _purge_labels(ir):
-        return list(filter(lambda x: x[0]!='label', ir))
+    def _purge_labels(ir_data):
+        ir, data = ir_data
+        return (list(filter(lambda x: x[0]!='label', ir)), data)
 
     @staticmethod
     def _merge_binary_instructions(ir):
@@ -920,7 +960,7 @@ class JITMatcher:
 
         # function call arguments and thier sizes
         args = (('string',4),('length',4))
-        self._x86_binary, (self._ir_transfromed, labels, jmp_targets, var_read, var_written, var2regs, used_regs) = cc.compile_to_x86_32(self._ir,args)
+        self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args)
 
         self._description = dfa.description
         self._jit_func = loadcode.load(self._x86_binary)
