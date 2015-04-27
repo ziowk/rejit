@@ -36,11 +36,12 @@ class Compiler:
         self._state_code(start, states_edges[start], end_states)
         for st,edges in filter(lambda x: x[0] != start, states_edges.items()):
             self._state_code(st, edges, end_states)
-        return self._ir
+        variables = {'i':'long', 'string':'pointer', 'char':'byte', 'length':'long'}
+        return self._ir, variables
 
-    def compile_to_x86_32(self, ir, args, save_hex_file=None):
+    def compile_to_x86_32(self, ir, args, var_sizes, save_hex_file=None):
         # used to relay information between passes (other than transformed IR)
-        compilation_data = {'args': args, 'arch':'32'}
+        compilation_data = {'args': args, 'arch':'32', 'var_sizes':var_sizes}
 
         # apply compilation passes in this order
         ir_transformed, compilation_data = functools.reduce(lambda ir_data, ir_pass: ir_pass(ir_data), 
@@ -436,7 +437,7 @@ class Compiler:
 class VMRegex:
     def __init__(self, dfa):
         self._description = dfa.description
-        self._ir = Compiler().compile_to_ir(dfa,True)
+        self._ir, self._variables = Compiler().compile_to_ir(dfa,True)
         self._runtime_limit = 10000
     
     def accept(self, string):
@@ -992,12 +993,12 @@ def int64bin(int64):
 class JITMatcher:
     def __init__(self, dfa):
         cc = Compiler()
-        self._ir = cc.compile_to_ir(dfa)
+        self._ir, self._variables = cc.compile_to_ir(dfa)
         self._ir_transformed = None
 
         # function call arguments and thier sizes
         args = (('string',4),('length',4))
-        self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args)
+        self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args, self._variables)
 
         self._description = dfa.description
         self._jit_func = loadcode.load(self._x86_binary)
