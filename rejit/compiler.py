@@ -39,10 +39,6 @@ class Compiler:
         return self._ir
 
     def compile_to_x86_32(self, ir, args, save_hex_file=None):
-        # offset from [ebp] to arguments (return address, old ebp)
-        # warning: different in 64bit code
-        args_offset = 8
-
         # used to relay information between passes (other than transformed IR)
         names_read = set()
         names_written = set()
@@ -68,7 +64,6 @@ class Compiler:
                     functools.partial(Compiler._add_function_prologue,
                         args=args, 
                         var_regs=var_regs,
-                        args_offset=args_offset, 
                         regs_to_restore=to_restore),
                     functools.partial(Compiler._replace_vars, var_regs=var_regs),
                     Compiler._replace_values,
@@ -141,15 +136,19 @@ class Compiler:
         return ir
 
     @staticmethod
-    def _add_function_prologue(ir, args, var_regs, args_offset, regs_to_restore):
-        ir_load_args = Compiler._load_args(args, var_regs, args_offset)
+    def _add_function_prologue(ir, args, var_regs, regs_to_restore):
+        ir_load_args = Compiler._load_args(args, var_regs)
         ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore)
         return ir_calle_reg_save + ir_load_args + ir
 
     @staticmethod
-    def _load_args(args, var_regs, offset):
+    def _load_args(args, var_regs):
+        # offset from [ebp] to arguments (return address, old ebp)
+        # warning: different in 64bit code
+        args_offset = 8
+
         ir_1 = []
-        total = offset
+        total = args_offset
         for arg, size in (args):
             if arg in var_regs:
                 _, binary = encode_instruction([0x8B], '32', reg=var_regs[arg], base=Reg.EBP,disp=total)
