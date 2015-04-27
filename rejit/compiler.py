@@ -709,15 +709,15 @@ def encode_instruction(opcode_list, arch, *,
     instruction = []
     binary = bytearray()
 
-    # opcode_reg -> register in the opcode
-    if opcode_reg is not None:
-        opcode_list[0] += opcode_reg
-
     # add prefices
     if prefix_list:
         instruction += prefix_list
         for prefix in prefix_list:
             binary.append(prefix)
+
+    # opcode_reg -> register in the opcode
+    if opcode_reg is not None:
+        opcode_list[0] += opcode_reg
 
     # add opcodes
     instruction += opcode_list
