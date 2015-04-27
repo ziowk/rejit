@@ -136,27 +136,28 @@ class Compiler:
         ir, data = ir_data
         args = data['args']
         var_regs = data['var_regs']
+        var_sizes = data['var_sizes']
         regs_to_restore = data['regs_to_restore']
         arch = data['arch']
 
-        ir_load_args = Compiler._load_args(args, var_regs, arch)
+        ir_load_args = Compiler._load_args(args, var_regs, var_sizes, arch)
         ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore, arch)
 
         return (ir_calle_reg_save + ir_load_args + ir, data)
 
     @staticmethod
-    def _load_args(args, var_regs, arch):
+    def _load_args(args, var_regs, var_sizes, arch):
         # offset from [ebp] to arguments (return address, old ebp)
         # warning: different in 64bit code
         args_offset = 8
 
         ir_1 = []
         total = args_offset
-        for arg, size in (args):
+        for arg in (args):
             if arg in var_regs:
-                _, binary = encode_instruction([0x8B], arch, reg=var_regs[arg], base=Reg.EBP,disp=total)
+                _, binary = encode_instruction([0x8B], arch, reg=var_regs[arg], base=Reg.EBP, disp=total, size=var_sizes[arg])
                 ir_1.append((('mov',var_regs[arg],'=[',Reg.ESP,'+',total,']'), binary))
-            total += size
+            total += type2size(var_sizes[arg],arch)
         return ir_1
 
     @staticmethod
@@ -164,7 +165,7 @@ class Compiler:
         ir_1 = []
         _, binary = encode_instruction([0x50], arch, opcode_reg=Reg.EBP)
         ir_1.append((('push', Reg.EBP),binary))
-        _, binary = encode_instruction([0x8B], arch, reg=Reg.EBP,reg_mem=Reg.ESP)
+        _, binary = encode_instruction([0x8B], arch, reg=Reg.EBP,reg_mem=Reg.ESP, size='long')
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
         for reg in regs_to_restore:
             _, binary = encode_instruction([0x50], arch, opcode_reg=reg)
@@ -175,21 +176,29 @@ class Compiler:
     def _replace_vars(ir_data):
         ir, data = ir_data
         var_regs = data['var_regs']
+        var_sizes = data['var_sizes']
+        arch = data['arch']
 
         ir_1 = []
         for inst in ir:
-            if inst[0] == 'cmp name':
-                ir_1.append((inst[0], var_regs[inst[1]],  var_regs[inst[2]]))
-            elif inst[0] == 'cmp value':
-                ir_1.append((inst[0], var_regs[inst[1]], inst[2]))
-            elif inst[0] == 'set':
-                ir_1.append((inst[0], var_regs[inst[1]], inst[2]))
-            elif inst[0] == 'inc':
-                ir_1.append((inst[0], var_regs[inst[1]]))
-            elif inst[0] == 'move':
-                ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]]))
-            elif inst[0] == 'move indexed':
-                ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]]))
+            if inst[0] in { 'cmp name',  'cmp value', 'set', 'inc', 'move', 'move indexed'}:
+                if inst[0] == 'cmp name':
+                    assert type2size(var_sizes[inst[1]],arch) == type2size(var_sizes[inst[2]],arch)
+                    ir_1.append((inst[0], var_regs[inst[1]],  var_regs[inst[2]], var_sizes[inst[1]]))
+                elif inst[0] == 'cmp value':
+                    ir_1.append((inst[0], var_regs[inst[1]], inst[2], var_sizes[inst[1]]))
+                elif inst[0] == 'set':
+                    ir_1.append((inst[0], var_regs[inst[1]], inst[2], var_sizes[inst[1]]))
+                elif inst[0] == 'inc':
+                    ir_1.append((inst[0], var_regs[inst[1]], var_sizes[inst[1]]))
+                elif inst[0] == 'move':
+                    assert var_sizes[inst[1]] == var_sizes[inst[2]]
+                    ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_sizes[inst[1]]))
+                elif inst[0] == 'move indexed':
+                    print(var_sizes)
+                    assert type2size(var_sizes[inst[2]],arch) == type2size(var_sizes[inst[3]],arch)
+                    ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]],
+                        var_sizes[inst[1]], var_sizes[inst[2]]))
             else:
                 ir_1.append(inst)
 
@@ -202,9 +211,9 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'cmp value':
-                ir_1.append((inst[0], inst[1], ord(inst[2])))
+                ir_1.append((inst[0], inst[1], ord(inst[2]), inst[3]))
             elif inst[0] == 'set':
-                ir_1.append((inst[0], inst[1], inst[2]))
+                ir_1.append((inst[0], inst[1], inst[2], inst[3]))
             elif inst[0] == 'ret':
                 ir_1.append((inst[0], 1 if inst[1] else 0))
             else:
@@ -221,11 +230,11 @@ class Compiler:
         for inst in ir:
             if inst[0] == 'cmp value':
                 """cmp r/m8 imm8"""
-                _, binary = encode_instruction([0x80], arch, opex=0x07, reg_mem=inst[1], imm=inst[2], size=1)
+                _, binary = encode_instruction([0x80], arch, opex=0x07, reg_mem=inst[1], imm=inst[2], size=inst[3])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             elif inst[0] == 'cmp name':
                 """cmp r/m16/32/64 r16/32/64"""
-                _, binary = encode_instruction([0x39], arch, reg=inst[1], reg_mem=inst[2])
+                _, binary = encode_instruction([0x39], arch, reg=inst[1], reg_mem=inst[2], size=inst[3])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -240,10 +249,10 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'move indexed':
-                _, binary = encode_instruction([0x8A], arch, reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1)
+                _, binary = encode_instruction([0x8A], arch, reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1,size=inst[4], address_size=inst[5])
                 ir_1.append((('mov',inst[1],'=[',inst[2],'+',inst[3],']'), binary))
             elif inst[0] == 'move':
-                _, binary = encode_instruction([0x8B], arch, reg=inst[1],reg_mem=inst[2])
+                _, binary = encode_instruction([0x8B], arch, reg=inst[1],reg_mem=inst[2],size=inst[3])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -258,7 +267,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
-                _, binary = encode_instruction([0x40], arch, opcode_reg=inst[1])
+                _, binary = encode_instruction([0x40], arch, opcode_reg=inst[1], size=inst[2])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -273,7 +282,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'set':
-                _, binary = encode_instruction([0xB8], arch, opcode_reg=inst[1], imm=inst[2], size=4)
+                _, binary = encode_instruction([0xB8], arch, opcode_reg=inst[1], imm=inst[2], size=inst[3])
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -289,7 +298,7 @@ class Compiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'ret':
-                _, binary = encode_instruction([0xB8], arch, opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,size=4)
+                _, binary = encode_instruction([0xB8], arch, opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,size='int')
                 ir_1.append((('mov', Reg.EAX, inst[1]),binary))
                 ir_1.append(('jump','return'))
             else:
@@ -794,6 +803,9 @@ def encode_instruction(opcode_list, arch, *,
     if prefix_list is None:
         prefix_list = []
 
+
+    if isinstance(size,str):
+        size = type2size(size,arch)
     if arch == '32':
         # 0x66 -> override operand size to 16bit 
         # 0x67 -> override addressing to 16bit
@@ -996,8 +1008,8 @@ class JITMatcher:
         self._ir, self._variables = cc.compile_to_ir(dfa)
         self._ir_transformed = None
 
-        # function call arguments and thier sizes
-        args = (('string',4),('length',4))
+        # function call arguments
+        args = ('string','length')
         self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args, self._variables)
 
         self._description = dfa.description
