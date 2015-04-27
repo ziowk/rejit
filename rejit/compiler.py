@@ -39,13 +39,6 @@ class Compiler:
         return self._ir
 
     def compile_to_x86_32(self, ir, args, save_hex_file=None):
-        # registers available for variables
-        # can't access ESI EDI lowest byte in 32bit mode
-        reg_list = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.EBX] 
-
-        # registers saved by calle
-        calle_saved = [Reg.EBX, Reg.ESI, Reg.EDI, Reg.EBP]
-
         # find variables referenced by IR instructions
         names_read, names_written = Compiler._find_vars(ir)
 
@@ -53,23 +46,25 @@ class Compiler:
         # and do: vars_to_allocate = names_read
         vars_to_allocate = names_read | names_written
 
-        # currently variables can be stored in registers only
-        var_regs, used_regs = Compiler._allocate_vars(vars_to_allocate, reg_list)
-
-        # find registers which have to be restored
-        to_restore = list(used_regs & set(calle_saved))
-
         # offset from [ebp] to arguments (return address, old ebp)
         # warning: different in 64bit code
         args_offset = 8
 
         # used to relay information between passes (other than transformed IR)
+        var_regs = dict()
+        used_regs = set()
+        to_restore = list()
         labels = dict()
         jmp_targets = set()
 
         # apply compilation passes in this order
         ir_transformed = functools.reduce(lambda ir, ir_pass: ir_pass(ir), 
                 [ 
+                    functools.partial(Compiler._allocate_vars_pass,
+                        vars_to_allocate=vars_to_allocate,
+                        out_var_regs=var_regs,
+                        out_used_regs=used_regs,
+                        out_to_restore=to_restore),
                     functools.partial(Compiler._add_function_prologue,
                         args=args, 
                         var_regs=var_regs,
@@ -124,12 +119,24 @@ class Compiler:
         return names_read, names_written
 
     @staticmethod
-    def _allocate_vars(vars_to_allocate, reg_list):
+    def _allocate_vars_pass(ir, vars_to_allocate, out_var_regs, out_used_regs, out_to_restore):
+        # registers available for variables
+        # can't access ESI EDI lowest byte in 32bit mode
+        reg_list = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.EBX] 
+
+        # currently variables can be stored in registers only
         if len(reg_list) < len(vars_to_allocate):
-            raise CompilationError('not enough registers')
-        var_regs = dict(zip(vars_to_allocate, reg_list))
-        used_regs = set(var_regs.values())
-        return var_regs, used_regs
+            raise CompilationError('Not enough registers')
+        out_var_regs.update(dict(zip(vars_to_allocate, reg_list)))
+        out_used_regs.update(set(out_var_regs.values()))
+
+        # calle-saved registers
+        calle_saved = [Reg.EBX, Reg.ESI, Reg.EDI, Reg.EBP]
+
+        # find registers which have to be restored
+        out_to_restore += list(out_used_regs & set(calle_saved))
+
+        return ir
 
     @staticmethod
     def _add_function_prologue(ir, args, var_regs, args_offset, regs_to_restore):
