@@ -72,6 +72,10 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8B], '32', reg=compiler.Reg.EAX, reg_mem=compiler.Reg.EAX)
         assert binary == b'\x8B\xC0' 
 
+    def test_encode_16bit_move(self):
+        _, binary = compiler.encode_instruction([0x8B], '32', reg=compiler.Reg.EAX, base=compiler.Reg.ECX, size=2)
+        assert binary == b'\x66\x8B\x01'
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)

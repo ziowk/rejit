@@ -709,6 +709,16 @@ def encode_instruction(opcode_list, arch, *,
     instruction = []
     binary = bytearray()
 
+    if prefix_list is None:
+        prefix_list = []
+
+    if arch == '32':
+        # 0x66 -> override operand size to 16bit 
+        if size == 2:
+            prefix_list.append(OPcode.OVERRIDE_SIZE)
+    else:
+        raise CompilationError('Architecture {} not supported'.format(arch))
+
     # add prefices
     if prefix_list:
         instruction += prefix_list
