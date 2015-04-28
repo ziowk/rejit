@@ -140,10 +140,11 @@ class Compiler:
         regs_to_restore = data['regs_to_restore']
         arch = data['arch']
 
-        ir_load_args = Compiler._load_args(args, var_regs, var_sizes, arch)
+        ir_save_stack = Compiler._new_stack_frame(arch)
         ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore, arch)
+        ir_load_args = Compiler._load_args(args, var_regs, var_sizes, arch)
 
-        return (ir_calle_reg_save + ir_load_args + ir, data)
+        return (ir_save_stack + ir_calle_reg_save + ir_load_args + ir, data)
 
     @staticmethod
     def _load_args(args, var_regs, var_sizes, arch):
@@ -161,12 +162,17 @@ class Compiler:
         return ir_1
 
     @staticmethod
-    def _calle_reg_save(regs_to_restore, arch):
+    def _new_stack_frame(arch):
         ir_1 = []
         _, binary = encode_instruction([0x50], arch, opcode_reg=Reg.EBP)
         ir_1.append((('push', Reg.EBP),binary))
         _, binary = encode_instruction([0x8B], arch, reg=Reg.EBP,reg_mem=Reg.ESP, size='long')
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
+        return ir_1
+
+    @staticmethod
+    def _calle_reg_save(regs_to_restore, arch):
+        ir_1 = []
         for reg in regs_to_restore:
             _, binary = encode_instruction([0x50], arch, opcode_reg=reg)
             ir_1.append((('push', reg),binary))
