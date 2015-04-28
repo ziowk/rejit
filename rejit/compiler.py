@@ -1159,7 +1159,11 @@ class JITMatcher:
 
         # function call arguments
         args = ('string','length')
-        self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args, self._variables)
+        # 64bit Python
+        if struct.calcsize("P") == 8:
+            self._x86_binary, compilation_data = cc.compile_to_x86_64(self._ir, args, self._variables)
+        else:
+            self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args, self._variables)
 
         self._description = dfa.description
         self._jit_func = loadcode.load(self._x86_binary)
