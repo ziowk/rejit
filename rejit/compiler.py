@@ -844,12 +844,16 @@ def encode_instruction(opcode_list, arch, *,
         # desirable to omit rex byte if it is not needed.
         # REX.W = 1 -> override operand size to non-default (32->64)
         # REX.R = 1 -> modrm REG to R8-R15
+        # REX.B = 1 -> modrm R/M to R8-R15
         w, r, x, b = None, None, None, None
         if size == 8:
             w = 1
         if match_mask(reg, Reg._EXTENDED_MASK):
             reg = extract_reg(reg)
             r = 1
+        if match_mask(reg_mem, Reg._EXTENDED_MASK):
+            reg_mem = extract_reg(reg_mem)
+            b = 1
         if any(map(lambda v: v is not None, (w, r, x, b))):
             w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
             rex = REXByte(w=w,r=r,x=x,b=b)
