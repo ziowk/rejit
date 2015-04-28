@@ -132,6 +132,43 @@ class Compiler:
         return ir_data
 
     @staticmethod
+    def _allocate_vars_pass_64(ir_data):
+        ir, data = ir_data
+        args = data['args']
+        vars_to_allocate = data['vars_to_allocate']
+
+        if len(args) > 4:
+            raise CompilationError('More than 4 args currently not supported on 64bit platform')
+
+        # first 4 arguments are passed in registers (and we don't support more)
+        arg_regs = [Reg.ECX, Reg.EDX, Reg.R8, Reg.R9] 
+
+        # caller-saved registers - no need to restore them
+        scratch_regs = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.R8, Reg.R9, Reg.R10, Reg.R11]
+
+        # arguments are allocated to their registers
+        var_regs = dict(zip(args, arg_regs))
+
+        # registers which are available for variables which aren't arguments
+        reg_list = set(scratch_regs) - set(var_regs.values())
+
+        not_allocated = vars_to_allocate - set(args)
+
+        # currently variables can be stored in registers only
+        if len(reg_list) < len(not_allocated):
+            raise CompilationError('not enough registers')
+        var_regs.update(dict(zip(not_allocated, reg_list)))
+        used_regs = set(var_regs.values())
+
+        # no need for using calle saved registers in 64bit mode
+        regs_to_restore = []
+
+        data['var_regs'] = var_regs
+        data['used_regs'] = used_regs
+        data['regs_to_restore'] = regs_to_restore
+        return ir_data
+
+    @staticmethod
     def _add_function_prologue(ir_data):
         ir, data = ir_data
         args = data['args']
