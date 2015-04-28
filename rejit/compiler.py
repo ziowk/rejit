@@ -791,6 +791,16 @@ def type2size(type, arch):
     else:
         raise CompilationError('Uknown architecture {}'.format(arch))
 
+def match_mask(reg, mask):
+    if reg is None:
+        return False
+    return bool(reg & mask)
+
+def extract_reg(reg):
+    if reg is None:
+        return None
+    return reg & Reg._REG_MASK
+
 def encode_instruction(opcode_list, arch, *,
         prefix_list = None,
         reg = None,
@@ -826,6 +836,7 @@ def encode_instruction(opcode_list, arch, *,
         # 0x66 -> override operand size to 16bit 
         # 0x67 -> override addressing to 32bit
         # REX.W = 1 -> override operand size to non-default (32->64)
+        # REX.R = 1 -> modrm REG to R8-R15
         if size == 2:
             prefix_list.append(OPcode.OVERRIDE_SIZE)
         if address_size == 4:
@@ -837,6 +848,9 @@ def encode_instruction(opcode_list, arch, *,
         w, r, x, b = None, None, None, None
         if size == 8:
             w = 1
+        if match_mask(reg, Reg._EXTENDED_MASK):
+            reg = extract_reg(reg)
+            r = 1
         if any(map(lambda v: v is not None, (w, r, x, b))):
             w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
             rex = REXByte(w=w,r=r,x=x,b=b)

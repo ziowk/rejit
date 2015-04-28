@@ -5,6 +5,7 @@ import pytest
 from rejit.dfa import DFA
 import rejit.loadcode as loadcode
 import rejit.compiler as compiler
+from rejit.compiler import Reg
 from rejit.compiler import VMRegex
 from rejit.compiler import JITMatcher
 from tests.helper import accept_test_helper
@@ -93,6 +94,12 @@ class TestCodeGen:
     def test_encode_64bit_move_x64(self):
         _, binary = compiler.encode_instruction([0x8B], '64', reg=compiler.Reg.EAX, base=compiler.Reg.ECX, size = 8)
         assert binary == b'\x48\x8B\x01'
+
+    def test_encode_R8_R15_x64(self):
+        ext_regs = [Reg.R8, Reg.R9, Reg.R10, Reg.R11, Reg.R12, Reg.R13, Reg.R14, Reg.R15] 
+        for reg in ext_regs:
+            _, binary = compiler.encode_instruction([0x8B], '64', reg=reg, base=compiler.Reg.ECX, size = 8)
+            assert binary == b'\x4C\x8B' + ((reg & Reg._REG_MASK) * 0x8 + 0x1).to_bytes(1, byteorder='little')
 
 class Testx86accept:
     def test_empty_JITMatcher(self):
