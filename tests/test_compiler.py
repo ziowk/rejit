@@ -107,6 +107,12 @@ class TestCodeGen:
             _, binary = compiler.encode_instruction([0x8B], '64', reg=Reg.EAX, reg_mem=reg, size = 8)
             assert binary == b'\x49\x8B' + (0xC0 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
 
+    def test_encode_R8_R15_opcode_reg_x64(self):
+        ext_regs = [Reg.R8, Reg.R9, Reg.R10, Reg.R11, Reg.R12, Reg.R13, Reg.R14, Reg.R15] 
+        for reg in ext_regs:
+            _, binary = compiler.encode_instruction([0x50], '64', opcode_reg=reg)
+            assert binary == b'\x41' + (0x50 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)
