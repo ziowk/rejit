@@ -95,7 +95,7 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8B], '64', reg=compiler.Reg.EAX, base=compiler.Reg.ECX, size = 8)
         assert binary == b'\x48\x8B\x01'
 
-    def test_encode_R8_R15_x64(self):
+    def test_encode_R8_R15_reg_x64(self):
         ext_regs = [Reg.R8, Reg.R9, Reg.R10, Reg.R11, Reg.R12, Reg.R13, Reg.R14, Reg.R15] 
         for reg in ext_regs:
             _, binary = compiler.encode_instruction([0x8B], '64', reg=reg, base=compiler.Reg.ECX, size = 8)
