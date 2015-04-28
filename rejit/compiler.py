@@ -525,26 +525,28 @@ class VMRegex:
         return ret_val, info
 
 class Reg(IntEnum):
-    EAX = 0b000
-    ECX = 0b001
-    EDX = 0b010
-    EBX = 0b011
-    ESP = 0b100
-    EBP = 0b101
-    ESI = 0b110
-    EDI = 0b111
+    EAX = 0b0000
+    ECX = 0b0001
+    EDX = 0b0010
+    EBX = 0b0011
+    ESP = 0b0100
+    EBP = 0b0101
+    ESI = 0b0110
+    EDI = 0b0111
+    R8  = 0b1000
+    R9  = 0b1001
+    R10 = 0b1010
+    R11 = 0b1011
+    R12 = 0b1100
+    R13 = 0b1101
+    R14 = 0b1110
+    R15 = 0b1111
     _SIB_BASE_NONE = 0b101
     _DISP32_ONLY = 0b101
     _USE_SIB = 0b100
     _SIB_INDEX_NONE = 0b100
-    R8 = 0b000
-    R9 = 0b001
-    R10 = 0b010
-    R11 = 0b011
-    R12 = 0b100
-    R13 = 0b101
-    R14 = 0b110
-    R15 = 0b111
+    _EXTENDED_MASK = 0b1000 # bit marks registers allowed only in 64-bit mode
+    _REG_MASK = 0b111 # bits relevant for ModR/M and SIB bytes
 
 class OPcode(IntEnum):
     OVERRIDE_ADDRESSING = 0x67
