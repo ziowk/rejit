@@ -811,9 +811,9 @@ def encode_instruction(opcode_list, arch, *,
     if prefix_list is None:
         prefix_list = []
 
-
     if isinstance(size,str):
         size = type2size(size,arch)
+
     if arch == '32':
         # 0x66 -> override operand size to 16bit 
         # 0x67 -> override addressing to 16bit
