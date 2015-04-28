@@ -822,8 +822,11 @@ def encode_instruction(opcode_list, arch, *,
             #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
     elif arch == '64':
         # 0x66 -> override operand size to 16bit 
+        # 0x67 -> override addressing to 32bit
         if size == 2:
             prefix_list.append(OPcode.OVERRIDE_SIZE)
+        if address_size == 4:
+            prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
     else:
         raise CompilationError('Architecture {} not supported'.format(arch))
 
