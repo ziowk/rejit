@@ -131,6 +131,19 @@ class TestCodeGen:
             _, binary = compiler.encode_instruction([0x8B], '64', reg=Reg.EAX, base=Reg.EAX, index=reg, scale=compiler.Scale.MUL_1, size = 8)
             assert binary == b'\x4A\x8B\x04'+ ((reg & Reg._REG_MASK) * 0x8).to_bytes(1, byteorder='little')
 
+    def test_encode_SPL_BPL_SIL_DIL_x64(self):
+        low_bytes = [Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI]
+        for reg in low_bytes:
+            # mov reg, [rax]
+            _, binary = compiler.encode_instruction([0x8A], '64', reg=reg, base=Reg.EAX, size = 1)
+            assert binary == b'\x40\x8A'+ ((reg & Reg._REG_MASK) * 0x8).to_bytes(1, byteorder='little')
+            # mov al, reg
+            _, binary = compiler.encode_instruction([0x8A], '64', reg=Reg.EAX, reg_mem=reg, size = 1)
+            assert binary == b'\x40\x8A'+ (0xC0 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+            # mov reg, BYTE PTR 1
+            _, binary = compiler.encode_instruction([0xB4], '64', opcode_reg=reg, imm=1, size = 1)
+            assert binary == b'\x40'+ (0xB4 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little') + b'\x01'
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)

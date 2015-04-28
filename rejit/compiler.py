@@ -864,6 +864,10 @@ def encode_instruction(opcode_list, arch, *,
             w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
             rex = REXByte(w=w,r=r,x=x,b=b)
             prefix_list += [rex.byte]
+        # if no rex byte and accessing SPL BPL SIL DIL
+        elif any(map(lambda x: x in [Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI], [reg, reg_mem, opcode_reg])) and size == 1:
+            rex = REXByte()
+            prefix_list += [rex.byte]
     else:
         raise CompilationError('Architecture {} not supported'.format(arch))
 
