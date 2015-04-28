@@ -823,10 +823,22 @@ def encode_instruction(opcode_list, arch, *,
     elif arch == '64':
         # 0x66 -> override operand size to 16bit 
         # 0x67 -> override addressing to 32bit
+        # REX.W = 1 -> override operand size to non-default (32->64)
         if size == 2:
             prefix_list.append(OPcode.OVERRIDE_SIZE)
         if address_size == 4:
             prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
+        # This code is tricky because we have to distinguish valid 0 values for
+        # rex byte components from absence of a value - None, because it is
+        # desirable to omit rex byte if it is not needed.
+
+        w, r, x, b = None, None, None, None
+        if size == 8:
+            w = 1
+        if any(map(lambda v: v is not None, (w, r, x, b))):
+            w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
+            rex = REXByte(w=w,r=r,x=x,b=b)
+            prefix_list += [rex.byte]
     else:
         raise CompilationError('Architecture {} not supported'.format(arch))
 
