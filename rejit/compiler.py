@@ -835,8 +835,6 @@ def encode_instruction(opcode_list, arch, *,
     elif arch == '64':
         # 0x66 -> override operand size to 16bit 
         # 0x67 -> override addressing to 32bit
-        # REX.W = 1 -> override operand size to non-default (32->64)
-        # REX.R = 1 -> modrm REG to R8-R15
         if size == 2:
             prefix_list.append(OPcode.OVERRIDE_SIZE)
         if address_size == 4:
@@ -844,7 +842,8 @@ def encode_instruction(opcode_list, arch, *,
         # This code is tricky because we have to distinguish valid 0 values for
         # rex byte components from absence of a value - None, because it is
         # desirable to omit rex byte if it is not needed.
-
+        # REX.W = 1 -> override operand size to non-default (32->64)
+        # REX.R = 1 -> modrm REG to R8-R15
         w, r, x, b = None, None, None, None
         if size == 8:
             w = 1
