@@ -184,6 +184,15 @@ class Compiler:
         return (ir_save_stack + ir_calle_reg_save + ir_load_args + ir, data)
 
     @staticmethod
+    def _add_function_prologue_64(ir_data):
+        ir, data = ir_data
+        arch = data['arch']
+
+        ir_new_stack_frame = Compiler._new_stack_frame(arch)
+
+        return (ir_new_stack_frame + ir, data)
+
+    @staticmethod
     def _load_args(args, var_regs, var_sizes, arch):
         # offset from [ebp] to arguments (return address, old ebp)
         # warning: different in 64bit code
