@@ -73,6 +73,40 @@ class Compiler:
 
         return x86_code, compilation_data
 
+    def compile_to_x86_64(self, ir, args, var_sizes, save_hex_file=None):
+        # used to relay information between passes (other than transformed IR)
+        compilation_data = {'args': args, 'arch':'64', 'var_sizes':var_sizes}
+
+        # apply compilation passes in this order
+        ir_transformed, compilation_data = functools.reduce(lambda ir_data, ir_pass: ir_pass(ir_data), 
+                [ 
+                    Compiler._find_vars_pass,
+                    Compiler._allocate_vars_pass_64,
+                    Compiler._add_function_prologue_64,
+                    Compiler._replace_vars,
+                    Compiler._replace_values,
+                    Compiler._impl_cmp,
+                    Compiler._impl_mov,
+                    Compiler._impl_inc_64,
+                    Compiler._impl_set,
+                    Compiler._impl_ret,
+                    Compiler._find_labels,
+                    Compiler._impl_jmps_ins_placeholder,
+                    Compiler._impl_jmps,
+                    Compiler._purge_labels,
+                ],
+                (ir, compilation_data))
+
+        # merge generated x86 instructions to create final binary
+        x86_code = Compiler._merge_binary_instructions(ir_transformed)
+
+        if save_hex_file:
+            with open(save_hex_file, 'wt') as output:
+                for b in x86_code:
+                    output.write('{:02x} '.format(b))
+
+        return x86_code, compilation_data
+
     @staticmethod
     def _find_vars_pass(ir_data):
         ir, data = ir_data
