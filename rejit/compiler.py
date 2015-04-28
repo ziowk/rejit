@@ -327,6 +327,21 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
+    def _impl_inc_64(ir_data):
+        ir, data = ir_data
+        arch = data['arch']
+
+        ir_1 = []
+        for inst in ir:
+            if inst[0] == 'inc':
+                _, binary = encode_instruction([0xFF], arch, opex=0x0, reg_mem=inst[1], size=inst[2])
+                ir_1.append((inst, binary))
+            else:
+                ir_1.append(inst)
+
+        return (ir_1, data)
+
+    @staticmethod
     def _impl_set(ir_data):
         ir, data = ir_data
         arch = data['arch']
