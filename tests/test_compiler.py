@@ -124,6 +124,13 @@ class TestCodeGen:
             else:
                 assert binary == b'\x49\x8B' + (reg & Reg._REG_MASK).to_bytes(1, byteorder='little')
 
+    def test_encode_R8_R15_index_x64(self):
+        # R12 -> RSP, can't use RSP as addressing index
+        ext_regs = [Reg.R8, Reg.R9, Reg.R10, Reg.R11, Reg.R13, Reg.R14, Reg.R15] 
+        for reg in ext_regs:
+            _, binary = compiler.encode_instruction([0x8B], '64', reg=Reg.EAX, base=Reg.EAX, index=reg, scale=compiler.Scale.MUL_1, size = 8)
+            assert binary == b'\x4A\x8B\x04'+ ((reg & Reg._REG_MASK) * 0x8).to_bytes(1, byteorder='little')
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)

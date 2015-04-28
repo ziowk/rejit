@@ -844,6 +844,7 @@ def encode_instruction(opcode_list, arch, *,
         # desirable to omit rex byte if it is not needed.
         # REX.W = 1 -> override operand size to non-default (32->64)
         # REX.R = 1 -> modrm REG to R8-R15
+        # REX.X = 1 -> sib INDEX to R8-R15
         # REX.B = 1 -> modrm R/M, sib BASE, opcode REG to R8-R15
         w, r, x, b = None, None, None, None
         if size == 8:
@@ -851,6 +852,9 @@ def encode_instruction(opcode_list, arch, *,
         if match_mask(reg, Reg._EXTENDED_MASK):
             reg = extract_reg(reg)
             r = 1
+        if match_mask(index, Reg._EXTENDED_MASK):
+            index = extract_reg(index)
+            x = 1
         if match_mask(reg_mem, Reg._EXTENDED_MASK) or match_mask(base, Reg._EXTENDED_MASK) or match_mask(opcode_reg, Reg._EXTENDED_MASK):
             reg_mem = extract_reg(reg_mem)
             base = extract_reg(base)
