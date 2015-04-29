@@ -234,7 +234,7 @@ class Compiler:
 
         ir_1 = []
         total = args_offset
-        for arg in (args):
+        for arg in args:
             if arg in var_regs:
                 _, binary = encode_instruction([0x8B], arch, reg=var_regs[arg], base=Reg.EBP, disp=total, size=var_sizes[arg])
                 ir_1.append((('mov',var_regs[arg],'=[',Reg.ESP,'+',total,']'), binary))
