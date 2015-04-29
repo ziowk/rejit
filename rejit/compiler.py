@@ -48,18 +48,18 @@ class Compiler:
                 [ 
                     Compiler._find_vars_pass,
                     Compiler._allocate_vars_pass,
-                    Compiler._add_function_prologue,
-                    Compiler._replace_vars,
-                    Compiler._replace_values,
-                    Compiler._impl_cmp,
-                    Compiler._impl_mov,
-                    Compiler._impl_inc,
-                    Compiler._impl_set,
-                    Compiler._impl_ret,
-                    Compiler._find_labels,
-                    Compiler._impl_jmps_ins_placeholder,
-                    Compiler._impl_jmps,
-                    Compiler._purge_labels,
+                    Compiler._add_function_prologue_pass,
+                    Compiler._replace_vars_pass,
+                    Compiler._replace_values_pass,
+                    Compiler._impl_cmp_pass,
+                    Compiler._impl_mov_pass,
+                    Compiler._impl_inc_pass,
+                    Compiler._impl_set_pass,
+                    Compiler._impl_ret_pass,
+                    Compiler._find_labels_pass,
+                    Compiler._impl_jmps_ins_placeholder_pass,
+                    Compiler._impl_jmps_pass,
+                    Compiler._purge_labels_pass,
                 ],
                 (ir, compilation_data))
 
@@ -82,18 +82,18 @@ class Compiler:
                 [ 
                     Compiler._find_vars_pass,
                     Compiler._allocate_vars_pass_64,
-                    Compiler._add_function_prologue_64,
-                    Compiler._replace_vars,
-                    Compiler._replace_values,
-                    Compiler._impl_cmp,
-                    Compiler._impl_mov,
-                    Compiler._impl_inc_64,
-                    Compiler._impl_set,
-                    Compiler._impl_ret,
-                    Compiler._find_labels,
-                    Compiler._impl_jmps_ins_placeholder,
-                    Compiler._impl_jmps,
-                    Compiler._purge_labels,
+                    Compiler._add_function_prologue_pass_64,
+                    Compiler._replace_vars_pass,
+                    Compiler._replace_values_pass,
+                    Compiler._impl_cmp_pass,
+                    Compiler._impl_mov_pass,
+                    Compiler._impl_inc_pass_64,
+                    Compiler._impl_set_pass,
+                    Compiler._impl_ret_pass,
+                    Compiler._find_labels_pass,
+                    Compiler._impl_jmps_ins_placeholder_pass,
+                    Compiler._impl_jmps_pass,
+                    Compiler._purge_labels_pass,
                 ],
                 (ir, compilation_data))
 
@@ -203,7 +203,7 @@ class Compiler:
         return ir_data
 
     @staticmethod
-    def _add_function_prologue(ir_data):
+    def _add_function_prologue_pass(ir_data):
         ir, data = ir_data
         args = data['args']
         var_regs = data['var_regs']
@@ -218,7 +218,7 @@ class Compiler:
         return (ir_new_stack_frame + ir_calle_reg_save + ir_load_args + ir, data)
 
     @staticmethod
-    def _add_function_prologue_64(ir_data):
+    def _add_function_prologue_pass_64(ir_data):
         ir, data = ir_data
         arch = data['arch']
 
@@ -259,7 +259,7 @@ class Compiler:
         return ir_1
 
     @staticmethod
-    def _replace_vars(ir_data):
+    def _replace_vars_pass(ir_data):
         ir, data = ir_data
         var_regs = data['var_regs']
         var_sizes = data['var_sizes']
@@ -291,7 +291,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _replace_values(ir_data):
+    def _replace_values_pass(ir_data):
         ir, data = ir_data
 
         ir_1 = []
@@ -308,7 +308,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_cmp(ir_data):
+    def _impl_cmp_pass(ir_data):
         ir, data = ir_data
         arch = data['arch']
 
@@ -328,7 +328,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_mov(ir_data):
+    def _impl_mov_pass(ir_data):
         ir, data = ir_data
         arch = data['arch']
 
@@ -346,7 +346,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_inc(ir_data):
+    def _impl_inc_pass(ir_data):
         ir, data = ir_data
         arch = data['arch']
 
@@ -361,7 +361,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_inc_64(ir_data):
+    def _impl_inc_pass_64(ir_data):
         ir, data = ir_data
         arch = data['arch']
 
@@ -376,7 +376,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_set(ir_data):
+    def _impl_set_pass(ir_data):
         ir, data = ir_data
         arch = data['arch']
 
@@ -391,7 +391,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_ret(ir_data):
+    def _impl_ret_pass(ir_data):
         ir, data = ir_data
         regs_to_restore = data['regs_to_restore']
         arch = data['arch']
@@ -416,7 +416,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _find_labels(ir_data):
+    def _find_labels_pass(ir_data):
         ir, data = ir_data
 
         labels = dict()
@@ -430,7 +430,7 @@ class Compiler:
         return ir_data
 
     @staticmethod
-    def _impl_jmps_ins_placeholder(ir_data):
+    def _impl_jmps_ins_placeholder_pass(ir_data):
         ir, data = ir_data
         labels = data['labels']
         arch = data['arch']
@@ -458,7 +458,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _impl_jmps(ir_data):
+    def _impl_jmps_pass(ir_data):
         ir, data = ir_data
         labels = data['labels']
 
@@ -481,7 +481,7 @@ class Compiler:
         return (ir_1, data)
 
     @staticmethod
-    def _purge_labels(ir_data):
+    def _purge_labels_pass(ir_data):
         ir, data = ir_data
         return (list(filter(lambda x: x[0]!='label', ir)), data)
 
