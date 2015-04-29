@@ -281,7 +281,6 @@ class Compiler:
                     assert var_sizes[inst[1]] == var_sizes[inst[2]]
                     ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_sizes[inst[1]]))
                 elif inst[0] == 'move indexed':
-                    print(var_sizes)
                     assert type2size(var_sizes[inst[2]],arch) == type2size(var_sizes[inst[3]],arch)
                     ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]],
                         var_sizes[inst[1]], var_sizes[inst[2]]))
