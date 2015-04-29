@@ -211,11 +211,11 @@ class Compiler:
         regs_to_restore = data['regs_to_restore']
         arch = data['arch']
 
-        ir_save_stack = Compiler._new_stack_frame(arch)
+        ir_new_stack_frame = Compiler._new_stack_frame(arch)
         ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore, arch)
         ir_load_args = Compiler._load_args(args, var_regs, var_sizes, arch)
 
-        return (ir_save_stack + ir_calle_reg_save + ir_load_args + ir, data)
+        return (ir_new_stack_frame + ir_calle_reg_save + ir_load_args + ir, data)
 
     @staticmethod
     def _add_function_prologue_64(ir_data):
