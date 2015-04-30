@@ -3,6 +3,7 @@
 from enum import IntEnum
 import struct
 import functools
+import os
 
 import rejit.loadcode as loadcode
 import rejit.common
@@ -171,14 +172,19 @@ class Compiler:
         args = data['args']
         vars_to_allocate = data['vars_to_allocate']
 
-        if len(args) > 4:
-            raise CompilationError('More than 4 args currently not supported on 64bit platform')
+        if os.name == 'nt':
+            # first arguments are passed in registers (and we don't support more)
+            arg_regs = [Reg.ECX, Reg.EDX, Reg.R8, Reg.R9] 
+            # caller-saved registers - no need to restore them
+            scratch_regs = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.R8, Reg.R9, Reg.R10, Reg.R11]
+        elif os.name == 'posix':
+            arg_regs = [Reg.EDI, Reg.ESI, Reg.EDX, Reg.ECX, Reg.R8, Reg.R9] 
+            scratch_regs = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.ESI, Reg.EDI, Reg.R8, Reg.R9, Reg.R10, Reg.R11]
+        else:
+            raise CompilationError('Not supported system: {}'.format(os.name))
 
-        # first 4 arguments are passed in registers (and we don't support more)
-        arg_regs = [Reg.ECX, Reg.EDX, Reg.R8, Reg.R9] 
-
-        # caller-saved registers - no need to restore them
-        scratch_regs = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.R8, Reg.R9, Reg.R10, Reg.R11]
+        if len(args) > len(arg_regs):
+            raise CompilationError('More than {} args currently not supported on this platform'.format(len(args)))
 
         # arguments are allocated to their registers
         var_regs = dict(zip(args, arg_regs))
