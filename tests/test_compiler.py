@@ -3,6 +3,7 @@
 import pytest
 
 from rejit.dfa import DFA
+from rejit.nfa import NFA
 import rejit.loadcode as loadcode
 import rejit.compiler as compiler
 from rejit.compiler import Reg
@@ -191,4 +192,11 @@ class Testx86accept:
     def test_complex_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.complex_nfa_1)),auto_cases.complex_cases_1)
         accept_test_helper(JITMatcher(DFA(auto_cases.complex_nfa_2)),auto_cases.complex_cases_2)
+
+class TestJITMatcher:
+    # test for bug #84
+    def test_accept_return_bool(self):
+        matcher = JITMatcher(DFA(NFA.symbol('a')))
+        assert isinstance(matcher.accept('a'), bool)
+        assert isinstance(matcher.accept('b'), bool)
 
