@@ -611,3 +611,47 @@ class TestRegexOther:
         with pytest.raises(rejit.regex.RegexCompilationError):
             re.compile_to_DFA()
 
+    def test_JIT_compilation(self):
+        re = Regex('x(a|b)*x')
+        cases = [
+                    ('xx', True),
+                    ('xaaax', True),
+                    ('xbbbx', True),
+                    ('xabababx', True),
+                    ('xbbbaaax', True),
+                    ('', False),
+                    ('ababa', False),
+                    ('xxababxx', False),
+                    ('xaaa', False),
+                    ('bbbx', False),
+                    ('xxx', False),
+                    ('ccc', False),
+                ]
+        accept_test_helper(re,cases)
+        assert re._matcher_type == 'NFA'
+        # compile NFA -> DFA
+        re.compile_to_DFA()
+        accept_test_helper(re,cases)
+        assert re._matcher_type == 'DFA'
+        # compile DFA -> x86
+        re.compile_to_x86()
+        accept_test_helper(re,cases)
+        assert re._matcher_type == 'JIT'
+
+        re = Regex('x(a|b)*x')
+        accept_test_helper(re,cases)
+        assert re._matcher_type == 'NFA'
+        # compile NFA -> DFA -> x86
+        re.compile_to_x86()
+        accept_test_helper(re,cases)
+        assert re._matcher_type == 'JIT'
+
+        # can't compile back to DFA
+        with pytest.raises(rejit.regex.RegexCompilationError):
+            re.compile_to_DFA()
+
+        # can't compile a Regex without a matcher
+        re = Regex()
+        with pytest.raises(rejit.regex.RegexCompilationError):
+            re.compile_to_x86()
+
