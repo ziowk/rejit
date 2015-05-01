@@ -1178,5 +1178,5 @@ class JITMatcher:
         return self._description
 
     def accept(self, s):
-        return loadcode.call(self._jit_func,s,len(s))
+        return bool(loadcode.call(self._jit_func,s,len(s)))
 
