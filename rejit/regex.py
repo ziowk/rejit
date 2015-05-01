@@ -8,6 +8,7 @@ from rejit.common import special_chars
 
 from rejit.nfa import NFA
 from rejit.dfa import DFA
+from rejit.compiler import JITMatcher
 
 class RegexError(RejitError): pass
 
@@ -52,6 +53,13 @@ class Regex:
                     "Can only compile NFA-type matcher to a DFA. Current matcher type: {}".format(self._matcher_type))
         self._matcher = DFA(self._matcher)
         self._matcher_type = 'DFA'
+
+    def compile_to_x86(self):
+        if self._matcher_type == 'JIT':
+            return
+        self.compile_to_DFA()
+        self._matcher = JITMatcher(self._matcher)
+        self._matcher_type = 'JIT'
 
     def _getchar(self):
         if self._input:
