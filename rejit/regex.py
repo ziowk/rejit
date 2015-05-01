@@ -45,6 +45,8 @@ class Regex:
         return self.get_matcher_description()
 
     def compile_to_DFA(self):
+        if self._matcher_type == 'DFA':
+            return
         if self._matcher_type != 'NFA':
             raise RegexCompilationError(
                     "Can only compile NFA-type matcher to a DFA. Current matcher type: {}".format(self._matcher_type))
