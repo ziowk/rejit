@@ -39,7 +39,7 @@ Regular expressions in `rejit` can be used to check if a string looks like a
 number. Here's a pretty bad attempt:
 ```
 >>> import rejit.regex as re
->>> regex = re.Regex(r'(\-?[0-9]*(\.[0-9]+)?')
+>>> regex = re.Regex(r'\-?[0-9]*(\.[0-9]+)?')
 >>> regex.accept('not a number')
 False
 >>> regex.accept('42')
@@ -53,6 +53,16 @@ False
 >>> regex.accept('-')
 True
 # ugh, a lone minus is accepted, but that's actually the regex' fault, not a bug
+>>> regex.compile_to_DFA()
+# `regex` will now use a DFA-based matcher, which should work faster
+>>> regex.accept('-1000.00')
+True
+>>> regex.compile_to_x86()
+# `regex` will now use a JIT compiled matcher, which should work even faster than a DFA one
+>>> regex.accept('999.999')
+True
+>>> regex.accept('0xFF')
+False
 ```
 
 ## Installation
