@@ -4,7 +4,7 @@ from setuptools import setup, Extension
 
 setup(  
     name='rejit',
-    version='0.1',
+    version='0.2',
     description='Simple regular expression just-in-time compiler',
     author='Grzegorz Ludwikowski',
     author_email='ludwikowskig@gmail.com',
