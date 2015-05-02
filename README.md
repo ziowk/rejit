@@ -20,6 +20,7 @@ Rough plan to JIT compile regular expressions:
 * [x] pack native code in an easy to call wrapper
 
 ## Supported features
+### Regular expression features
 `rejit` supports the following regexp features:
 * union - `abc|def`
 * concatenation - `abcd`
@@ -33,6 +34,13 @@ Rough plan to JIT compile regular expressions:
 
 Currently `rejit` can only decide whether a string exactly matches a regexp.
 There is no search support.
+
+### Available regex matchers
+`rejit` provides three types of matchers:
+* NFA-based matcher - default, created implicitly when creating a `Regex` object
+* DFA-based matcher - a linear time matcher, created with `compile_to_DFA()`
+* JIT compiled matcher - a linear time matcher, compiled to x86 machine code.
+Created with `compile_to_x86()`
 
 ## Usage example
 Regular expressions in `rejit` can be used to check if a string looks like a
