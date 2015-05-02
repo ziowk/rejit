@@ -17,7 +17,7 @@ setup(
         },
     keywords = ['regexp', 'regex', 'JIT', 'just-in-time', 'compiler'],
     classifiers = [
-        'Develeopment Status :: 2 - Pre-Alpha',
+        'Develeopment Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
