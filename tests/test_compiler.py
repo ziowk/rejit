@@ -149,6 +149,10 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.EAX, reg_mem=Reg.ECX)
         assert binary == b'\x8A\xC1'
 
+    def test_encode_modrm_REG_DISP(self):
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, disp=0x7FFFFFF0)
+        assert binary == b'\x8A\x0D\xF0\xFF\xFF\x7F'
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)
