@@ -153,6 +153,9 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0D\xF0\xFF\xFF\x7F'
 
+        _, binary = compiler.encode_instruction([0x8A], '64', reg=Reg.ECX, disp=0x7FFFFFF0)
+        assert binary == b'\x8A\x0C\x25\xF0\xFF\xFF\x7F'
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)
