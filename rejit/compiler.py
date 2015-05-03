@@ -642,7 +642,10 @@ class Reg(IntEnum):
     R14 = 0b1110
     R15 = 0b1111
     _SIB_BASE_NONE = 0b101
-    _DISP32_ONLY = 0b101
+    _DISP32_ONLY_32_RM = 0b101
+    _DISP32_ONLY_64_RM = 0b100
+    _DISP32_ONLY_64_BASE = 0b101
+    _DISP32_ONLY_64_INDEX = 0b100
     _USE_SIB = 0b100
     _SIB_INDEX_NONE = 0b100
     _EXTENDED_MASK = 0b1000 # bit marks registers allowed only in 64-bit mode
@@ -658,12 +661,15 @@ class Mod(IntEnum):
     MEM_DISP32 = 0b10
     REG = 0b11
     _SIB_BASE_NONE = 0b00
+    _DISP32_ONLY_32_MOD = 0b00
+    _DISP32_ONLY_64_MOD = 0b00
 
 class Scale(IntEnum):
     MUL_1 = 0b00
     MUL_2 = 0b01
     MUL_4 = 0b10
     MUL_8 = 0b11
+    _DISP32_ONLY_64_SCALE = 0b00
 
 class REXByte:
     def __init__(self, *, w=0, r=0, x=0, b=0):
@@ -988,7 +994,7 @@ def encode_instruction(opcode_list, arch, *,
 
     # add operands or opcode extension
     if reg is not None or reg_mem is not None or base is not None or index is not None or disp is not None or opex is not None:
-        add_reg_mem_opex(instruction, binary, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
+        add_reg_mem_opex(instruction, binary, arch, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
 
     # add immediate value
     if imm is not None:
@@ -1006,7 +1012,7 @@ def encode_instruction(opcode_list, arch, *,
 
     return (tuple(instruction), binary)
 
-def add_reg_mem_opex(instruction, binary, *,
+def add_reg_mem_opex(instruction, binary, arch, *,
         reg = None, 
         opex = None, 
         reg_mem = None, 
@@ -1036,13 +1042,26 @@ def add_reg_mem_opex(instruction, binary, *,
         binary += modrm.binary
         return
 
-    # [disp32] on 32bit, [RIP/EIP + disp32] on 64bit
+    # [disp32] on 32bit is encoded with modrm mod=00 rm=101
+    # [disp32] on 64bit is encoded with modrm and sib, because
+    # on 64bit mod=00 rm=101 means [RIP/EIP + disp32]
+    # so modrm mod=00 rm=100, sib base=101 index=100 scale=any
     if base is None and index is None:
-        modrm.mod = Mod.MEM
-        modrm.rm = Reg._DISP32_ONLY
+        if arch == '32':
+            modrm.mod = Mod._DISP32_ONLY_32_MOD
+            modrm.rm = Reg._DISP32_ONLY_32_RM
 
-        instruction += [modrm, disp]
-        binary += modrm.binary + int32bin(disp)
+            instruction += [modrm, disp]
+            binary += modrm.binary + int32bin(disp)
+        elif arch == '64':
+            modrm.mod = Mod._DISP32_ONLY_64_MOD
+            modrm.rm = Reg._DISP32_ONLY_64_RM
+            sib = SIBByte(base  = Reg._DISP32_ONLY_64_BASE, 
+                          index = Reg._DISP32_ONLY_64_INDEX, 
+                          scale = Scale._DISP32_ONLY_64_SCALE)
+
+            instruction += [modrm, sib, disp]
+            binary += modrm.binary + sib.binary + int32bin(disp)
         return
 
     # supplement a displacment for memory addressing
