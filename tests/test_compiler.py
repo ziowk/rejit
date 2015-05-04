@@ -179,6 +179,28 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP, index=Reg.EAX, scale=Scale.MUL_1)
         assert binary == b'\x8A\x4C\x05\x00'
 
+    def test_encode_addr_REG_BASE(self):
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.ESP, disp=0x7FFFFFF0)
+        assert binary == b'\x8A\x8C\x24\xF0\xFF\xFF\x7F'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.ESP, disp=0x70)
+        assert binary == b'\x8A\x4C\x24\x70'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.ESP) 
+        assert binary == b'\x8A\x0C\x24'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, disp=0x7FFFFFF0)
+        assert binary == b'\x8A\x8B\xF0\xFF\xFF\x7F'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, disp=0x70)
+        assert binary == b'\x8A\x4B\x70'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX)
+        assert binary == b'\x8A\x0B'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP)
+        assert binary == b'\x8A\x4D\x00'
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)
