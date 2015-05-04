@@ -160,6 +160,9 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_1, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0C\x05\xF0\xFF\xFF\x7F'
 
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_2, disp=0x70)
+        assert binary == b'\x8A\x0C\x45\x70\x00\x00\x00'
+
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_8)
         assert binary == b'\x8A\x0C\xC5\x00\x00\x00\x00'
 
