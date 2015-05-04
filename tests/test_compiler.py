@@ -166,6 +166,19 @@ class TestCodeGen:
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_8)
         assert binary == b'\x8A\x0C\xC5\x00\x00\x00\x00'
 
+    def test_encode_addr_REG_BASE_INDEX(self):
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, index=Reg.EAX, scale=Scale.MUL_8, disp=0x7FFFFFF0)
+        assert binary == b'\x8A\x8C\xC3\xF0\xFF\xFF\x7F'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, index=Reg.EAX, scale=Scale.MUL_4, disp=0x70)
+        assert binary == b'\x8A\x4C\x83\x70'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, index=Reg.EAX, scale=Scale.MUL_2)
+        assert binary == b'\x8A\x0C\x43'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP, index=Reg.EAX, scale=Scale.MUL_1)
+        assert binary == b'\x8A\x4C\x05\x00'
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)
