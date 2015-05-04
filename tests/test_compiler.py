@@ -145,11 +145,11 @@ class TestCodeGen:
             _, binary = compiler.encode_instruction([0xB4], '64', opcode_reg=reg, imm=1, size = 1)
             assert binary == b'\x40'+ (0xB4 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little') + b'\x01'
 
-    def test_encode_modrm_REG_REGMEM(self):
+    def test_encode_addr_REG_REGMEM(self):
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.EAX, reg_mem=Reg.ECX)
         assert binary == b'\x8A\xC1'
 
-    def test_encode_modrm_REG_DISP(self):
+    def test_encode_addr_REG_DISP(self):
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0D\xF0\xFF\xFF\x7F'
 
