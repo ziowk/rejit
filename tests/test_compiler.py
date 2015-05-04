@@ -6,7 +6,7 @@ from rejit.dfa import DFA
 from rejit.nfa import NFA
 import rejit.loadcode as loadcode
 import rejit.compiler as compiler
-from rejit.compiler import Reg
+from rejit.compiler import Reg, Scale
 from rejit.compiler import VMRegex
 from rejit.compiler import JITMatcher
 from tests.helper import accept_test_helper
@@ -155,6 +155,13 @@ class TestCodeGen:
 
         _, binary = compiler.encode_instruction([0x8A], '64', reg=Reg.ECX, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0C\x25\xF0\xFF\xFF\x7F'
+
+    def test_encode_addr_REG_INDEX(self):
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_1, disp=0x7FFFFFF0)
+        assert binary == b'\x8A\x0C\x05\xF0\xFF\xFF\x7F'
+
+        _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_8)
+        assert binary == b'\x8A\x0C\xC5\x00\x00\x00\x00'
 
 class Testx86accept:
     def test_empty_JITMatcher(self):
