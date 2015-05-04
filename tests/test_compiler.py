@@ -146,58 +146,75 @@ class TestCodeGen:
             assert binary == b'\x40'+ (0xB4 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little') + b'\x01'
 
     def test_encode_addr_REG_REGMEM(self):
+        # mov al, cl
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.EAX, reg_mem=Reg.ECX)
         assert binary == b'\x8A\xC1'
 
     def test_encode_addr_REG_DISP(self):
+        # mov cl, [0x7FFFFFF0]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0D\xF0\xFF\xFF\x7F'
 
+        # mov cl, [0x7FFFFFF0]
         _, binary = compiler.encode_instruction([0x8A], '64', reg=Reg.ECX, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0C\x25\xF0\xFF\xFF\x7F'
 
     def test_encode_addr_REG_INDEX(self):
+        # mov cl, [eax*1 + 0x7FFFFFF0]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_1, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x0C\x05\xF0\xFF\xFF\x7F'
 
+        # mov cl, [eax*2 + 0x70]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_2, disp=0x70)
         assert binary == b'\x8A\x0C\x45\x70\x00\x00\x00'
 
+        # mov cl, [eax*8]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, index=Reg.EAX, scale=Scale.MUL_8)
         assert binary == b'\x8A\x0C\xC5\x00\x00\x00\x00'
 
     def test_encode_addr_REG_BASE_INDEX(self):
+        # mov cl, [ebx + eax*8 + 0x7FFFFFF0]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, index=Reg.EAX, scale=Scale.MUL_8, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x8C\xC3\xF0\xFF\xFF\x7F'
 
+        # mov cl, [ebx + eax*4 + 0x70]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, index=Reg.EAX, scale=Scale.MUL_4, disp=0x70)
         assert binary == b'\x8A\x4C\x83\x70'
 
+        # mov cl, [ebx + eax*2]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, index=Reg.EAX, scale=Scale.MUL_2)
         assert binary == b'\x8A\x0C\x43'
 
+        # mov cl, [ebp + eax*1]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP, index=Reg.EAX, scale=Scale.MUL_1)
         assert binary == b'\x8A\x4C\x05\x00'
 
     def test_encode_addr_REG_BASE(self):
+        # mov cl, [esp + 0x7FFFFFF0]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.ESP, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x8C\x24\xF0\xFF\xFF\x7F'
 
+        # mov cl, [esp + 0x70]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.ESP, disp=0x70)
         assert binary == b'\x8A\x4C\x24\x70'
 
+        # mov cl, [esp]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.ESP) 
         assert binary == b'\x8A\x0C\x24'
 
+        # mov cl, [ebx + 0x7FFFFFF0]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, disp=0x7FFFFFF0)
         assert binary == b'\x8A\x8B\xF0\xFF\xFF\x7F'
 
+        # mov cl, [ebx + 0x70]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX, disp=0x70)
         assert binary == b'\x8A\x4B\x70'
 
+        # mov cl, [ebx]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBX)
         assert binary == b'\x8A\x0B'
 
+        # mov cl, [ebp]
         _, binary = compiler.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP)
         assert binary == b'\x8A\x4D\x00'
 
