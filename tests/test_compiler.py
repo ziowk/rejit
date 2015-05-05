@@ -8,7 +8,7 @@ import rejit.loadcode as loadcode
 import rejit.compiler as compiler
 from rejit.compiler import Reg, Scale
 from rejit.compiler import VMRegex
-from rejit.compiler import JITMatcher
+from rejit.jitmatcher import JITMatcher
 from tests.helper import accept_test_helper
 
 import tests.automaton_test_cases as auto_cases

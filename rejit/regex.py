@@ -8,7 +8,7 @@ from rejit.common import special_chars
 
 from rejit.nfa import NFA
 from rejit.dfa import DFA
-from rejit.compiler import JITMatcher
+from rejit.jitmatcher import JITMatcher
 
 class RegexError(RejitError): pass
 
