@@ -61,10 +61,16 @@ False
 >>> regex.accept('-')
 True
 # ugh, a lone minus is accepted, but that's actually the regex' fault, not a bug
+```
+To speed up, we can convert regex matcher to a DFA from a default NFA.
+```
 >>> regex.compile_to_DFA()
 # `regex` will now use a DFA-based matcher, which should work faster
 >>> regex.accept('-1000.00')
 True
+```
+For even larger speedup, we can JIT compile regex matcher to x86 machine code.
+```
 >>> regex.compile_to_x86()
 # `regex` will now use a JIT compiled matcher, which should work even faster than a DFA one
 >>> regex.accept('999.999')
