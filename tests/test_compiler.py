@@ -9,6 +9,7 @@ import rejit.compiler as compiler
 from rejit.compiler import Reg, Scale
 from rejit.vmmatcher import VMMatcher
 from rejit.jitmatcher import JITMatcher
+from rejit.x86encoder import InstructionEncodingError
 from tests.helper import accept_test_helper
 
 import tests.automaton_test_cases as auto_cases
@@ -81,7 +82,7 @@ class TestCodeGen:
         assert binary == b'\x66\x8B\x01'
 
     def test_encode_16bit_addressing(self):
-        with pytest.raises(compiler.CompilationError):
+        with pytest.raises(InstructionEncodingError):
             _, binary = compiler.encode_instruction([0x8B], '32', reg=compiler.Reg.EAX, base=compiler.Reg.EBX, address_size=2)
 
     def test_encode_16bit_move_x64(self):

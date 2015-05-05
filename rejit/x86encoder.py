@@ -5,7 +5,7 @@ from enum import IntEnum
 
 import rejit.common
 
-class CompilationError(rejit.common.RejitError): pass
+class InstructionEncodingError(rejit.common.RejitError): pass
 
 class Reg(IntEnum):
     EAX = 0b0000
@@ -279,7 +279,7 @@ def encode_instruction(opcode_list, arch, *,
         if size == 2:
             prefix_list.append(OPcode.OVERRIDE_SIZE)
         if address_size == 2:
-            raise CompilationError('16bit addressing not supported')
+            raise InstructionEncodingError('16bit addressing not supported')
             #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
     elif arch == '64':
         # 0x66 -> override operand size to 16bit 
@@ -318,7 +318,7 @@ def encode_instruction(opcode_list, arch, *,
             rex = REXByte()
             prefix_list += [rex.byte]
     else:
-        raise CompilationError('Architecture {} not supported'.format(arch))
+        raise InstructionEncodingError('Architecture {} not supported'.format(arch))
 
     # add prefices
     if prefix_list:
@@ -351,7 +351,7 @@ def encode_instruction(opcode_list, arch, *,
         elif size == 8:
             binary += int64bin(imm)
         else:
-            raise CompilationError("can't use {} immediate value of size {}".format(imm,size))
+            raise InstructionEncodingError("can't use {} immediate value of size {}".format(imm,size))
 
     return (tuple(instruction), binary)
 
@@ -526,7 +526,7 @@ def type2size(type, arch):
         elif type == 'byte':
             return 1
         else:
-            raise CompilationError('Unknown variable type {} in architecture {}'.format(type,arch))
+            raise InstructionEncodingError('Unknown variable type {} in architecture {}'.format(type,arch))
     elif arch == '64':
         if type == 'pointer':
             return 8
@@ -539,9 +539,9 @@ def type2size(type, arch):
         elif type == 'byte':
             return 1
         else:
-            raise CompilationError('Unknown variable type {} in architecture {}'.format(type,arch))
+            raise InstructionEncodingError('Unknown variable type {} in architecture {}'.format(type,arch))
     else:
-        raise CompilationError('Uknown architecture {}'.format(arch))
+        raise InstructionEncodingError('Uknown architecture {}'.format(arch))
 
 def int8bin(int8):
     return struct.pack('@b', int8)

@@ -5,7 +5,9 @@ import functools
 import os
 
 import rejit.common
-from rejit.x86encoder import encode_instruction, type2size, int32bin, Scale, Reg, CompilationError
+from rejit.x86encoder import encode_instruction, type2size, int32bin, Scale, Reg
+
+class CompilationError(rejit.common.RejitError): pass
 
 class Compiler:
     def __init__(self):
