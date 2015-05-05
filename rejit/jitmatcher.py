@@ -3,12 +3,14 @@
 import struct
 
 import rejit.compiler as compiler
+import rejit.ir_compiler as ir_compiler
 import rejit.loadcode as loadcode
 
 class JITMatcher:
     def __init__(self, dfa):
+        ir_cc = ir_compiler.IRCompiler()
         cc = compiler.Compiler()
-        self._ir, self._variables = cc.compile_to_ir(dfa)
+        self._ir, self._variables = ir_cc.compile_to_ir(dfa)
         self._ir_transformed = None
 
         # function call arguments

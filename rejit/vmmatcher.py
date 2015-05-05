@@ -1,14 +1,14 @@
 #encoding: utf8
 
 import rejit.common
-import rejit.compiler as compiler
+import rejit.ir_compiler as ir_compiler
 
 class VMError(rejit.common.RejitError): pass
 
 class VMMatcher:
     def __init__(self, dfa):
         self._description = dfa.description
-        self._ir, self._variables = compiler.Compiler().compile_to_ir(dfa,True)
+        self._ir, self._variables = ir_compiler.IRCompiler().compile_to_ir(dfa,True)
         self._runtime_limit = 10000
     
     def accept(self, string):
