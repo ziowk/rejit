@@ -5,7 +5,7 @@ import rejit.compiler as compiler
 
 class VMError(rejit.common.RejitError): pass
 
-class VMRegex:
+class VMMatcher:
     def __init__(self, dfa):
         self._description = dfa.description
         self._ir, self._variables = compiler.Compiler().compile_to_ir(dfa,True)
