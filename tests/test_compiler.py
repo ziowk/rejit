@@ -55,7 +55,6 @@ class TestVMMatcher:
 
     def test_zero_or_one_VMMatcher(self):
         vm = VMMatcher(DFA(auto_cases.zero_or_one_nfa))
-        print(vm._ir)
         accept_test_helper(VMMatcher(DFA(auto_cases.zero_or_one_nfa)),auto_cases.zero_or_one_cases)
 
     def test_complex_VMMatcher(self):
