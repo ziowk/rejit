@@ -9,7 +9,7 @@ import rejit.loadcode as loadcode
 class JITMatcher:
     def __init__(self, dfa):
         ir_cc = ir_compiler.IRCompiler()
-        cc = compiler.Compiler()
+        cc = compiler.JITCompiler()
         self._ir, self._variables = ir_cc.compile_to_ir(dfa)
         self._ir_transformed = None
 

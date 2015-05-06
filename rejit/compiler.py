@@ -9,7 +9,7 @@ from rejit.x86encoder import encode_instruction, type2size, int32bin, Scale, Reg
 
 class CompilationError(rejit.common.RejitError): pass
 
-class Compiler:
+class JITCompiler:
     def __init__(self):
         pass
 
@@ -20,25 +20,25 @@ class Compiler:
         # apply compilation passes in this order
         ir_transformed, compilation_data = functools.reduce(lambda ir_data, ir_pass: ir_pass(ir_data), 
                 [ 
-                    Compiler._find_vars_pass,
-                    Compiler._allocate_vars_pass,
-                    Compiler._add_function_prologue_pass,
-                    Compiler._replace_vars_pass,
-                    Compiler._replace_values_pass,
-                    Compiler._impl_cmp_pass,
-                    Compiler._impl_mov_pass,
-                    Compiler._impl_inc_pass,
-                    Compiler._impl_set_pass,
-                    Compiler._impl_ret_pass,
-                    Compiler._find_labels_pass,
-                    Compiler._impl_jmps_ins_placeholder_pass,
-                    Compiler._impl_jmps_pass,
-                    Compiler._purge_labels_pass,
+                    JITCompiler._find_vars_pass,
+                    JITCompiler._allocate_vars_pass,
+                    JITCompiler._add_function_prologue_pass,
+                    JITCompiler._replace_vars_pass,
+                    JITCompiler._replace_values_pass,
+                    JITCompiler._impl_cmp_pass,
+                    JITCompiler._impl_mov_pass,
+                    JITCompiler._impl_inc_pass,
+                    JITCompiler._impl_set_pass,
+                    JITCompiler._impl_ret_pass,
+                    JITCompiler._find_labels_pass,
+                    JITCompiler._impl_jmps_ins_placeholder_pass,
+                    JITCompiler._impl_jmps_pass,
+                    JITCompiler._purge_labels_pass,
                 ],
                 (ir, compilation_data))
 
         # merge generated x86 instructions to create final binary
-        x86_code = Compiler._merge_binary_instructions(ir_transformed)
+        x86_code = JITCompiler._merge_binary_instructions(ir_transformed)
 
         if save_hex_file:
             with open(save_hex_file, 'wt') as output:
@@ -54,25 +54,25 @@ class Compiler:
         # apply compilation passes in this order
         ir_transformed, compilation_data = functools.reduce(lambda ir_data, ir_pass: ir_pass(ir_data), 
                 [ 
-                    Compiler._find_vars_pass,
-                    Compiler._allocate_vars_pass_64,
-                    Compiler._add_function_prologue_pass_64,
-                    Compiler._replace_vars_pass,
-                    Compiler._replace_values_pass,
-                    Compiler._impl_cmp_pass,
-                    Compiler._impl_mov_pass,
-                    Compiler._impl_inc_pass_64,
-                    Compiler._impl_set_pass,
-                    Compiler._impl_ret_pass,
-                    Compiler._find_labels_pass,
-                    Compiler._impl_jmps_ins_placeholder_pass,
-                    Compiler._impl_jmps_pass,
-                    Compiler._purge_labels_pass,
+                    JITCompiler._find_vars_pass,
+                    JITCompiler._allocate_vars_pass_64,
+                    JITCompiler._add_function_prologue_pass_64,
+                    JITCompiler._replace_vars_pass,
+                    JITCompiler._replace_values_pass,
+                    JITCompiler._impl_cmp_pass,
+                    JITCompiler._impl_mov_pass,
+                    JITCompiler._impl_inc_pass_64,
+                    JITCompiler._impl_set_pass,
+                    JITCompiler._impl_ret_pass,
+                    JITCompiler._find_labels_pass,
+                    JITCompiler._impl_jmps_ins_placeholder_pass,
+                    JITCompiler._impl_jmps_pass,
+                    JITCompiler._purge_labels_pass,
                 ],
                 (ir, compilation_data))
 
         # merge generated x86 instructions to create final binary
-        x86_code = Compiler._merge_binary_instructions(ir_transformed)
+        x86_code = JITCompiler._merge_binary_instructions(ir_transformed)
 
         if save_hex_file:
             with open(save_hex_file, 'wt') as output:
@@ -190,9 +190,9 @@ class Compiler:
         regs_to_restore = data['regs_to_restore']
         arch = data['arch']
 
-        ir_new_stack_frame = Compiler._new_stack_frame(arch)
-        ir_calle_reg_save = Compiler._calle_reg_save(regs_to_restore, arch)
-        ir_load_args = Compiler._load_args(args, var_regs, var_sizes, arch)
+        ir_new_stack_frame = JITCompiler._new_stack_frame(arch)
+        ir_calle_reg_save = JITCompiler._calle_reg_save(regs_to_restore, arch)
+        ir_load_args = JITCompiler._load_args(args, var_regs, var_sizes, arch)
 
         return (ir_new_stack_frame + ir_calle_reg_save + ir_load_args + ir, data)
 
@@ -201,7 +201,7 @@ class Compiler:
         ir, data = ir_data
         arch = data['arch']
 
-        ir_new_stack_frame = Compiler._new_stack_frame(arch)
+        ir_new_stack_frame = JITCompiler._new_stack_frame(arch)
 
         return (ir_new_stack_frame + ir, data)
 
