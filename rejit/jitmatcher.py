@@ -9,17 +9,16 @@ import rejit.loadcode as loadcode
 class JITMatcher:
     def __init__(self, dfa):
         ir_cc = ir_compiler.IRCompiler()
-        cc = jitcompiler.JITCompiler()
+        jit_cc = jitcompiler.JITCompiler()
         self._ir, self._variables = ir_cc.compile_to_ir(dfa)
-        self._ir_transformed = None
 
         # function call arguments
         args = ('string','length')
         # 64bit Python
         if struct.calcsize("P") == 8:
-            self._x86_binary, compilation_data = cc.compile_to_x86_64(self._ir, args, self._variables)
+            self._x86_binary, self._compilation_data = jit_cc.compile_to_x86_64(self._ir, args, self._variables)
         else:
-            self._x86_binary, compilation_data = cc.compile_to_x86_32(self._ir, args, self._variables)
+            self._x86_binary, self._compilation_data = jit_cc.compile_to_x86_32(self._ir, args, self._variables)
 
         self._description = dfa.description
         self._jit_func = loadcode.load(self._x86_binary)
