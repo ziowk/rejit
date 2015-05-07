@@ -4,7 +4,6 @@ import pytest
 
 from rejit.dfa import DFA
 from rejit.nfa import NFA
-import rejit.loadcode as loadcode
 from rejit.jitmatcher import JITMatcher
 from rejit.x86encoder import InstructionEncodingError, Reg, Scale, Encoder
 from tests.helper import accept_test_helper
@@ -20,13 +19,6 @@ def encoder64():
     return Encoder('64')
 
 class TestCodeGen:
-    def test_dynamic_code_loading(self):
-        # mov eax, dword ptr 7
-        # ret
-        binary = b'\xb8\x07\x00\x00\x00\xc3'
-        code = loadcode.load(binary)
-        assert(loadcode.call(code, "elo", 3) == 7)
-
     def test_add_reg_mem_modrm_test(self, encoder32):
         # test for a bug fixed in 639968d
         _, binary = encoder32.encode_instruction([0x8B], '32', reg=Reg.EAX, reg_mem=Reg.EAX)
