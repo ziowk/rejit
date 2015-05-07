@@ -250,258 +250,262 @@ class SIBByte:
                 base = self.base,
                 )
 
-def encode_instruction(opcode_list, arch, *,
-        prefix_list = None,
-        reg = None,
-        opex = None,
-        reg_mem = None,
-        base = None,
-        index = None,
-        scale = None,
-        disp = None,
-        imm = None,
-        size = None,
-        address_size = None,
-        opcode_reg = None):
+class Encoder:
+    def __init__(self, arch):
+        self._arch = arch
 
-    instruction = []
-    binary = bytearray()
+    def encode_instruction(self, opcode_list, arch, *,
+            prefix_list = None,
+            reg = None,
+            opex = None,
+            reg_mem = None,
+            base = None,
+            index = None,
+            scale = None,
+            disp = None,
+            imm = None,
+            size = None,
+            address_size = None,
+            opcode_reg = None):
 
-    if prefix_list is None:
-        prefix_list = []
+        instruction = []
+        binary = bytearray()
 
-    if isinstance(size,str):
-        size = type2size(size,arch)
+        if prefix_list is None:
+            prefix_list = []
 
-    if arch == '32':
-        # 0x66 -> override operand size to 16bit 
-        # 0x67 -> override addressing to 16bit
-        if size == 2:
-            prefix_list.append(OPcode.OVERRIDE_SIZE)
-        if address_size == 2:
-            raise InstructionEncodingError('16bit addressing not supported')
-            #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
-    elif arch == '64':
-        # 0x66 -> override operand size to 16bit 
-        # 0x67 -> override addressing to 32bit
-        if size == 2:
-            prefix_list.append(OPcode.OVERRIDE_SIZE)
-        if address_size == 4:
-            prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
-        # This code is tricky because we have to distinguish valid 0 values for
-        # rex byte components from absence of a value - None, because it is
-        # desirable to omit rex byte if it is not needed.
-        # REX.W = 1 -> override operand size to non-default (32->64)
-        # REX.R = 1 -> modrm REG to R8-R15
-        # REX.X = 1 -> sib INDEX to R8-R15
-        # REX.B = 1 -> modrm R/M, sib BASE, opcode REG to R8-R15
-        w, r, x, b = None, None, None, None
-        if size == 8:
-            w = 1
-        if match_mask(reg, Reg._EXTENDED_MASK):
-            reg = extract_reg(reg)
-            r = 1
-        if match_mask(index, Reg._EXTENDED_MASK):
-            index = extract_reg(index)
-            x = 1
-        if match_mask(reg_mem, Reg._EXTENDED_MASK) or match_mask(base, Reg._EXTENDED_MASK) or match_mask(opcode_reg, Reg._EXTENDED_MASK):
-            reg_mem = extract_reg(reg_mem)
-            base = extract_reg(base)
-            opcode_reg = extract_reg(opcode_reg)
-            b = 1
-        if any(map(lambda v: v is not None, (w, r, x, b))):
-            w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
-            rex = REXByte(w=w,r=r,x=x,b=b)
-            prefix_list += [rex.byte]
-        # if no rex byte and accessing SPL BPL SIL DIL
-        elif any(map(lambda x: x in [Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI], [reg, reg_mem, opcode_reg])) and size == 1:
-            rex = REXByte()
-            prefix_list += [rex.byte]
-    else:
-        raise InstructionEncodingError('Architecture {} not supported'.format(arch))
+        if isinstance(size,str):
+            size = type2size(size,arch)
 
-    # add prefices
-    if prefix_list:
-        instruction += prefix_list
-        for prefix in prefix_list:
-            binary.append(prefix)
-
-    # opcode_reg -> register in the opcode
-    if opcode_reg is not None:
-        opcode_list[0] += opcode_reg
-
-    # add opcodes
-    instruction += opcode_list
-    for opcode in opcode_list:
-        binary.append(opcode)
-
-    # add operands or opcode extension
-    if reg is not None or reg_mem is not None or base is not None or index is not None or disp is not None or opex is not None:
-        add_reg_mem_opex(instruction, binary, arch, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
-
-    # add immediate value
-    if imm is not None:
-        instruction.append(imm)
-        if size == 1:
-            binary += int8bin(imm)
-        elif size == 2:
-            binary += int16bin(imm)
-        elif size == 4:
-            binary += int32bin(imm)
-        elif size == 8:
-            binary += int64bin(imm)
-        else:
-            raise InstructionEncodingError("can't use {} immediate value of size {}".format(imm,size))
-
-    return (tuple(instruction), binary)
-
-def add_reg_mem_opex(instruction, binary, arch, *,
-        reg = None, 
-        opex = None, 
-        reg_mem = None, 
-        base = None, 
-        index = None, 
-        scale = None, 
-        disp = None):
-
-    # can't use ESP/R12 as an index
-    # [base + scale * ESP/R12 + disp] is not allowed
-    assert index != Reg.ESP
-
-    modrm = ModRMByte()
-
-    # register or opcode extension
-    if reg is not None:
-        modrm.reg = reg 
-    if opex is not None:
-        modrm.opex = opex
-
-    # r/m address is a register, not memory
-    if reg_mem is not None:
-        modrm.mod = Mod.REG
-        modrm.rm = reg_mem
-
-        instruction += [modrm]
-        binary += modrm.binary
-        return
-
-    # [disp32] on 32bit is encoded with modrm mod=00 rm=101
-    # [disp32] on 64bit is encoded with modrm and sib, because
-    # on 64bit mod=00 rm=101 means [RIP/EIP + disp32]
-    # so modrm mod=00 rm=100, sib base=101 index=100 scale=any
-    if base is None and index is None:
         if arch == '32':
-            modrm.mod = Mod._DISP32_ONLY_32_MOD
-            modrm.rm = Reg._DISP32_ONLY_32_RM
-
-            instruction += [modrm, disp]
-            binary += modrm.binary + int32bin(disp)
+            # 0x66 -> override operand size to 16bit 
+            # 0x67 -> override addressing to 16bit
+            if size == 2:
+                prefix_list.append(OPcode.OVERRIDE_SIZE)
+            if address_size == 2:
+                raise InstructionEncodingError('16bit addressing not supported')
+                #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
         elif arch == '64':
-            modrm.mod = Mod._DISP32_ONLY_64_MOD
-            modrm.rm = Reg._DISP32_ONLY_64_RM
-            sib = SIBByte(base  = Reg._DISP32_ONLY_64_BASE, 
-                          index = Reg._DISP32_ONLY_64_INDEX, 
-                          scale = Scale._DISP32_ONLY_64_SCALE)
+            # 0x66 -> override operand size to 16bit 
+            # 0x67 -> override addressing to 32bit
+            if size == 2:
+                prefix_list.append(OPcode.OVERRIDE_SIZE)
+            if address_size == 4:
+                prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
+            # This code is tricky because we have to distinguish valid 0 values for
+            # rex byte components from absence of a value - None, because it is
+            # desirable to omit rex byte if it is not needed.
+            # REX.W = 1 -> override operand size to non-default (32->64)
+            # REX.R = 1 -> modrm REG to R8-R15
+            # REX.X = 1 -> sib INDEX to R8-R15
+            # REX.B = 1 -> modrm R/M, sib BASE, opcode REG to R8-R15
+            w, r, x, b = None, None, None, None
+            if size == 8:
+                w = 1
+            if match_mask(reg, Reg._EXTENDED_MASK):
+                reg = extract_reg(reg)
+                r = 1
+            if match_mask(index, Reg._EXTENDED_MASK):
+                index = extract_reg(index)
+                x = 1
+            if match_mask(reg_mem, Reg._EXTENDED_MASK) or match_mask(base, Reg._EXTENDED_MASK) or match_mask(opcode_reg, Reg._EXTENDED_MASK):
+                reg_mem = extract_reg(reg_mem)
+                base = extract_reg(base)
+                opcode_reg = extract_reg(opcode_reg)
+                b = 1
+            if any(map(lambda v: v is not None, (w, r, x, b))):
+                w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
+                rex = REXByte(w=w,r=r,x=x,b=b)
+                prefix_list += [rex.byte]
+            # if no rex byte and accessing SPL BPL SIL DIL
+            elif any(map(lambda x: x in [Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI], [reg, reg_mem, opcode_reg])) and size == 1:
+                rex = REXByte()
+                prefix_list += [rex.byte]
+        else:
+            raise InstructionEncodingError('Architecture {} not supported'.format(arch))
 
-            instruction += [modrm, sib, disp]
-            binary += modrm.binary + sib.binary + int32bin(disp)
-        return
+        # add prefices
+        if prefix_list:
+            instruction += prefix_list
+            for prefix in prefix_list:
+                binary.append(prefix)
 
-    # supplement a displacment for memory addressing
-    if disp is None:
-        disp = 0
+        # opcode_reg -> register in the opcode
+        if opcode_reg is not None:
+            opcode_list[0] += opcode_reg
 
-    if index is not None:
-        modrm.rm = Reg._USE_SIB
-        sib = SIBByte()
-        sib.scale = scale
-        sib.index = index
+        # add opcodes
+        instruction += opcode_list
+        for opcode in opcode_list:
+            binary.append(opcode)
 
-        # [scale * index + disp]
-        # Addressing without a base, rare.
-        # Have to use Mod.MEM and disp32
-        if base is None: 
-            modrm.mod = Mod._SIB_BASE_NONE
-            sib.base = Reg._SIB_BASE_NONE
+        # add operands or opcode extension
+        if reg is not None or reg_mem is not None or base is not None or index is not None or disp is not None or opex is not None:
+            self.add_reg_mem_opex(instruction, binary, arch, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
 
-            instruction += [modrm, sib, disp]
-            binary += modrm.binary + sib.binary + int32bin(disp)
-            return 
-        # [base + scale * index + disp]
-        else: 
-            sib.base = base
-            # Can't do [EBP/R13 + scale*index] (Mod.MEM)
-            # Have to use [EBP/R13 + scale*index + 0] (Mod.MEM_DISP8)
-            # Therefore test `base` != Reg.EBP 
-            # Reg.EBP will be handled in the next case
-            if disp == 0 and base != Reg.EBP: 
-                modrm.mod = Mod.MEM
-
-                instruction += [modrm, sib]
-                binary += modrm.binary + sib.binary
-                return
-            elif -128 <= disp <= 127:
-                modrm.mod = Mod.MEM_DISP8
-
-                instruction += [modrm, sib, disp]
-                binary += modrm.binary + sib.binary + int8bin(disp)
-                return 
+        # add immediate value
+        if imm is not None:
+            instruction.append(imm)
+            if size == 1:
+                binary += int8bin(imm)
+            elif size == 2:
+                binary += int16bin(imm)
+            elif size == 4:
+                binary += int32bin(imm)
+            elif size == 8:
+                binary += int64bin(imm)
             else:
-                modrm.mod = Mod.MEM_DISP32
+                raise InstructionEncodingError("can't use {} immediate value of size {}".format(imm,size))
 
-                instruction += [modrm, sib, disp]
-                binary += modrm.binary + sib.binary + int32bin(disp)
-                return
-    # [base + disp]
-    else: 
-        # can't do [ESP/R12 + disp] without a SIB byte
-        # because ESP/R12 R/M means SIB in modRM
-        if base == Reg.ESP: # [ESP/R12 + disp]
-            modrm.rm = Reg._USE_SIB
-            sib = SIBByte()
-            sib.base = Reg.ESP
-            # Any scale will work, because index is none
-            sib.scale = Scale.MUL_1 
-            sib.index = Reg._SIB_INDEX_NONE
-            if disp == 0:
-                modrm.mod = Mod.MEM
+        return (tuple(instruction), binary)
 
-                instruction += [modrm, sib]
-                binary += modrm.binary + sib.binary
-                return
-            elif -128 <= disp <= 127:
-                modrm.mod = Mod.MEM_DISP8
+    def add_reg_mem_opex(self, instruction, binary, arch, *,
+            reg = None, 
+            opex = None, 
+            reg_mem = None, 
+            base = None, 
+            index = None, 
+            scale = None, 
+            disp = None):
 
-                instruction += [modrm, sib, disp]
-                binary += modrm.binary + sib.binary + int8bin(disp)
-                return 
-            else:
-                modrm.mod = Mod.MEM_DISP32
+        # can't use ESP/R12 as an index
+        # [base + scale * ESP/R12 + disp] is not allowed
+        assert index != Reg.ESP
 
-                instruction += [modrm, sib, disp]
-                binary += modrm.binary + sib.binary + int32bin(disp)
-                return
-        # [non-ESP + disp]
-        else: 
-            modrm.rm = base
-            if disp == 0 and base != Reg.EBP:
-                modrm.mod = Mod.MEM
+        modrm = ModRMByte()
 
-                instruction += [modrm]
-                binary += modrm.binary
-                return
-            elif -128 <= disp <= 127:
-                modrm.mod = Mod.MEM_DISP8
+        # register or opcode extension
+        if reg is not None:
+            modrm.reg = reg 
+        if opex is not None:
+            modrm.opex = opex
 
-                instruction += [modrm, disp]
-                binary += modrm.binary + int8bin(disp)
-                return 
-            else:
-                modrm.mod = Mod.MEM_DISP32
+        # r/m address is a register, not memory
+        if reg_mem is not None:
+            modrm.mod = Mod.REG
+            modrm.rm = reg_mem
+
+            instruction += [modrm]
+            binary += modrm.binary
+            return
+
+        # [disp32] on 32bit is encoded with modrm mod=00 rm=101
+        # [disp32] on 64bit is encoded with modrm and sib, because
+        # on 64bit mod=00 rm=101 means [RIP/EIP + disp32]
+        # so modrm mod=00 rm=100, sib base=101 index=100 scale=any
+        if base is None and index is None:
+            if arch == '32':
+                modrm.mod = Mod._DISP32_ONLY_32_MOD
+                modrm.rm = Reg._DISP32_ONLY_32_RM
 
                 instruction += [modrm, disp]
                 binary += modrm.binary + int32bin(disp)
+            elif arch == '64':
+                modrm.mod = Mod._DISP32_ONLY_64_MOD
+                modrm.rm = Reg._DISP32_ONLY_64_RM
+                sib = SIBByte(base  = Reg._DISP32_ONLY_64_BASE, 
+                              index = Reg._DISP32_ONLY_64_INDEX, 
+                              scale = Scale._DISP32_ONLY_64_SCALE)
+
+                instruction += [modrm, sib, disp]
+                binary += modrm.binary + sib.binary + int32bin(disp)
+            return
+
+        # supplement a displacment for memory addressing
+        if disp is None:
+            disp = 0
+
+        if index is not None:
+            modrm.rm = Reg._USE_SIB
+            sib = SIBByte()
+            sib.scale = scale
+            sib.index = index
+
+            # [scale * index + disp]
+            # Addressing without a base, rare.
+            # Have to use Mod.MEM and disp32
+            if base is None: 
+                modrm.mod = Mod._SIB_BASE_NONE
+                sib.base = Reg._SIB_BASE_NONE
+
+                instruction += [modrm, sib, disp]
+                binary += modrm.binary + sib.binary + int32bin(disp)
                 return 
+            # [base + scale * index + disp]
+            else: 
+                sib.base = base
+                # Can't do [EBP/R13 + scale*index] (Mod.MEM)
+                # Have to use [EBP/R13 + scale*index + 0] (Mod.MEM_DISP8)
+                # Therefore test `base` != Reg.EBP 
+                # Reg.EBP will be handled in the next case
+                if disp == 0 and base != Reg.EBP: 
+                    modrm.mod = Mod.MEM
+
+                    instruction += [modrm, sib]
+                    binary += modrm.binary + sib.binary
+                    return
+                elif -128 <= disp <= 127:
+                    modrm.mod = Mod.MEM_DISP8
+
+                    instruction += [modrm, sib, disp]
+                    binary += modrm.binary + sib.binary + int8bin(disp)
+                    return 
+                else:
+                    modrm.mod = Mod.MEM_DISP32
+
+                    instruction += [modrm, sib, disp]
+                    binary += modrm.binary + sib.binary + int32bin(disp)
+                    return
+        # [base + disp]
+        else: 
+            # can't do [ESP/R12 + disp] without a SIB byte
+            # because ESP/R12 R/M means SIB in modRM
+            if base == Reg.ESP: # [ESP/R12 + disp]
+                modrm.rm = Reg._USE_SIB
+                sib = SIBByte()
+                sib.base = Reg.ESP
+                # Any scale will work, because index is none
+                sib.scale = Scale.MUL_1 
+                sib.index = Reg._SIB_INDEX_NONE
+                if disp == 0:
+                    modrm.mod = Mod.MEM
+
+                    instruction += [modrm, sib]
+                    binary += modrm.binary + sib.binary
+                    return
+                elif -128 <= disp <= 127:
+                    modrm.mod = Mod.MEM_DISP8
+
+                    instruction += [modrm, sib, disp]
+                    binary += modrm.binary + sib.binary + int8bin(disp)
+                    return 
+                else:
+                    modrm.mod = Mod.MEM_DISP32
+
+                    instruction += [modrm, sib, disp]
+                    binary += modrm.binary + sib.binary + int32bin(disp)
+                    return
+            # [non-ESP + disp]
+            else: 
+                modrm.rm = base
+                if disp == 0 and base != Reg.EBP:
+                    modrm.mod = Mod.MEM
+
+                    instruction += [modrm]
+                    binary += modrm.binary
+                    return
+                elif -128 <= disp <= 127:
+                    modrm.mod = Mod.MEM_DISP8
+
+                    instruction += [modrm, disp]
+                    binary += modrm.binary + int8bin(disp)
+                    return 
+                else:
+                    modrm.mod = Mod.MEM_DISP32
+
+                    instruction += [modrm, disp]
+                    binary += modrm.binary + int32bin(disp)
+                    return 
 
 def match_mask(reg, mask):
     if reg is None:
