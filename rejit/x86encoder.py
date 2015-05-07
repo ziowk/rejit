@@ -252,6 +252,12 @@ class SIBByte:
 
 class Encoder:
     def __init__(self, arch):
+        if arch == '64':
+            pass # set x86_32 specific methods here
+        elif arch == '32':
+            pass # set x86_64 specific methods here
+        else:
+            raise InstructionEncodingError('Architecture {} not supported'.format(arch))
         self._arch = arch
 
     def encode_instruction(self, opcode_list, arch, *,

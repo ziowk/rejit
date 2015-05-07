@@ -224,6 +224,12 @@ class TestCodeGen:
         _, binary = encoder32.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP)
         assert binary == b'\x8A\x4D\x00'
 
+    def test_arch_check(self):
+        assert Encoder('32')
+        assert Encoder('64')
+        with pytest.raises(InstructionEncodingError):
+            Encoder('MIPS')
+
 class Testx86accept:
     def test_empty_JITMatcher(self):
         accept_test_helper(JITMatcher(DFA(auto_cases.empty_nfa)), auto_cases.empty_cases)
