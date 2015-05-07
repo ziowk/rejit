@@ -12,7 +12,7 @@ def encoder32():
 def encoder64():
     return Encoder('64')
 
-class TestCodeGen:
+class TestInstructionEncoding:
     def test_add_reg_mem_modrm_test(self, encoder32):
         # test for a bug fixed in 639968d
         _, binary = encoder32.encode_instruction([0x8B], '32', reg=Reg.EAX, reg_mem=Reg.EAX)
@@ -160,9 +160,9 @@ class TestCodeGen:
         _, binary = encoder32.encode_instruction([0x8A], '32', reg=Reg.ECX, base=Reg.EBP)
         assert binary == b'\x8A\x4D\x00'
 
-    def test_arch_check(self):
-        assert Encoder('32')
-        assert Encoder('64')
-        with pytest.raises(InstructionEncodingError):
-            Encoder('MIPS')
+def test_arch_check():
+    assert Encoder('32')
+    assert Encoder('64')
+    with pytest.raises(InstructionEncodingError):
+        Encoder('MIPS')
 
