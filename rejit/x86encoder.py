@@ -274,7 +274,6 @@ class Encoder:
             address_size = None,
             opcode_reg = None):
 
-        instruction = []
         binary = bytearray()
 
         if prefix_list is None:
@@ -332,7 +331,6 @@ class Encoder:
 
         # add prefices
         if prefix_list:
-            instruction += prefix_list
             for prefix in prefix_list:
                 binary.append(prefix)
 
@@ -341,17 +339,15 @@ class Encoder:
             opcode_list[0] += opcode_reg
 
         # add opcodes
-        instruction += opcode_list
         for opcode in opcode_list:
             binary.append(opcode)
 
         # add operands or opcode extension
         if reg is not None or reg_mem is not None or base is not None or index is not None or disp is not None or opex is not None:
-            self.add_reg_mem_opex(instruction, binary, arch, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
+            self.add_reg_mem_opex(binary, arch, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
 
         # add immediate value
         if imm is not None:
-            instruction.append(imm)
             if size == 1:
                 binary += int8bin(imm)
             elif size == 2:
@@ -363,9 +359,9 @@ class Encoder:
             else:
                 raise InstructionEncodingError("can't use {} immediate value of size {}".format(imm,size))
 
-        return (tuple(instruction), binary)
+        return binary
 
-    def add_reg_mem_opex(self, instruction, binary, arch, *,
+    def add_reg_mem_opex(self, binary, arch, *,
             reg = None, 
             opex = None, 
             reg_mem = None, 
@@ -391,7 +387,6 @@ class Encoder:
             modrm.mod = Mod.REG
             modrm.rm = reg_mem
 
-            instruction += [modrm]
             binary += modrm.binary
             return
 
@@ -404,7 +399,6 @@ class Encoder:
                 modrm.mod = Mod._DISP32_ONLY_32_MOD
                 modrm.rm = Reg._DISP32_ONLY_32_RM
 
-                instruction += [modrm, disp]
                 binary += modrm.binary + int32bin(disp)
             elif arch == '64':
                 modrm.mod = Mod._DISP32_ONLY_64_MOD
@@ -413,7 +407,6 @@ class Encoder:
                               index = Reg._DISP32_ONLY_64_INDEX, 
                               scale = Scale._DISP32_ONLY_64_SCALE)
 
-                instruction += [modrm, sib, disp]
                 binary += modrm.binary + sib.binary + int32bin(disp)
             return
 
@@ -434,7 +427,6 @@ class Encoder:
                 modrm.mod = Mod._SIB_BASE_NONE
                 sib.base = Reg._SIB_BASE_NONE
 
-                instruction += [modrm, sib, disp]
                 binary += modrm.binary + sib.binary + int32bin(disp)
                 return 
             # [base + scale * index + disp]
@@ -447,19 +439,16 @@ class Encoder:
                 if disp == 0 and base != Reg.EBP: 
                     modrm.mod = Mod.MEM
 
-                    instruction += [modrm, sib]
                     binary += modrm.binary + sib.binary
                     return
                 elif -128 <= disp <= 127:
                     modrm.mod = Mod.MEM_DISP8
 
-                    instruction += [modrm, sib, disp]
                     binary += modrm.binary + sib.binary + int8bin(disp)
                     return 
                 else:
                     modrm.mod = Mod.MEM_DISP32
 
-                    instruction += [modrm, sib, disp]
                     binary += modrm.binary + sib.binary + int32bin(disp)
                     return
         # [base + disp]
@@ -476,19 +465,16 @@ class Encoder:
                 if disp == 0:
                     modrm.mod = Mod.MEM
 
-                    instruction += [modrm, sib]
                     binary += modrm.binary + sib.binary
                     return
                 elif -128 <= disp <= 127:
                     modrm.mod = Mod.MEM_DISP8
 
-                    instruction += [modrm, sib, disp]
                     binary += modrm.binary + sib.binary + int8bin(disp)
                     return 
                 else:
                     modrm.mod = Mod.MEM_DISP32
 
-                    instruction += [modrm, sib, disp]
                     binary += modrm.binary + sib.binary + int32bin(disp)
                     return
             # [non-ESP + disp]
@@ -497,19 +483,16 @@ class Encoder:
                 if disp == 0 and base != Reg.EBP:
                     modrm.mod = Mod.MEM
 
-                    instruction += [modrm]
                     binary += modrm.binary
                     return
                 elif -128 <= disp <= 127:
                     modrm.mod = Mod.MEM_DISP8
 
-                    instruction += [modrm, disp]
                     binary += modrm.binary + int8bin(disp)
                     return 
                 else:
                     modrm.mod = Mod.MEM_DISP32
 
-                    instruction += [modrm, disp]
                     binary += modrm.binary + int32bin(disp)
                     return 
 

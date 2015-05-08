@@ -220,7 +220,7 @@ class JITCompiler:
         total = args_offset
         for arg in args:
             if arg in var_regs:
-                _, binary = encoder.encode_instruction([0x8B], arch, reg=var_regs[arg], base=Reg.EBP, disp=total, size=var_sizes[arg])
+                binary = encoder.encode_instruction([0x8B], arch, reg=var_regs[arg], base=Reg.EBP, disp=total, size=var_sizes[arg])
                 ir_1.append((('mov',var_regs[arg],'=[',Reg.ESP,'+',total,']'), binary))
             total += type2size(var_sizes[arg],arch)
         return ir_1
@@ -228,9 +228,9 @@ class JITCompiler:
     @staticmethod
     def _new_stack_frame(arch, encoder):
         ir_1 = []
-        _, binary = encoder.encode_instruction([0x50], arch, opcode_reg=Reg.EBP)
+        binary = encoder.encode_instruction([0x50], arch, opcode_reg=Reg.EBP)
         ir_1.append((('push', Reg.EBP),binary))
-        _, binary = encoder.encode_instruction([0x8B], arch, reg=Reg.EBP,reg_mem=Reg.ESP, size='long')
+        binary = encoder.encode_instruction([0x8B], arch, reg=Reg.EBP,reg_mem=Reg.ESP, size='long')
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
         return ir_1
 
@@ -238,7 +238,7 @@ class JITCompiler:
     def _calle_reg_save(regs_to_restore, arch, encoder):
         ir_1 = []
         for reg in regs_to_restore:
-            _, binary = encoder.encode_instruction([0x50], arch, opcode_reg=reg)
+            binary = encoder.encode_instruction([0x50], arch, opcode_reg=reg)
             ir_1.append((('push', reg),binary))
         return ir_1
 
@@ -300,11 +300,11 @@ class JITCompiler:
         for inst in ir:
             if inst[0] == 'cmp value':
                 """cmp r/m8 imm8"""
-                _, binary = encoder.encode_instruction([0x80], arch, opex=0x07, reg_mem=inst[1], imm=inst[2], size=inst[3])
+                binary = encoder.encode_instruction([0x80], arch, opex=0x07, reg_mem=inst[1], imm=inst[2], size=inst[3])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             elif inst[0] == 'cmp name':
                 """cmp r/m16/32/64 r16/32/64"""
-                _, binary = encoder.encode_instruction([0x39], arch, reg=inst[1], reg_mem=inst[2], size=inst[3])
+                binary = encoder.encode_instruction([0x39], arch, reg=inst[1], reg_mem=inst[2], size=inst[3])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -320,10 +320,10 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'move indexed':
-                _, binary = encoder.encode_instruction([0x8A], arch, reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1,size=inst[4], address_size=inst[5])
+                binary = encoder.encode_instruction([0x8A], arch, reg=inst[1],base=inst[2],index=inst[3],scale=Scale.MUL_1,size=inst[4], address_size=inst[5])
                 ir_1.append((('mov',inst[1],'=[',inst[2],'+',inst[3],']'), binary))
             elif inst[0] == 'move':
-                _, binary = encoder.encode_instruction([0x8B], arch, reg=inst[1],reg_mem=inst[2],size=inst[3])
+                binary = encoder.encode_instruction([0x8B], arch, reg=inst[1],reg_mem=inst[2],size=inst[3])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -339,7 +339,7 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
-                _, binary = encoder.encode_instruction([0x40], arch, opcode_reg=inst[1], size=inst[2])
+                binary = encoder.encode_instruction([0x40], arch, opcode_reg=inst[1], size=inst[2])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -355,7 +355,7 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
-                _, binary = encoder.encode_instruction([0xFF], arch, opex=0x0, reg_mem=inst[1], size=inst[2])
+                binary = encoder.encode_instruction([0xFF], arch, opex=0x0, reg_mem=inst[1], size=inst[2])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
@@ -371,7 +371,7 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'set':
-                _, binary = encoder.encode_instruction([0xB8], arch, opcode_reg=inst[1], imm=inst[2], size=inst[3])
+                binary = encoder.encode_instruction([0xB8], arch, opcode_reg=inst[1], imm=inst[2], size=inst[3])
                 ir_1.append((('mov',inst[1], inst[2]), binary))
             else:
                 ir_1.append(inst)
@@ -388,18 +388,18 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'ret':
-                _, binary = encoder.encode_instruction([0xB8], arch, opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,size='int')
+                binary = encoder.encode_instruction([0xB8], arch, opcode_reg=Reg.EAX, imm=1 if inst[1] else 0,size='int')
                 ir_1.append((('mov', Reg.EAX, inst[1]),binary))
                 ir_1.append(('jump','return'))
             else:
                 ir_1.append(inst)
         ir_1.append(('label', 'return'))
         for reg in reversed(regs_to_restore):
-            _, binary = encoder.encode_instruction([0x58], arch, opcode_reg=reg)
+            binary = encoder.encode_instruction([0x58], arch, opcode_reg=reg)
             ir_1.append((('pop', reg),binary))
-        _, binary = encoder.encode_instruction([0x58], arch, opcode_reg=Reg.EBP)
+        binary = encoder.encode_instruction([0x58], arch, opcode_reg=Reg.EBP)
         ir_1.append((('pop', Reg.EBP),binary))
-        _, binary = encoder.encode_instruction([0xC3], arch)
+        binary = encoder.encode_instruction([0xC3], arch)
         ir_1.append((('ret',),binary))
 
         return (ir_1, data)
@@ -435,11 +435,11 @@ class JITCompiler:
                     raise CompilationError('label "{}" not found'.format(inst[1]))
                 jmp_targets.add(inst[1])
                 if inst[0] == 'jump':
-                    _, binary = encoder.encode_instruction([0xE9], arch, imm=0,size=4)
+                    binary = encoder.encode_instruction([0xE9], arch, imm=0,size=4)
                 elif inst[0] == 'jump eq':
-                    _, binary = encoder.encode_instruction([0x0F, 0x84], arch, imm=0,size=4)
+                    binary = encoder.encode_instruction([0x0F, 0x84], arch, imm=0,size=4)
                 elif inst[0] == 'jump ne':
-                    _, binary = encoder.encode_instruction([0x0F, 0x85], arch, imm=0,size=4)
+                    binary = encoder.encode_instruction([0x0F, 0x85], arch, imm=0,size=4)
                 ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
             else:
                 ir_1.append(inst)
