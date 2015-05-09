@@ -506,35 +506,41 @@ def extract_reg(reg):
         return None
     return reg & Reg._REG_MASK
 
-def type2size(type, arch):
+def type2size(type_, arch):
     if arch == '32':
-        if type == 'pointer':
-            return 4
-        elif type == 'long':
-            return 4
-        elif type == 'int':
-            return 4
-        elif type == 'short':
-            return 2
-        elif type == 'byte':
-            return 1
-        else:
-            raise InstructionEncodingError('Unknown variable type {} in architecture {}'.format(type,arch))
+        return _type2size32(type_)
     elif arch == '64':
-        if type == 'pointer':
-            return 8
-        elif type == 'long':
-            return 8
-        elif type == 'int':
-            return 4
-        elif type == 'short':
-            return 2
-        elif type == 'byte':
-            return 1
-        else:
-            raise InstructionEncodingError('Unknown variable type {} in architecture {}'.format(type,arch))
+        return _type2size64(type_)
     else:
         raise InstructionEncodingError('Uknown architecture {}'.format(arch))
+
+def _type2size32(type_):
+    if type_ == 'pointer':
+        return 4
+    elif type_ == 'long':
+        return 4
+    elif type_ == 'int':
+        return 4
+    elif type_ == 'short':
+        return 2
+    elif type_ == 'byte':
+        return 1
+    else:
+        raise InstructionEncodingError('Unknown variable type {}'.format(type_))
+
+def _type2size64(type_):
+    if type_ == 'pointer':
+        return 8
+    elif type_ == 'long':
+        return 8
+    elif type_ == 'int':
+        return 4
+    elif type_ == 'short':
+        return 2
+    elif type_ == 'byte':
+        return 1
+    else:
+        raise InstructionEncodingError('Unknown variable type {}'.format(type_))
 
 def int8bin(int8):
     return struct.pack('@b', int8)
