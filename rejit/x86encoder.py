@@ -307,16 +307,16 @@ class Encoder:
             w, r, x, b = None, None, None, None
             if size == 8:
                 w = 1
-            if match_mask(reg, Reg._EXTENDED_MASK):
-                reg = extract_reg(reg)
+            if Encoder._match_mask(reg, Reg._EXTENDED_MASK):
+                reg = Encoder._extract_reg(reg)
                 r = 1
-            if match_mask(index, Reg._EXTENDED_MASK):
-                index = extract_reg(index)
+            if Encoder._match_mask(index, Reg._EXTENDED_MASK):
+                index = Encoder._extract_reg(index)
                 x = 1
-            if match_mask(reg_mem, Reg._EXTENDED_MASK) or match_mask(base, Reg._EXTENDED_MASK) or match_mask(opcode_reg, Reg._EXTENDED_MASK):
-                reg_mem = extract_reg(reg_mem)
-                base = extract_reg(base)
-                opcode_reg = extract_reg(opcode_reg)
+            if Encoder._match_mask(reg_mem, Reg._EXTENDED_MASK) or Encoder._match_mask(base, Reg._EXTENDED_MASK) or Encoder._match_mask(opcode_reg, Reg._EXTENDED_MASK):
+                reg_mem = Encoder._extract_reg(reg_mem)
+                base = Encoder._extract_reg(base)
+                opcode_reg = Encoder._extract_reg(opcode_reg)
                 b = 1
             if any(map(lambda v: v is not None, (w, r, x, b))):
                 w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
@@ -496,15 +496,17 @@ class Encoder:
                     binary += modrm.binary + int32bin(disp)
                     return 
 
-def match_mask(reg, mask):
-    if reg is None:
-        return False
-    return bool(reg & mask)
+    @staticmethod
+    def _match_mask(reg, mask):
+        if reg is None:
+            return False
+        return bool(reg & mask)
 
-def extract_reg(reg):
-    if reg is None:
-        return None
-    return reg & Reg._REG_MASK
+    @staticmethod
+    def _extract_reg(reg):
+        if reg is None:
+            return None
+        return reg & Reg._REG_MASK
 
 def type2size(type_, arch):
     if arch == '32':
