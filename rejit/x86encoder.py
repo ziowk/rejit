@@ -253,9 +253,11 @@ class SIBByte:
 class Encoder:
     def __init__(self, arch):
         if arch == '64':
-            pass # set x86_32 specific methods here
+            # set x86_32 specific methods here
+            self._type2size = _type2size64
         elif arch == '32':
-            pass # set x86_64 specific methods here
+            # set x86_64 specific methods here
+            self._type2size = _type2size32
         else:
             raise InstructionEncodingError('Architecture {} not supported'.format(arch))
         self._arch = arch
@@ -280,7 +282,7 @@ class Encoder:
             prefix_list = []
 
         if isinstance(size,str):
-            size = type2size(size,arch)
+            size = self._type2size(size)
 
         if arch == '32':
             # 0x66 -> override operand size to 16bit 
