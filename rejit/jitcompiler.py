@@ -16,7 +16,7 @@ class JITCompiler:
 
     def compile_to_x86_32(self, ir, args, var_sizes, save_hex_file=None):
         # used to relay information between passes (other than transformed IR)
-        compilation_data = {'args': args, 'arch':'32', 'var_sizes':var_sizes}
+        compilation_data = {'args': args, 'var_sizes':var_sizes}
         compilation_data['encoder'] = rejit.x86encoder.Encoder('32')
 
         # apply compilation passes in this order
@@ -51,7 +51,7 @@ class JITCompiler:
 
     def compile_to_x86_64(self, ir, args, var_sizes, save_hex_file=None):
         # used to relay information between passes (other than transformed IR)
-        compilation_data = {'args': args, 'arch':'64', 'var_sizes':var_sizes}
+        compilation_data = {'args': args, 'var_sizes':var_sizes}
         compilation_data['encoder'] = rejit.x86encoder.Encoder('64')
 
         # apply compilation passes in this order
