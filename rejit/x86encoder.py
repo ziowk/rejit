@@ -510,6 +510,28 @@ class Encoder:
             return None
         return reg & Reg._REG_MASK
 
+class Opcode(IntEnum):
+    MOV_R_RM_8 = 0x8A
+    MOV_R_RM = 0x8B
+    MOV_RM_R_8 = 0x88
+    MOV_RM_R = 0x89
+    MOV_R_IMM_8 = 0xB0
+    MOV_R_IMM = 0xB8
+    PUSH_R = 0x50
+    POP_R = 0x58
+    CMP_RM_IMM_8 = 0x80
+    CMP_RM_IMM_8_EX = 0x7
+    CMP_RM_R = 0x39
+    INC_R_32 = 0x40
+    INC_RM_64 = 0xFF
+    INC_RM_64_EX = 0x0
+    RET = 0xC3
+    JMP_REL = 0xE9
+    JE_REL_A = 0x0F
+    JE_REL_B = 0x84
+    JNE_REL_A = 0x0F
+    JNE_REL_B = 0x85
+
 def type2size(type_, arch):
     if arch == '32':
         return _type2size32(type_)
