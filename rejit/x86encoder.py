@@ -262,7 +262,7 @@ class Encoder:
             raise InstructionEncodingError('Architecture {} not supported'.format(arch))
         self._arch = arch
 
-    def encode_instruction(self, opcode_list, arch=None, *,
+    def encode_instruction(self, opcode_list, *,
             prefix_list = None,
             reg = None,
             opex = None,
