@@ -262,7 +262,7 @@ class Encoder:
             raise InstructionEncodingError('Architecture {} not supported'.format(arch))
         self._arch = arch
 
-    def encode_instruction(self, opcode_list, arch, *,
+    def encode_instruction(self, opcode_list, arch=None, *,
             prefix_list = None,
             reg = None,
             opex = None,
@@ -284,7 +284,7 @@ class Encoder:
         if isinstance(size,str):
             size = self._type2size(size)
 
-        if arch == '32':
+        if self._arch == '32':
             # 0x66 -> override operand size to 16bit 
             # 0x67 -> override addressing to 16bit
             if size == 2:
@@ -292,7 +292,7 @@ class Encoder:
             if address_size == 2:
                 raise InstructionEncodingError('16bit addressing not supported')
                 #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
-        elif arch == '64':
+        elif self._arch == '64':
             # 0x66 -> override operand size to 16bit 
             # 0x67 -> override addressing to 32bit
             if size == 2:
@@ -329,7 +329,7 @@ class Encoder:
                 rex = REXByte()
                 prefix_list += [rex.byte]
         else:
-            raise InstructionEncodingError('Architecture {} not supported'.format(arch))
+            raise InstructionEncodingError('Architecture {} not supported'.format(self._arch))
 
         # add prefices
         if prefix_list:
@@ -346,7 +346,7 @@ class Encoder:
 
         # add operands or opcode extension
         if reg is not None or reg_mem is not None or base is not None or index is not None or disp is not None or opex is not None:
-            self.add_reg_mem_opex(binary, arch, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
+            self.add_reg_mem_opex(binary, reg=reg, opex=opex, reg_mem=reg_mem, base=base, index=index, scale=scale, disp=disp)
 
         # add immediate value
         if imm is not None:
@@ -363,7 +363,7 @@ class Encoder:
 
         return binary
 
-    def add_reg_mem_opex(self, binary, arch, *,
+    def add_reg_mem_opex(self, binary, *,
             reg = None, 
             opex = None, 
             reg_mem = None, 
@@ -397,12 +397,12 @@ class Encoder:
         # on 64bit mod=00 rm=101 means [RIP/EIP + disp32]
         # so modrm mod=00 rm=100, sib base=101 index=100 scale=any
         if base is None and index is None:
-            if arch == '32':
+            if self._arch == '32':
                 modrm.mod = Mod._DISP32_ONLY_32_MOD
                 modrm.rm = Reg._DISP32_ONLY_32_RM
 
                 binary += modrm.binary + int32bin(disp)
-            elif arch == '64':
+            elif self._arch == '64':
                 modrm.mod = Mod._DISP32_ONLY_64_MOD
                 modrm.rm = Reg._DISP32_ONLY_64_RM
                 sib = SIBByte(base  = Reg._DISP32_ONLY_64_BASE, 
