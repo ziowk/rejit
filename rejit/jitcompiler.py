@@ -296,11 +296,9 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'cmp value':
-                """cmp r/m8 imm8"""
                 binary = encoder.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, reg_mem=inst[1], imm=inst[2], size=inst[3])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             elif inst[0] == 'cmp name':
-                """cmp r/m16/32/64 r16/32/64"""
                 binary = encoder.encode_instruction([Opcode.CMP_RM_R], reg=inst[1], reg_mem=inst[2], size=inst[3])
                 ir_1.append((('cmp',inst[1],inst[2]), binary))
             else:
