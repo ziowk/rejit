@@ -6,7 +6,7 @@ import os
 
 import rejit.common
 import rejit.x86encoder
-from rejit.x86encoder import type2size, int32bin, Scale, Reg, Opcode
+from rejit.x86encoder import int32bin, Scale, Reg, Opcode
 
 class CompilationError(rejit.common.RejitError): pass
 
@@ -222,7 +222,7 @@ class JITCompiler:
             if arg in var_regs:
                 binary = encoder.encode_instruction([Opcode.MOV_R_RM], arch, reg=var_regs[arg], base=Reg.EBP, disp=total, size=var_sizes[arg])
                 ir_1.append((('mov',var_regs[arg],'=[',Reg.ESP,'+',total,']'), binary))
-            total += type2size(var_sizes[arg],arch)
+            total += encoder.type2size(var_sizes[arg])
         return ir_1
 
     @staticmethod
@@ -248,12 +248,13 @@ class JITCompiler:
         var_regs = data['var_regs']
         var_sizes = data['var_sizes']
         arch = data['arch']
+        encoder = data['encoder']
 
         ir_1 = []
         for inst in ir:
             if inst[0] in { 'cmp name',  'cmp value', 'set', 'inc', 'move', 'move indexed'}:
                 if inst[0] == 'cmp name':
-                    assert type2size(var_sizes[inst[1]],arch) == type2size(var_sizes[inst[2]],arch)
+                    assert encoder.type2size(var_sizes[inst[1]]) == encoder.type2size(var_sizes[inst[2]])
                     ir_1.append((inst[0], var_regs[inst[1]],  var_regs[inst[2]], var_sizes[inst[1]]))
                 elif inst[0] == 'cmp value':
                     ir_1.append((inst[0], var_regs[inst[1]], inst[2], var_sizes[inst[1]]))
@@ -265,7 +266,7 @@ class JITCompiler:
                     assert var_sizes[inst[1]] == var_sizes[inst[2]]
                     ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_sizes[inst[1]]))
                 elif inst[0] == 'move indexed':
-                    assert type2size(var_sizes[inst[2]],arch) == type2size(var_sizes[inst[3]],arch)
+                    assert encoder.type2size(var_sizes[inst[2]]) == encoder.type2size(var_sizes[inst[3]])
                     ir_1.append((inst[0], var_regs[inst[1]], var_regs[inst[2]], var_regs[inst[3]],
                         var_sizes[inst[1]], var_sizes[inst[2]]))
             else:
