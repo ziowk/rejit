@@ -498,6 +498,9 @@ class Encoder:
                     binary += modrm.binary + int32bin(disp)
                     return 
 
+    def type2size(self, type_):
+        return self._type2size(type_)
+
     @staticmethod
     def _match_mask(reg, mask):
         if reg is None:
