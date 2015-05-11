@@ -535,14 +535,6 @@ class Opcode(IntEnum):
     JNE_REL_A = 0x0F
     JNE_REL_B = 0x85
 
-def type2size(type_, arch):
-    if arch == '32':
-        return _type2size32(type_)
-    elif arch == '64':
-        return _type2size64(type_)
-    else:
-        raise InstructionEncodingError('Uknown architecture {}'.format(arch))
-
 def _type2size32(type_):
     if type_ == 'pointer':
         return 4
