@@ -160,6 +160,14 @@ class TestInstructionEncoding:
         binary = encoder32.encode_instruction([Opcode.MOV_R_RM_8], reg=Reg.ECX, base=Reg.EBP)
         assert binary == b'\x8A\x4D\x00'
 
+def test_index_ESP_R12_check(encoder32, encoder64):
+    # mov cl, [ebp+esp*4]
+    with pytest.raises(InstructionEncodingError):
+        binary = encoder32.encode_instruction([Opcode.MOV_R_RM_8], reg=Reg.ECX, base=Reg.EBP, index=Reg.ESP, scale=Scale.MUL_4)
+    # mov cl, [rbp+R12*4]
+    with pytest.raises(InstructionEncodingError):
+        binary = encoder64.encode_instruction([Opcode.MOV_R_RM_8], reg=Reg.ECX, base=Reg.EBP, index=Reg.R12, scale=Scale.MUL_4)
+
 def test_arch_check():
     assert Encoder('32')
     assert Encoder('64')
