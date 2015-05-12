@@ -374,7 +374,8 @@ class Encoder:
 
         # can't use ESP/R12 as an index
         # [base + scale * ESP/R12 + disp] is not allowed
-        assert index != Reg.ESP
+        if index == Reg.ESP:
+            raise InstructionEncodingError("Can't use ESP/R12 as an index")
 
         modrm = ModRMByte()
 
