@@ -2,15 +2,15 @@
 
 import pytest
 
-from rejit.x86encoder import InstructionEncodingError, Reg, Scale, Encoder, Opcode
+from rejit.x86encoder import InstructionEncodingError, Reg, Scale, Encoder, Encoder32, Encoder64, Opcode
 
 @pytest.fixture(scope="module")
 def encoder32():
-    return Encoder('32')
+    return Encoder32()
 
 @pytest.fixture(scope="module")
 def encoder64():
-    return Encoder('64')
+    return Encoder64()
 
 class TestInstructionEncoding:
     def test_add_reg_mem_modrm_test(self, encoder32):
