@@ -514,6 +514,14 @@ class Encoder:
             return None
         return reg & Reg._REG_MASK
 
+class Encoder64(Encoder):
+    def __init__(self):
+        super().__init__('64')
+
+class Encoder32(Encoder):
+    def __init__(self):
+        super().__init__('32')
+
 class Opcode(IntEnum):
     MOV_R_RM_8 = 0x8A
     MOV_R_RM = 0x8B
