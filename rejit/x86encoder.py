@@ -252,13 +252,7 @@ class SIBByte:
 
 class Encoder:
     def __init__(self, arch):
-        if arch == '64':
-            # set x86_32 specific methods here
-            self._type2size = _type2size64
-        elif arch == '32':
-            # set x86_64 specific methods here
-            self._type2size = _type2size32
-        else:
+        if arch not in ['32', '64']:
             raise InstructionEncodingError('Architecture {} not supported'.format(arch))
         self._arch = arch
 
@@ -518,9 +512,37 @@ class Encoder64(Encoder):
     def __init__(self):
         super().__init__('64')
 
+    def _type2size(self, type_):
+        if type_ == 'pointer':
+            return 8
+        elif type_ == 'long':
+            return 8
+        elif type_ == 'int':
+            return 4
+        elif type_ == 'short':
+            return 2
+        elif type_ == 'byte':
+            return 1
+        else:
+            raise InstructionEncodingError('Unknown variable type {}'.format(type_))
+
 class Encoder32(Encoder):
     def __init__(self):
         super().__init__('32')
+
+    def _type2size(self, type_):
+        if type_ == 'pointer':
+            return 4
+        elif type_ == 'long':
+            return 4
+        elif type_ == 'int':
+            return 4
+        elif type_ == 'short':
+            return 2
+        elif type_ == 'byte':
+            return 1
+        else:
+            raise InstructionEncodingError('Unknown variable type {}'.format(type_))
 
 class Opcode(IntEnum):
     MOV_R_RM_8 = 0x8A
@@ -543,34 +565,6 @@ class Opcode(IntEnum):
     JE_REL_B = 0x84
     JNE_REL_A = 0x0F
     JNE_REL_B = 0x85
-
-def _type2size32(type_):
-    if type_ == 'pointer':
-        return 4
-    elif type_ == 'long':
-        return 4
-    elif type_ == 'int':
-        return 4
-    elif type_ == 'short':
-        return 2
-    elif type_ == 'byte':
-        return 1
-    else:
-        raise InstructionEncodingError('Unknown variable type {}'.format(type_))
-
-def _type2size64(type_):
-    if type_ == 'pointer':
-        return 8
-    elif type_ == 'long':
-        return 8
-    elif type_ == 'int':
-        return 4
-    elif type_ == 'short':
-        return 2
-    elif type_ == 'byte':
-        return 1
-    else:
-        raise InstructionEncodingError('Unknown variable type {}'.format(type_))
 
 def int8bin(int8):
     return struct.pack('@b', int8)
