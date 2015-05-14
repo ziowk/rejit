@@ -276,7 +276,7 @@ class Encoder:
             prefix_list = []
 
         if isinstance(size,str):
-            size = self._type2size(size)
+            size = self.type2size(size)
 
         if self._arch == '32':
             # 0x66 -> override operand size to 16bit 
@@ -493,9 +493,6 @@ class Encoder:
                     binary += modrm.binary + int32bin(disp)
                     return 
 
-    def type2size(self, type_):
-        return self._type2size(type_)
-
     @staticmethod
     def _match_mask(reg, mask):
         if reg is None:
@@ -512,7 +509,7 @@ class Encoder64(Encoder):
     def __init__(self):
         super().__init__('64')
 
-    def _type2size(self, type_):
+    def type2size(self, type_):
         if type_ == 'pointer':
             return 8
         elif type_ == 'long':
@@ -530,7 +527,7 @@ class Encoder32(Encoder):
     def __init__(self):
         super().__init__('32')
 
-    def _type2size(self, type_):
+    def type2size(self, type_):
         if type_ == 'pointer':
             return 4
         elif type_ == 'long':
