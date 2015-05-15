@@ -392,19 +392,7 @@ class Encoder:
         # on 64bit mod=00 rm=101 means [RIP/EIP + disp32]
         # so modrm mod=00 rm=100, sib base=101 index=100 scale=any
         if base is None and index is None:
-            if self._arch == '32':
-                modrm.mod = Mod._DISP32_ONLY_32_MOD
-                modrm.rm = Reg._DISP32_ONLY_32_RM
-
-                binary += modrm.binary + int32bin(disp)
-            elif self._arch == '64':
-                modrm.mod = Mod._DISP32_ONLY_64_MOD
-                modrm.rm = Reg._DISP32_ONLY_64_RM
-                sib = SIBByte(base  = Reg._DISP32_ONLY_64_BASE, 
-                              index = Reg._DISP32_ONLY_64_INDEX, 
-                              scale = Scale._DISP32_ONLY_64_SCALE)
-
-                binary += modrm.binary + sib.binary + int32bin(disp)
+            binary += self._handle_disp_only_addressing(modrm, disp)
             return
 
         # supplement a displacment for memory addressing
@@ -523,6 +511,15 @@ class Encoder64(Encoder):
         else:
             raise InstructionEncodingError('Unknown variable type {}'.format(type_))
 
+    def _handle_disp_only_addressing(self, modrm, disp):
+        modrm.mod = Mod._DISP32_ONLY_64_MOD
+        modrm.rm = Reg._DISP32_ONLY_64_RM
+        sib = SIBByte(base  = Reg._DISP32_ONLY_64_BASE, 
+                      index = Reg._DISP32_ONLY_64_INDEX, 
+                      scale = Scale._DISP32_ONLY_64_SCALE)
+
+        return modrm.binary + sib.binary + int32bin(disp)
+
 class Encoder32(Encoder):
     def __init__(self):
         super().__init__('32')
@@ -540,6 +537,11 @@ class Encoder32(Encoder):
             return 1
         else:
             raise InstructionEncodingError('Unknown variable type {}'.format(type_))
+
+    def _handle_disp_only_addressing(self, modrm, disp):
+        modrm.mod = Mod._DISP32_ONLY_32_MOD
+        modrm.rm = Reg._DISP32_ONLY_32_RM
+        return modrm.binary + int32bin(disp)
 
 class Opcode(IntEnum):
     MOV_R_RM_8 = 0x8A
