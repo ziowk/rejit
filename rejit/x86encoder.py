@@ -278,48 +278,9 @@ class Encoder:
         if isinstance(size,str):
             size = self.type2size(size)
 
-        if self._arch == '32':
-            # 0x66 -> override operand size to 16bit 
-            # 0x67 -> override addressing to 16bit
-            if size == 2:
-                prefix_list.append(OPcode.OVERRIDE_SIZE)
-            if address_size == 2:
-                raise InstructionEncodingError('16bit addressing not supported')
-                #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
-        elif self._arch == '64':
-            # 0x66 -> override operand size to 16bit 
-            # 0x67 -> override addressing to 32bit
-            if size == 2:
-                prefix_list.append(OPcode.OVERRIDE_SIZE)
-            if address_size == 4:
-                prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
-            # This code is tricky because we have to distinguish valid 0 values for
-            # rex byte components from absence of a value - None, because it is
-            # desirable to omit rex byte if it is not needed.
-            # REX.W = 1 -> override operand size to non-default (32->64)
-            # REX.R = 1 -> modrm REG to R8-R15
-            # REX.X = 1 -> sib INDEX to R8-R15
-            # REX.B = 1 -> modrm R/M, sib BASE, opcode REG to R8-R15
-            w, r, x, b = None, None, None, None
-            if size == 8:
-                w = 1
-            if Encoder._match_mask(reg, Reg._EXTENDED_MASK):
-                r = 1
-            if Encoder._match_mask(index, Reg._EXTENDED_MASK):
-                x = 1
-            if Encoder._match_mask(reg_mem, Reg._EXTENDED_MASK) or Encoder._match_mask(base, Reg._EXTENDED_MASK) or Encoder._match_mask(opcode_reg, Reg._EXTENDED_MASK):
-                b = 1
-            if any(map(lambda v: v is not None, (w, r, x, b))):
-                w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
-                rex = REXByte(w=w,r=r,x=x,b=b)
-                prefix_list += [rex.byte]
-            # if no rex byte and accessing SPL BPL SIL DIL
-            elif any(map(lambda x: x in [Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI], [reg, reg_mem, opcode_reg])) and size == 1:
-                rex = REXByte()
-                prefix_list += [rex.byte]
-        else:
-            raise InstructionEncodingError('Architecture {} not supported'.format(self._arch))
+        self._append_size_prefixes(prefix_list, size, address_size, reg, reg_mem, index, base, opcode_reg)
 
+        # extract actual register codes (variables include more information in some bits)
         reg, index, reg_mem, base, opcode_reg = map(Encoder._extract_reg, [reg, index, reg_mem, base, opcode_reg])
 
         # add prefices
@@ -517,6 +478,38 @@ class Encoder64(Encoder):
 
         return modrm.binary + sib.binary + int32bin(disp)
 
+    def _append_size_prefixes(self, prefix_list, size, address_size, reg, reg_mem, index, base, opcode_reg):
+        # 0x66 -> override operand size to 16bit 
+        # 0x67 -> override addressing to 32bit
+        if size == 2:
+            prefix_list.append(OPcode.OVERRIDE_SIZE)
+        if address_size == 4:
+            prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
+        # This code is tricky because we have to distinguish valid 0 values for
+        # rex byte components from absence of a value - None, because it is
+        # desirable to omit rex byte if it is not needed.
+        # REX.W = 1 -> override operand size to non-default (32->64)
+        # REX.R = 1 -> modrm REG to R8-R15
+        # REX.X = 1 -> sib INDEX to R8-R15
+        # REX.B = 1 -> modrm R/M, sib BASE, opcode REG to R8-R15
+        w, r, x, b = None, None, None, None
+        if size == 8:
+            w = 1
+        if Encoder._match_mask(reg, Reg._EXTENDED_MASK):
+            r = 1
+        if Encoder._match_mask(index, Reg._EXTENDED_MASK):
+            x = 1
+        if Encoder._match_mask(reg_mem, Reg._EXTENDED_MASK) or Encoder._match_mask(base, Reg._EXTENDED_MASK) or Encoder._match_mask(opcode_reg, Reg._EXTENDED_MASK):
+            b = 1
+        if any(map(lambda v: v is not None, (w, r, x, b))):
+            w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
+            rex = REXByte(w=w,r=r,x=x,b=b)
+            prefix_list += [rex.byte]
+        # if no rex byte and accessing SPL BPL SIL DIL
+        elif any(map(lambda x: x in [Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI], [reg, reg_mem, opcode_reg])) and size == 1:
+            rex = REXByte()
+            prefix_list += [rex.byte]
+
 class Encoder32(Encoder):
     def __init__(self):
         super().__init__('32')
@@ -539,6 +532,15 @@ class Encoder32(Encoder):
         modrm.mod = Mod._DISP32_ONLY_32_MOD
         modrm.rm = Reg._DISP32_ONLY_32_RM
         return modrm.binary + int32bin(disp)
+
+    def _append_size_prefixes(self, prefix_list, size, address_size, *args):
+        # 0x66 -> override operand size to 16bit 
+        # 0x67 -> override addressing to 16bit
+        if size == 2:
+            prefix_list.append(OPcode.OVERRIDE_SIZE)
+        if address_size == 2:
+            raise InstructionEncodingError('16bit addressing not supported')
+            #prefix_list.append(OPcode.OVERRIDE_ADDRESSING)
 
 class Opcode(IntEnum):
     MOV_R_RM_8 = 0x8A
