@@ -304,15 +304,10 @@ class Encoder:
             if size == 8:
                 w = 1
             if Encoder._match_mask(reg, Reg._EXTENDED_MASK):
-                reg = Encoder._extract_reg(reg)
                 r = 1
             if Encoder._match_mask(index, Reg._EXTENDED_MASK):
-                index = Encoder._extract_reg(index)
                 x = 1
             if Encoder._match_mask(reg_mem, Reg._EXTENDED_MASK) or Encoder._match_mask(base, Reg._EXTENDED_MASK) or Encoder._match_mask(opcode_reg, Reg._EXTENDED_MASK):
-                reg_mem = Encoder._extract_reg(reg_mem)
-                base = Encoder._extract_reg(base)
-                opcode_reg = Encoder._extract_reg(opcode_reg)
                 b = 1
             if any(map(lambda v: v is not None, (w, r, x, b))):
                 w, r, x, b = map(lambda v: 0 if v is None else v, [w, r, x, b])
@@ -324,6 +319,8 @@ class Encoder:
                 prefix_list += [rex.byte]
         else:
             raise InstructionEncodingError('Architecture {} not supported'.format(self._arch))
+
+        reg, index, reg_mem, base, opcode_reg = map(Encoder._extract_reg, [reg, index, reg_mem, base, opcode_reg])
 
         # add prefices
         if prefix_list:
