@@ -251,10 +251,9 @@ class SIBByte:
                 )
 
 class Encoder:
-    def __init__(self, arch):
-        if arch not in ['32', '64']:
-            raise InstructionEncodingError('Architecture {} not supported'.format(arch))
-        self._arch = arch
+    def __init__(self):
+        # abstract class?
+        raise InstructionEncodingError('Creating `Encoder` instances is not allowed')
 
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
@@ -453,7 +452,7 @@ class Encoder:
 
 class Encoder64(Encoder):
     def __init__(self):
-        super().__init__('64')
+        self._arch = '64'
 
     def type2size(self, type_):
         if type_ == 'pointer':
@@ -512,7 +511,7 @@ class Encoder64(Encoder):
 
 class Encoder32(Encoder):
     def __init__(self):
-        super().__init__('32')
+        self._arch = '32'
 
     def type2size(self, type_):
         if type_ == 'pointer':

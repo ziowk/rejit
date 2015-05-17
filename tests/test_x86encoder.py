@@ -168,9 +168,13 @@ def test_index_ESP_R12_check(encoder32, encoder64):
     with pytest.raises(InstructionEncodingError):
         binary = encoder64.encode_instruction([Opcode.MOV_R_RM_8], reg=Reg.ECX, base=Reg.EBP, index=Reg.R12, scale=Scale.MUL_4)
 
-def test_arch_check():
-    assert Encoder('32')
-    assert Encoder('64')
+def test_encoder_construction():
     with pytest.raises(InstructionEncodingError):
+        Encoder()
+    with pytest.raises(TypeError):
+        Encoder('32')
+    with pytest.raises(TypeError):
+        Encoder('64')
+    with pytest.raises(TypeError):
         Encoder('MIPS')
 
