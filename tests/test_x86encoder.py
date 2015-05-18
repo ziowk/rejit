@@ -4,6 +4,14 @@ import pytest
 
 from rejit.x86encoder import InstructionEncodingError, Reg, Scale, Encoder, Encoder32, Encoder64, Opcode
 
+reg64 = [Reg.EAX, Reg.ECX, Reg.EDX, Reg.EBX, Reg.ESP, Reg.EBP, Reg.ESI, Reg.EDI, Reg.R8, Reg.R9, Reg.R10, Reg.R11, Reg.R12, Reg.R13, Reg.R14, Reg.R15]
+
+reg64_1 = reg64[:8]
+
+reg64_2 = reg64[8:]
+
+reg32 = reg64[:8]
+
 @pytest.fixture(scope="module")
 def encoder32():
     return Encoder32()
@@ -159,6 +167,17 @@ class TestInstructionEncoding:
         # mov cl, [ebp]
         binary = encoder32.encode_instruction([Opcode.MOV_R_RM_8], reg=Reg.ECX, base=Reg.EBP)
         assert binary == b'\x8A\x4D\x00'
+
+    def test_encode_pop(self, encoder32, encoder64):
+        for reg in reg32:
+            binary = encoder32.enc_pop(reg)
+            assert binary == (0x58 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+        for reg in reg64_1:
+            binary = encoder64.enc_pop(reg)
+            assert binary == (0x58 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+        for reg in reg64_2:
+            binary = encoder64.enc_pop(reg)
+            assert binary == b'\x41' + (0x58 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
 
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
