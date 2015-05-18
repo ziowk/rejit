@@ -385,9 +385,9 @@ class JITCompiler:
                 ir_1.append(inst)
         ir_1.append(('label', 'return'))
         for reg in reversed(regs_to_restore):
-            binary = encoder.encode_instruction([Opcode.POP_R], opcode_reg=reg)
+            binary = encoder.enc_pop(reg)
             ir_1.append((('pop', reg),binary))
-        binary = encoder.encode_instruction([Opcode.POP_R], opcode_reg=Reg.EBP)
+        binary = encoder.enc_pop(Reg.EBP)
         ir_1.append((('pop', Reg.EBP),binary))
         binary = encoder.encode_instruction([Opcode.RET])
         ir_1.append((('ret',),binary))
