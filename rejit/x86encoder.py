@@ -255,6 +255,9 @@ class Encoder:
         # abstract class?
         raise InstructionEncodingError('Creating `Encoder` instances is not allowed')
 
+    def enc_pop(self, reg):
+        return self.encode_instruction([Opcode.POP_R], opcode_reg=reg)
+
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
             reg = None,
