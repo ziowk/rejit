@@ -258,6 +258,9 @@ class Encoder:
     def enc_pop(self, reg):
         return self.encode_instruction([Opcode.POP_R], opcode_reg=reg)
 
+    def enc_push(self, reg):
+        return self.encode_instruction([Opcode.PUSH_R], opcode_reg=reg)
+
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
             reg = None,
