@@ -226,7 +226,7 @@ class JITCompiler:
     @staticmethod
     def _new_stack_frame(encoder):
         ir_1 = []
-        binary = encoder.encode_instruction([Opcode.PUSH_R], opcode_reg=Reg.EBP)
+        binary = encoder.enc_push(Reg.EBP)
         ir_1.append((('push', Reg.EBP),binary))
         binary = encoder.encode_instruction([Opcode.MOV_R_RM], reg=Reg.EBP,reg_mem=Reg.ESP, size='long')
         ir_1.append((('mov',Reg.EBP,Reg.ESP), binary))
@@ -236,7 +236,7 @@ class JITCompiler:
     def _calle_reg_save(regs_to_restore, encoder):
         ir_1 = []
         for reg in regs_to_restore:
-            binary = encoder.encode_instruction([Opcode.PUSH_R], opcode_reg=reg)
+            binary = encoder.enc_push(reg)
             ir_1.append((('push', reg),binary))
         return ir_1
 
