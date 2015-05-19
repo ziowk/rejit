@@ -179,6 +179,17 @@ class TestInstructionEncoding:
             binary = encoder64.enc_pop(reg)
             assert binary == b'\x41' + (0x58 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
 
+    def test_encode_push(self, encoder32, encoder64):
+        for reg in reg32:
+            binary = encoder32.enc_push(reg)
+            assert binary == (0x50 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+        for reg in reg64_1:
+            binary = encoder64.enc_push(reg)
+            assert binary == (0x50 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+        for reg in reg64_2:
+            binary = encoder64.enc_push(reg)
+            assert binary == b'\x41' + (0x50 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
     with pytest.raises(InstructionEncodingError):
