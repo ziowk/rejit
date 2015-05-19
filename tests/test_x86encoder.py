@@ -190,6 +190,10 @@ class TestInstructionEncoding:
             binary = encoder64.enc_push(reg)
             assert binary == b'\x41' + (0x50 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
 
+    def test_encode_ret(self, encoder32, encoder64):
+        assert encoder32.enc_ret() == b'\xC3'
+        assert encoder64.enc_ret() == b'\xC3'
+
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
     with pytest.raises(InstructionEncodingError):
