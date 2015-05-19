@@ -389,7 +389,7 @@ class JITCompiler:
             ir_1.append((('pop', reg),binary))
         binary = encoder.enc_pop(Reg.EBP)
         ir_1.append((('pop', Reg.EBP),binary))
-        binary = encoder.encode_instruction([Opcode.RET])
+        binary = encoder.enc_ret()
         ir_1.append((('ret',),binary))
 
         return (ir_1, data)
