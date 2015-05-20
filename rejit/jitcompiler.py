@@ -424,7 +424,7 @@ class JITCompiler:
                     raise CompilationError('label "{}" not found'.format(inst[1]))
                 jmp_targets.add(inst[1])
                 if inst[0] == 'jump':
-                    binary = encoder.encode_instruction([Opcode.JMP_REL], imm=0,size=4)
+                    binary = encoder.enc_jmp_near(0)
                 elif inst[0] == 'jump eq':
                     binary = encoder.encode_instruction([Opcode.JE_REL_A, Opcode.JE_REL_B], imm=0,size=4)
                 elif inst[0] == 'jump ne':
