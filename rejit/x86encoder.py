@@ -264,6 +264,9 @@ class Encoder:
     def enc_ret(self):
         return self.encode_instruction([Opcode.RET])
 
+    def enc_jmp_near(self, rel32):
+        return self.encode_instruction([Opcode.JMP_REL], imm=rel32, size=4)
+
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
             reg = None,
