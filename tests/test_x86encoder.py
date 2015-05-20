@@ -194,6 +194,16 @@ class TestInstructionEncoding:
         assert encoder32.enc_ret() == b'\xC3'
         assert encoder64.enc_ret() == b'\xC3'
 
+    def test_encode_jmp_near(self, encoder32, encoder64):
+        assert encoder32.enc_jmp_near(0x12345678) == b'\xE9\x78\x56\x34\x12'
+        assert encoder32.enc_jmp_near(-0x12345678) == b'\xE9\x88\xA9\xCB\xED'
+        assert encoder32.enc_jmp_near(0x12) == b'\xE9\x12\x00\x00\x00'
+        assert encoder32.enc_jmp_near(-0x12) == b'\xE9\xEE\xFF\xFF\xFF'
+        assert encoder64.enc_jmp_near(0x12345678) == b'\xE9\x78\x56\x34\x12'
+        assert encoder64.enc_jmp_near(-0x12345678) == b'\xE9\x88\xA9\xCB\xED'
+        assert encoder64.enc_jmp_near(0x12) == b'\xE9\x12\x00\x00\x00'
+        assert encoder64.enc_jmp_near(-0x12) == b'\xE9\xEE\xFF\xFF\xFF'
+
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
     with pytest.raises(InstructionEncodingError):
