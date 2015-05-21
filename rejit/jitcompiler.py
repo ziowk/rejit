@@ -426,7 +426,7 @@ class JITCompiler:
                 if inst[0] == 'jump':
                     binary = encoder.enc_jmp_near(0)
                 elif inst[0] == 'jump eq':
-                    binary = encoder.encode_instruction([Opcode.JE_REL_A, Opcode.JE_REL_B], imm=0,size=4)
+                    binary = encoder.enc_je_near(0)
                 elif inst[0] == 'jump ne':
                     binary = encoder.encode_instruction([Opcode.JNE_REL_A, Opcode.JNE_REL_B], imm=0,size=4)
                 ir_1.append(((jmp_map[inst[0]], inst[1]), binary))
