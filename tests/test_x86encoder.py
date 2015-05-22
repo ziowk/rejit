@@ -214,6 +214,13 @@ class TestInstructionEncoding:
         assert encoder64.enc_je_near(0x12) == b'\x0F\x84\x12\x00\x00\x00'
         assert encoder64.enc_je_near(-0x12) == b'\x0F\x84\xEE\xFF\xFF\xFF'
 
+    def test_encode_inc(self, encoder32):
+        for reg in reg32:
+            assert encoder32.enc_inc(reg) == (0x40 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+            assert encoder32.enc_inc(reg, size=2) == b'\x66' + (0x40 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+        with pytest.raises(InstructionEncodingError):
+            encoder32.enc_inc('eax + ebx*4 + 10')
+
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
     with pytest.raises(InstructionEncodingError):
