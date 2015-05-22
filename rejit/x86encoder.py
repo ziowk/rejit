@@ -528,6 +528,14 @@ class Encoder32(Encoder):
     def __init__(self):
         self._arch = '32'
 
+    def enc_inc(self, operand, size=4):
+        if isinstance(size, str):
+            size = self.type2size(size)
+        if isinstance(operand, Reg) and (size == 4 or size == 2):
+            return self.encode_instruction([Opcode.INC_R_32], opcode_reg=operand, size=size)
+        else:
+            raise InstructionEncodingError('inc r/m8/16/32 not supported yet')
+
     def type2size(self, type_):
         if type_ == 'pointer':
             return 4
