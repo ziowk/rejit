@@ -250,6 +250,13 @@ class SIBByte:
                 base = self.base,
                 )
 
+class Mem:
+    def __init__(self, *, base=None, index=None, scale=None, disp=None):
+        self.base = base
+        self.index = index
+        self.scale = scale
+        self.disp = disp
+
 class Encoder:
     def __init__(self):
         # abstract class?
