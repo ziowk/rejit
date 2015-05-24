@@ -347,7 +347,7 @@ class JITCompiler:
         ir_1 = []
         for inst in ir:
             if inst[0] == 'inc':
-                binary = encoder.encode_instruction([Opcode.INC_RM_64], opex=Opcode.INC_RM_64_EX, reg_mem=inst[1], size=inst[2])
+                binary = encoder.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, reg_mem=inst[1], size=inst[2])
                 ir_1.append((inst, binary))
             else:
                 ir_1.append(inst)
