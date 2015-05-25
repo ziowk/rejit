@@ -288,10 +288,17 @@ class Encoder:
             disp = None,
             imm = None,
             size = None,
+            mem = None,
             address_size = None,
             opcode_reg = None):
 
         binary = bytearray()
+        
+        if mem is not None:
+            base = mem.base
+            index = mem.index
+            scale = mem.scale
+            disp = mem.disp
 
         if prefix_list is None:
             prefix_list = []
