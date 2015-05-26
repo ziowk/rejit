@@ -546,10 +546,11 @@ class Encoder32(Encoder):
         if isinstance(size, str):
             size = self.type2size(size)
         # duck typing won't help me here
-        if isinstance(operand, Reg) and (size == 4 or size == 2):
-            return self.encode_instruction([Opcode.INC_R_32], opcode_reg=operand, size=size)
-        elif isinstance(operand, Mem) and (size == 4 or size == 2):
-            return self.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, mem=operand, size=size)
+        if size == 4 or size == 2:
+            if isinstance(operand, Reg):
+                return self.encode_instruction([Opcode.INC_R_32], opcode_reg=operand, size=size)
+            elif isinstance(operand, Mem):
+                return self.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, mem=operand, size=size)
         else:
             raise InstructionEncodingError('inc r/m8 not supported yet')
 
