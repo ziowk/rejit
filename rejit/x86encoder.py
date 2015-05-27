@@ -548,7 +548,7 @@ class Encoder32(Encoder):
         # duck typing won't help me here
         if size == 4 or size == 2:
             if isinstance(operand, Reg):
-                return self.encode_instruction([Opcode.INC_R_32], opcode_reg=operand, size=size)
+                return self.encode_instruction([Opcode.INC_R_X32], opcode_reg=operand, size=size)
             elif isinstance(operand, Mem):
                 return self.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, mem=operand, size=size)
         else:
@@ -594,7 +594,7 @@ class Opcode(IntEnum):
     CMP_RM_IMM_8 = 0x80
     CMP_RM_IMM_8_EX = 0x7
     CMP_RM_R = 0x39
-    INC_R_32 = 0x40
+    INC_R_X32 = 0x40
     INC_RM = 0xFF
     INC_RM_EX = 0x0
     RET = 0xC3
