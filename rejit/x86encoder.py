@@ -595,6 +595,8 @@ class Opcode(IntEnum):
     CMP_RM_IMM_8_EX = 0x7
     CMP_RM_R = 0x39
     INC_R_X32 = 0x40
+    INC_RM_8 = 0xFE
+    INC_RM_8_EX = 0x0
     INC_RM = 0xFF
     INC_RM_EX = 0x0
     RET = 0xC3
