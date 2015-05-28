@@ -551,8 +551,11 @@ class Encoder32(Encoder):
                 return self.encode_instruction([Opcode.INC_R_X32], opcode_reg=operand, size=size)
             elif isinstance(operand, Mem):
                 return self.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, mem=operand, size=size)
-        else:
-            raise InstructionEncodingError('inc r/m8 not supported yet')
+        elif size == 1:
+            if isinstance(operand, Reg):
+                return self.encode_instruction([Opcode.INC_RM_8], opex=Opcode.INC_RM_8_EX, reg_mem=operand, size=size)
+            elif isinstance(operand, Mem):
+                return self.encode_instruction([Opcode.INC_RM_8], opex=Opcode.INC_RM_8_EX, mem=operand, size=size)
 
     def type2size(self, type_):
         if type_ == 'pointer':
