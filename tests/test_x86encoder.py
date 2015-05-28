@@ -218,8 +218,10 @@ class TestInstructionEncoding:
         for reg in reg32:
             assert encoder32.enc_inc(reg) == (0x40 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
             assert encoder32.enc_inc(reg, size=2) == b'\x66' + (0x40 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
+            assert encoder32.enc_inc(reg, size=1) == b'\xFE' + (0xC0 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
         assert encoder32.enc_inc(Mem(base=Reg.EAX, index=Reg.ECX, scale=Scale.MUL_8, disp=128)) == b"\xFF\x84\xC8\x80\x00\x00\x00"
         assert encoder32.enc_inc(Mem(base=Reg.EAX, index=Reg.ECX, scale=Scale.MUL_8, disp=128), size=2) == b"\x66\xFF\x84\xC8\x80\x00\x00\x00"
+        assert encoder32.enc_inc(Mem(base=Reg.EAX, index=Reg.ECX, scale=Scale.MUL_8, disp=128), size=1) == b"\xFE\x84\xC8\x80\x00\x00\x00"
 
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
