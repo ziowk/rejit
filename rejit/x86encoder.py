@@ -483,6 +483,21 @@ class Encoder64(Encoder):
     def __init__(self):
         self._arch = '64'
 
+    def enc_inc(self, operand, size=4):
+        if isinstance(size, str):
+            size = self.type2size(size)
+        # duck typing won't help me here
+        if size in [2,4,8]:
+            if isinstance(operand, Reg):
+                return self.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, reg_mem=operand, size=size)
+            elif isinstance(operand, Mem):
+                return self.encode_instruction([Opcode.INC_RM], opex=Opcode.INC_RM_EX, mem=operand, size=size)
+        elif size == 1:
+            if isinstance(operand, Reg):
+                return self.encode_instruction([Opcode.INC_RM_8], opex=Opcode.INC_RM_8_EX, reg_mem=operand, size=size)
+            elif isinstance(operand, Mem):
+                return self.encode_instruction([Opcode.INC_RM_8], opex=Opcode.INC_RM_8_EX, mem=operand, size=size)
+
     def type2size(self, type_):
         if type_ == 'pointer':
             return 8
