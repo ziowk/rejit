@@ -217,6 +217,16 @@ class TestInstructionEncoding:
         assert encoder64.enc_je_near(0x12) == b'\x0F\x84\x12\x00\x00\x00'
         assert encoder64.enc_je_near(-0x12) == b'\x0F\x84\xEE\xFF\xFF\xFF'
 
+    def test_encode_jne_near(self, encoder32, encoder64):
+        assert encoder32.enc_jne_near(0x12345678) == b'\x0F\x85\x78\x56\x34\x12'
+        assert encoder32.enc_jne_near(-0x12345678) == b'\x0F\x85\x88\xA9\xCB\xED'
+        assert encoder32.enc_jne_near(0x12) == b'\x0F\x85\x12\x00\x00\x00'
+        assert encoder32.enc_jne_near(-0x12) == b'\x0F\x85\xEE\xFF\xFF\xFF'
+        assert encoder64.enc_jne_near(0x12345678) == b'\x0F\x85\x78\x56\x34\x12'
+        assert encoder64.enc_jne_near(-0x12345678) == b'\x0F\x85\x88\xA9\xCB\xED'
+        assert encoder64.enc_jne_near(0x12) == b'\x0F\x85\x12\x00\x00\x00'
+        assert encoder64.enc_jne_near(-0x12) == b'\x0F\x85\xEE\xFF\xFF\xFF'
+
     def test_encode_inc(self, encoder32, encoder64):
         for reg in reg32:
             assert encoder32.enc_inc(reg) == (0x40 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
