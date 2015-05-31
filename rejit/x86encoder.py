@@ -291,6 +291,7 @@ class Encoder:
             disp = None,
             imm = None,
             size = None,
+            imm_size = None,
             mem = None,
             address_size = None,
             opcode_reg = None):
@@ -333,13 +334,15 @@ class Encoder:
 
         # add immediate value
         if imm is not None:
-            if size == 1:
+            if imm_size is None:
+                imm_size = size
+            if imm_size == 1:
                 binary += int8bin(imm)
-            elif size == 2:
+            elif imm_size == 2:
                 binary += int16bin(imm)
-            elif size == 4:
+            elif imm_size == 4:
                 binary += int32bin(imm)
-            elif size == 8:
+            elif imm_size == 8:
                 binary += int64bin(imm)
             else:
                 raise InstructionEncodingError("can't use {} immediate value of size {}".format(imm,size))
