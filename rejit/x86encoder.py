@@ -280,6 +280,17 @@ class Encoder:
     def enc_jne_near(self, rel32):
         return self.encode_instruction([Opcode.JNE_REL_A, Opcode.JNE_REL_B], imm=rel32, size=4)
 
+    def enc_cmp(self, operand1, operand2, size):
+        type1 = type(operand1)
+        type2 = type(operand2)
+        if isinstance(size, str):
+            size = self.type2size(size)
+        if type1 == Reg and type2 == int:
+            if size == 1:
+                return self.encode_instruction([Opcode.CMP_AL_IMM_8], imm=operand2, size=size)
+            elif size in [2,4,8]:
+                return self.encode_instruction([Opcode.CMP_EAX_IMM], imm=operand2, size=size, imm_size=min(size,4))
+
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
             reg = None,
