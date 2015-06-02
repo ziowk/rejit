@@ -286,8 +286,10 @@ class Encoder:
         if isinstance(size, str):
             size = self.type2size(size)
         if type1 == Reg and type2 == int:
+            # cmp AL imm8
             if size == 1:
                 return self.encode_instruction([Opcode.CMP_AL_IMM_8], imm=operand2, size=size)
+            # cmp AX/EAX/RAX imm16/32
             elif size in [2,4,8]:
                 return self.encode_instruction([Opcode.CMP_EAX_IMM], imm=operand2, size=size, imm_size=min(size,4))
 
