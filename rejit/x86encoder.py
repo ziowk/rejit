@@ -285,7 +285,7 @@ class Encoder:
         type2 = type(operand2)
         if isinstance(size, str):
             size = self.type2size(size)
-        if type1 == Reg and type2 == int:
+        if type1 == Reg and operand1 == Reg.EAX and type2 == int:
             # cmp AL imm8
             if size == 1:
                 return self.encode_instruction([Opcode.CMP_AL_IMM_8], imm=operand2, size=size)
