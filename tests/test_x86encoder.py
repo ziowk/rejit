@@ -249,6 +249,12 @@ class TestInstructionEncoding:
             assert encoder64.enc_inc(reg,size=2) == b'\x66\x41\xFF' + (0xC0 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
             assert encoder64.enc_inc(reg,size=1) == b'\x41\xFE' + (0xC0 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
 
+    def test_encode_cmp(self, encoder32, encoder64):
+        assert encoder32.enc_cmp(Reg.EAX, 127, 1) == b'\x3C\x7F'
+        assert encoder32.enc_cmp(Reg.EAX, 127, 2) == b'\x66\x3D\x7F\x00'
+        assert encoder32.enc_cmp(Reg.EAX, 127, 4) == b'\x3D\x7F\x00\x00\x00'
+        assert encoder64.enc_cmp(Reg.EAX, 127, 8) == b'\x48\x3D\x7F\x00\x00\x00'
+
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
     with pytest.raises(InstructionEncodingError):
