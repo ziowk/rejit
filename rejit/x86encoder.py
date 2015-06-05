@@ -292,6 +292,13 @@ class Encoder:
             # cmp AX/EAX/RAX imm16/32
             elif size in [2,4,8]:
                 return self.encode_instruction([Opcode.CMP_EAX_IMM], imm=operand2, size=size, imm_size=min(size,4))
+        if (type1 == Reg or type1 == Mem) and type2 == int:
+            # cmp r/m8 imm8
+            if size == 1:
+                if type1 == Reg:
+                    return self.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, reg_mem=operand1, imm=operand2, size=size)
+                elif type1 == Mem:
+                    return self.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, mem=operand1, imm=operand2, size=size)
 
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
