@@ -254,6 +254,8 @@ class TestInstructionEncoding:
         assert encoder32.enc_cmp(Reg.EAX, 127, 2) == b'\x66\x3D\x7F\x00'
         assert encoder32.enc_cmp(Reg.EAX, 127, 4) == b'\x3D\x7F\x00\x00\x00'
         assert encoder64.enc_cmp(Reg.EAX, 127, 8) == b'\x48\x3D\x7F\x00\x00\x00'
+        assert encoder32.enc_cmp(Reg.ECX, 127, 1) == b'\x80\xF9\x7F'
+        assert encoder32.enc_cmp(Mem(base=Reg.EAX, index=Reg.ECX, scale=Scale.MUL_8, disp=128), 127, 1) == b'\x80\xBC\xC8\x80\x00\x00\x00\x7F'
 
 def test_index_ESP_R12_check(encoder32, encoder64):
     # mov cl, [ebp+esp*4]
