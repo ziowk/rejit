@@ -637,6 +637,8 @@ class Opcode(IntEnum):
     POP_R = 0x58
     CMP_RM_IMM_8 = 0x80
     CMP_RM_IMM_8_EX = 0x7
+    CMP_RM_IMM = 0x81
+    CMP_RM_IMM_EX = 0x7
     CMP_RM_R = 0x39
     CMP_AL_IMM_8 = 0x3C
     CMP_EAX_IMM = 0x3D
