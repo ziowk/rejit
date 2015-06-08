@@ -296,9 +296,9 @@ class Encoder:
             # cmp r/m8 imm8
             if size == 1:
                 if type1 == Reg:
-                    return self.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, reg_mem=operand1, imm=operand2, size=size)
+                    return self.encode_instruction([Opcode.CMP_RM_8_IMM_8], opex=Opcode.CMP_RM_8_IMM_8_EX, reg_mem=operand1, imm=operand2, size=size)
                 elif type1 == Mem:
-                    return self.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, mem=operand1, imm=operand2, size=size)
+                    return self.encode_instruction([Opcode.CMP_RM_8_IMM_8], opex=Opcode.CMP_RM_8_IMM_8_EX, mem=operand1, imm=operand2, size=size)
 
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
@@ -635,8 +635,8 @@ class Opcode(IntEnum):
     MOV_R_IMM = 0xB8
     PUSH_R = 0x50
     POP_R = 0x58
-    CMP_RM_IMM_8 = 0x80
-    CMP_RM_IMM_8_EX = 0x7
+    CMP_RM_8_IMM_8 = 0x80
+    CMP_RM_8_IMM_8_EX = 0x7
     CMP_RM_IMM = 0x81
     CMP_RM_IMM_EX = 0x7
     CMP_RM_R = 0x39
