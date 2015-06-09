@@ -635,13 +635,15 @@ class Opcode(IntEnum):
     MOV_R_IMM = 0xB8
     PUSH_R = 0x50
     POP_R = 0x58
+    CMP_AL_IMM_8 = 0x3C
+    CMP_EAX_IMM = 0x3D
     CMP_RM_8_IMM_8 = 0x80
     CMP_RM_8_IMM_8_EX = 0x7
     CMP_RM_IMM = 0x81
     CMP_RM_IMM_EX = 0x7
+    CMP_RM_IMM_8 = 0x83
+    CMP_RM_IMM_EX_8 = 0x7
     CMP_RM_R = 0x39
-    CMP_AL_IMM_8 = 0x3C
-    CMP_EAX_IMM = 0x3D
     INC_R_X32 = 0x40
     INC_RM_8 = 0xFE
     INC_RM_8_EX = 0x0
