@@ -299,6 +299,13 @@ class Encoder:
                     return self.encode_instruction([Opcode.CMP_RM_8_IMM_8], opex=Opcode.CMP_RM_8_IMM_8_EX, reg_mem=operand1, imm=operand2, size=size)
                 elif type1 == Mem:
                     return self.encode_instruction([Opcode.CMP_RM_8_IMM_8], opex=Opcode.CMP_RM_8_IMM_8_EX, mem=operand1, imm=operand2, size=size)
+            elif size in [2,4,8]:
+                # cmp r/m16/32/64 imm8
+                if -2**7 <= operand2 <= 2**7-1:
+                    if type1 == Reg:
+                        return self.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, reg_mem=operand1, imm=operand2, size=size, imm_size=1)
+                    elif type1 == Mem:
+                        return self.encode_instruction([Opcode.CMP_RM_IMM_8], opex=Opcode.CMP_RM_IMM_8_EX, mem=operand1, imm=operand2, size=size, imm_size=1)
 
     def encode_instruction(self, opcode_list, *,
             prefix_list = None,
