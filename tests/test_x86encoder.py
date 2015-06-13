@@ -250,12 +250,16 @@ class TestInstructionEncoding:
             assert encoder64.enc_inc(reg,size=1) == b'\x41\xFE' + (0xC0 + (reg & Reg._REG_MASK)).to_bytes(1, byteorder='little')
 
     def test_encode_cmp(self, encoder32, encoder64):
+        # cmp al im8
         assert encoder32.enc_cmp(Reg.EAX, 127, 1) == b'\x3C\x7F'
+        # cmp ax/eax/rax imm16/32
         assert encoder32.enc_cmp(Reg.EAX, 127, 2) == b'\x66\x3D\x7F\x00'
         assert encoder32.enc_cmp(Reg.EAX, 127, 4) == b'\x3D\x7F\x00\x00\x00'
         assert encoder64.enc_cmp(Reg.EAX, 127, 8) == b'\x48\x3D\x7F\x00\x00\x00'
+        # cmp r/m8 imm8
         assert encoder32.enc_cmp(Reg.ECX, 127, 1) == b'\x80\xF9\x7F'
         assert encoder32.enc_cmp(Mem(base=Reg.EAX, index=Reg.ECX, scale=Scale.MUL_8, disp=128), 127, 1) == b'\x80\xBC\xC8\x80\x00\x00\x00\x7F'
+        # cmp r/m16/32/64 imm8
         assert encoder32.enc_cmp(Reg.ECX, 127, 2) == b'\x66\x83\xF9\x7F'
         assert encoder32.enc_cmp(Mem(base=Reg.EAX, index=Reg.ECX, scale=Scale.MUL_8, disp=128), 127, 2) == b'\x66\x83\xBC\xC8\x80\x00\x00\x00\x7F'
         assert encoder32.enc_cmp(Reg.ECX, 127, 4) == b'\x83\xF9\x7F'
